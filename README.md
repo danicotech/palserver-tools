@@ -1,162 +1,115 @@
-# 帕魯玩家查詢工具網(Palworld 伺服器全家桶)
+**繁體中文** | [English](README.en.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-一套 **Docker 一鍵部署** 的 Palworld 專用伺服器 + 玩家查詢網站:
+# 🐏 帕魯玩家查詢工具網(Palworld 伺服器全家桶)
 
-- 🖥️ **Palworld 專用伺服器**(社群映像 `thijsvanloef/palworld-server-docker`)
-- ⏰ **自動排程開關服**(Go 排程器:時段開關、開/關服廣播倒數、崩潰自動重啟)
-- 🌐 **玩家查詢網站**(本專案重點,玩家用瀏覽器就能看):
-  - 📊 總覽儀表板(玩家數/帕魯總數/開服狀態/收服率)
-  - 🧑 玩家查詢、🐾 帕魯查詢(全服搜尋 + 物種報表)、🏷️ 詞條查詢
-  - 🥚 **配種表**:配種計算(多組 A+B=C)、反查組合、**帕魯配種樹**(互動樹狀規劃 / 最短路徑 / 玩家視角標記已擁有與缺少)
-  - 📖 圖鑑收服率、👑 首領進度、🏆 排行榜、🕐 上線分析
-  - 🌍 四語介面(繁中/簡中/英/日)
+**雙擊一個檔案就能開好整套 Palworld 伺服器**,並附一個玩家用瀏覽器就能看的查詢網站:
 
-配種資料:299 隻可配種帕魯 × 44,851 筆配方全覆蓋(來源 [tylercamp/palcalc](https://github.com/tylercamp/palcalc),MIT)。
+![總覽](docs/screenshots/01-dashboard.png)
+
+- 🖥️ Palworld 專用伺服器(Docker 社群映像)
+- ⏰ 自動排程開關服(時段開關、關服倒數廣播、崩潰自動重啟)
+- 🌐 玩家查詢網站:總覽 / 玩家 / 帕魯 / 詞條 / **配種表** / 圖鑑 / 首領 / 排行榜 / 上線分析
+- 🥚 配種表:299 隻 × 44,851 筆配方全覆蓋,互動**配種樹**與**最短路徑**規劃、玩家視角標記已擁有/缺
+- 🌍 網站四語介面(繁中/簡中/英/日)
+
+📖 **[完整使用手冊(全功能圖文教學)](docs/manual.html)** · 截圖目錄:[docs/screenshots/](docs/screenshots/)
 
 ---
 
-## 系統需求
+## 🚀 三步驟開服(不用會任何指令)
 
-- 任一台能跑 **Docker + Docker Compose v2** 的機器(Windows 用 Docker Desktop / Linux 直接裝 docker)
-- 8GB+ RAM(Palworld 伺服器本身吃 6GB 上下)
+1. **安裝 Docker**
+   - Windows:安裝並打開 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+   - Linux:`curl -fsSL https://get.docker.com | sh`
+2. **下載本專案**:點 GitHub 綠色 `Code` 按鈕 → `Download ZIP` → 解壓縮(或 `git clone`)
+3. **啟動**
+   - Windows:雙擊 **`start.bat`**
+   - Linux/macOS:`./start.sh`
 
-## 快速開始(5 分鐘)
-
-```bash
-git clone <你的-repo-網址>
-cd palworld-panel
-
-# 1) 建立後端設定檔(從範本複製)
-cp backend/config.example.json backend/config.json
-#    → 打開 backend/config.json,把 api.token 改成長隨機字串、rcon.password 改成你的管理密碼
-
-# 2) 在專案根目錄建立 .env,填入密碼(compose 會自動讀取):
-cat > .env <<'ENV'
-ADMIN_PASSWORD=你的管理密碼        # 需與 config.json 的 rcon.password 一致
-SERVER_PASSWORD=玩家進服密碼
-PUBLIC_IP=                        # 固定對外 IP;浮動可留空
-ENV
-#    伺服器名稱、各種倍率等其餘參數在 backend/docker-compose.yml 的 environment 區塊
-
-# 3) 一鍵啟動(伺服器 + 排程器 + 存檔解析 + 查詢網站)
-docker compose up -d --build
-```
-
-完成後:
+第一次啟動會**自動產生所有設定與兩組隨機密碼**(顯示在視窗裡,請抄下來),然後自動下載映像並開好四個服務。完成後:
 
 | 服務 | 位址 |
 |---|---|
-| 玩家查詢網站 | http://localhost(或你的主機 IP) |
-| Palworld 遊戲連線 | `你的IP:8211`(UDP) |
-| 排程器 API | http://localhost:9000(需 token) |
+| 玩家查詢網站 | `http://localhost`(或 `http://主機IP`) |
+| 遊戲連線 | `主機IP:8211`(UDP)+ 視窗顯示的進服密碼 |
 
-> 💡 想讓外網玩家看到網站:在主機自行架設反向代理或隧道指向本機 80 埠即可;也可以新增一個 gitignored 的 `docker-compose.override.yml` 疊加你自己的對外服務,不會影響本專案檔案。
+## 🕹️ 日常操作(雙擊即可)
 
----
-
-## 🚚 無痛搬家:把「你自己伺服器的存檔」換進來
-
-整個系統讀的存檔只有一個位置:**`backend/palworld-data/`**(掛載進容器的 `/palworld`)。
-把你原本伺服器的存檔複製進來,查詢網站的所有資料(玩家、帕魯、圖鑑、排行)就會變成你的伺服器。
-
-存檔的實際層級長這樣:
-
-```
-backend/palworld-data/
-└── Pal/
-    └── Saved/
-        ├── Config/LinuxServer/PalWorldSettings.ini   ← 每次開機由 compose 環境變數重新產生,不用手動搬
-        └── SaveGames/
-            └── 0/
-                └── <你的世界GUID>/                    ← ★ 把整個資料夾搬進來就對了
-                    ├── Level.sav                      (世界主存檔)
-                    ├── LevelMeta.sav
-                    └── Players/*.sav                  (每位玩家)
-```
-
-### 步驟
-
-1. **先關掉伺服器**(來源與目的兩邊都要):`docker compose stop palworld`
-2. 找到你原伺服器的 `SaveGames/0/<世界GUID>` 資料夾:
-   - 原本就是 Docker(同款社群映像):在原機的掛載目錄底下,整個 `Pal/Saved/SaveGames` 複製過來
-   - Windows 專用伺服器:`PalServer\Pal\Saved\SaveGames\0\<GUID>`
-   - Linux 專用伺服器:`PalServer/Pal/Saved/SaveGames/0/<GUID>`
-3. 複製到本專案 `backend/palworld-data/Pal/Saved/SaveGames/0/` 底下(整個 GUID 資料夾)
-4. Linux 主機記得把擁有者對齊 compose 的 PUID/PGID(預設 1000):
-   `sudo chown -R 1000:1000 backend/palworld-data`
-5. `docker compose up -d` 重新啟動 → 進網站按右上角 🔄 重新載入,資料就是你的伺服器了
-
-> ⚠️ 遊戲性設定(倍率、人數上限…)**不要**直接改 `PalWorldSettings.ini` —— 容器每次啟動會用
-> `backend/docker-compose.yml` 的環境變數重新產生它。要調整請改 compose 檔裡對應的變數。
-
----
-
-## 🔧 後端設定檔說明:`backend/config.json`
-
-一般人只需要動 ★ 標記的欄位,其餘保持預設即可。
-
-| 區塊 | 欄位 | 說明 |
+| 動作 | Windows | Linux/macOS |
 |---|---|---|
-| `timezone` | | 排程使用的時區,例 `Asia/Taipei` |
-| `docker` | `containerName` | 要被開/關的遊戲容器名(對應 compose 的 `container_name: palworld`,不用改) |
-| `rcon` | ★ `password` | RCON 管理密碼,**必須等於** compose 的 `ADMIN_PASSWORD` |
-| `rest` | `enabled` | 走官方 REST API 廣播/查線上玩家(預設開,不用改) |
-| `palsave` | `enabled` | 存檔解析服務(查詢網站的資料來源),**保持 true** |
-| `api` | ★ `token` | 排程器 API 的密碼,改成長隨機字串(網站後台呼叫用) |
-| `schedule` | ★ `windows` | **開服時段表**。每筆 = 星期幾 + 開/關時間,跨午夜自動處理。例:<br>`{ "label": "weekend", "days": ["Sat","Sun"], "open": "10:00", "close": "03:00" }`<br>想 24 小時開服就設 `"open": "00:00", "close": "24:00"` 全週 |
-| `hooks` | `onOpen` | 開服流程(依序執行):啟動容器 → 等 30 秒 → 廣播歡迎詞。改 `message` 即可自訂 |
-| `hooks` | ★ `onClose` | 關服流程。`countdown.announce` 陣列 = 「剩幾秒時廣播什麼」,想改提醒時間/文案**只改這個陣列**,例:<br>`{ "at": 600, "message": "伺服器將於 10 分鐘後關閉" }` |
-| `hooks` | `onManualStop` | 手動關服(API 觸發)的流程,預設 15 秒倒數後存檔關機 |
+| 啟動全部 | `start.bat` | `./start.sh` |
+| 重啟(套用新設定) | `restart.bat` | `./restart.sh` |
+| 停止全部 | `stop.bat` | `./stop.sh` |
+| 看狀態/日誌 | `status.bat` | `./status.sh` |
 
-`hooks` 可用的步驟型別:`startContainer`、`stopContainer`、`broadcast`、`wait`、`countdown`、`save`、`doexit`、`rcon`(任意指令)…,像堆積木一樣自由編排,存檔後重啟 scheduler 生效:
+偏好單一執行檔?裝好 [Go](https://go.dev/dl/) 後 `cd tools/launcher && go build -o ../../palserver.exe .`,雙擊 `palserver.exe` 會有數字選單(啟動/重啟/停止/狀態/只更新網站)。
 
-```bash
-docker compose restart scheduler
+## 🎛️ 調整伺服器參數:只改一個檔 `.env`
+
+**所有** Palworld 參數(名稱、人數、密碼、經驗/捕捉/傷害倍率、孵蛋時間、PvP…約 50 項)都集中在專案根目錄的 `.env`,每一項在 [`.example.env`](.example.env) 都有英文註解說明。改完存檔 → 雙擊 `restart.bat` 即套用:
+
+```env
+SERVER_NAME=My Palworld Server
+PLAYERS=32
+EXP_RATE=1.0          # 經驗倍率
+PAL_CAPTURE_RATE=1.0  # 捕捉率
+PAL_EGG_DEFAULT_HATCHING_TIME=72.0  # 孵蛋小時數
 ```
 
-## 🎛️ 遊戲參數:`backend/docker-compose.yml`
+> `.env` 不會進 git,你的密碼只存在自己電腦。沒寫的項目自動用預設值。
 
-伺服器名稱、密碼、各種倍率(經驗/捕捉率/傷害/孵蛋時間…)全部在 `palworld` 服務的
-`environment:` 區塊,每個變數旁都有中文註解。改完:
+## 🚚 無痛搬家:把你原本伺服器的存檔換進來
 
-```bash
-docker compose up -d palworld   # 重建遊戲容器套用
+系統只讀一個位置:`backend/palworld-data/`。把原伺服器的世界資料夾整個複製進來,網站的所有資料就變成你的伺服器:
+
+```text
+backend/palworld-data/Pal/Saved/SaveGames/0/<你的世界GUID>/   ← 整個資料夾放這裡
+    ├── Level.sav        (世界主存檔)
+    ├── LevelMeta.sav
+    └── Players/*.sav    (每位玩家)
 ```
 
----
+1. 兩邊伺服器都先停止(`stop.bat`)
+2. 原存檔位置:Windows 專服 `PalServer\Pal\Saved\SaveGames\0\<GUID>`;Linux/Docker 同層級
+3. 複製整個 `<GUID>` 資料夾到上面路徑
+4. Linux 主機:`sudo chown -R 1000:1000 backend/palworld-data`
+5. `start.bat` → 網站右上 🔄 重新載入
 
-## 📅 資料更新(改版後跑一次即可,選配)
+> ⚠️ 不要直接改 `PalWorldSettings.ini` —— 每次開機會由 `.env` 重新產生。
 
-遊戲大改版新增帕魯時,在 `frontend/` 執行:
+## ⏰ 排程與廣播:`backend/config.json`
+
+開服時段表與關服倒數廣播都在這(首次啟動自動產生;`config.example.json` 為範本):
+
+| 欄位 | 說明 |
+|---|---|
+| `schedule.windows` | 開服時段。例 `{ "days": ["Sat","Sun"], "open": "10:00", "close": "03:00" }`(跨午夜自動處理;24 小時開 = `00:00`~`24:00` 全週) |
+| `hooks.onClose.announce` | 關服前廣播:`{ "at": 600, "message": "10 分鐘後關服" }`,想改時間/文案只改這個陣列 |
+| `api.token` | 網站後台呼叫排程器的密碼(自動隨機產生) |
+
+改完:`docker compose restart scheduler`(或直接 `restart.bat`)。
+
+## 🔄 遊戲改版後更新配種資料(選配)
 
 ```bash
-node scripts/fetch-palcalc-breeding.mjs   # 更新 44,851 筆配種配方(palcalc)
-node scripts/fetch-pal-meta.mjs           # 更新屬性/圖鑑編號/稀有度
-pnpm build                                 # 重新建置前端
-cd .. && docker compose up -d --no-deps --build panel
+cd frontend
+node scripts/fetch-palcalc-breeding.mjs   # 配方
+node scripts/fetch-pal-meta.mjs           # 屬性/圖鑑編號/稀有度
+pnpm build && cd .. && docker compose up -d --no-deps --build panel
 ```
 
 ## ❓ 常見問題
 
 | 問題 | 解法 |
 |---|---|
-| 網站打開沒有玩家資料 | 存檔還沒放對位置(見「無痛搬家」),或伺服器從未開過(沒有存檔);放好後按網站右上 🔄 |
-| 排程沒有開服 | 檢查 `config.json` 的 `timezone` 與 `schedule.windows`;`docker compose logs -f scheduler` 看日誌 |
-| 廣播沒出現 | `ADMIN_PASSWORD` 與 `rcon.password` 不一致,兩邊改成一樣後重啟 |
-| 想手動立刻開/關服 | `curl -H "Authorization: Bearer <token>" -X POST http://localhost:9000/api/open`(`/close`、`/resume` 同理;詳見 `backend/README.md`) |
-| 埠被占用 | 80(網站)/8211(遊戲)/9000(API)任一被占用時,改上層或 backend compose 的 ports 映射左半邊 |
-
-## 🔐 發佈到 Git 前的檢查清單
-
-`.gitignore` 已排除存檔(`backend/palworld-data/`)、統計資料(`backend/data/`)、`.env` 與 `backend/config.json`(只進版控 `config.example.json`)。**推上去之前再確認**:
-
-- [ ] `backend/docker-compose.yml`:`ADMIN_PASSWORD` / `SERVER_PASSWORD` / `PUBLIC_IP` 改成佔位值或範例值
-- [ ] `git status` 沒有列出 `palworld-data`、`.env`、`config.json`
-- [ ] `git rm --cached` 清掉任何已被追蹤的敏感檔(若曾 commit 過)
+| 網站沒有玩家資料 | 存檔沒放對位置(見搬家章節),或伺服器還沒開過;放好後按網站 🔄 |
+| 排程沒開服 | 檢查 `.env` 的 `TZ` 與 `config.json` 的 `schedule.windows`;`status.bat` 看日誌 |
+| 忘記密碼 | 打開根目錄 `.env` 就看得到;改完 `restart.bat` |
+| 埠被占用 | 80/8211/9000 改 compose 的 ports 左半邊 |
 
 ## 授權與致謝
 
-- 配種配方資料:[tylercamp/palcalc](https://github.com/tylercamp/palcalc)(MIT,v26/v27)
-- 帕魯屬性/稀有度:[oMaN-Rod/palworld-save-pal](https://github.com/oMaN-Rod/palworld-save-pal)
+- 配種配方:[tylercamp/palcalc](https://github.com/tylercamp/palcalc)(MIT)
+- 屬性/稀有度:[oMaN-Rod/palworld-save-pal](https://github.com/oMaN-Rod/palworld-save-pal)
 - 伺服器映像:[thijsvanloef/palworld-server-docker](https://github.com/thijsvanloef/palworld-server-docker)
 - 其餘資料來源見 `frontend/packages/web/public/game-data/CREDITS.md`

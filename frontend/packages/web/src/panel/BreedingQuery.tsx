@@ -644,6 +644,18 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     return map;
   }, [index, chainTo]);
 
+  /** 目標抽換候選:從目前起點出發能到達的所有帕魯(id → 最短代數/組合數)。 */
+  const targetOptions = useMemo(() => {
+    if (!index || !chainFrom) return null;
+    const map = new Map<string, { dist: number; combos: number }>();
+    for (const S of index.speciesSet) {
+      if (S === chainFrom) continue;
+      const sol = solveChain(index, chainFrom, S, 1);
+      if (sol && sol.distance > 0) map.set(S, { dist: sol.distance, combos: sol.totalCombos });
+    }
+    return map;
+  }, [index, chainFrom]);
+
   /** 起點插槽作用中 → 網格只顯示「真的能配到目標」的帕魯。 */
   const startGridFilter = mode === "chain" && treeSub === "path" && activeSlot === "from" && Boolean(chainTo) && startOptions != null;
 
@@ -794,6 +806,18 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const tierCandidates = useMemo(() => {
     if (!index || !chain || openTier == null || !activeRoute) return [];
     const has = (id: string) => ownedSet?.has(id.toLowerCase()) ?? false;
+    if (openTier === chain.distance) {
+      // 目標抽換:從目前起點出發可到達的所有帕魯(附各自最短代數)
+      const rows = [...(targetOptions ?? new Map<string, { dist: number; combos: number }>())].map(([id, v]) => ({
+        id,
+        combos: v.combos,
+        dist: v.dist,
+      }));
+      return rows.sort(
+        (a, b) =>
+          (ownedSet ? Number(has(b.id)) - Number(has(a.id)) : 0) || a.dist! - b.dist! || b.combos - a.combos || byName(a.id, b.id),
+      );
+    }
     if (openTier === 0) {
       const rows = [...(startOptions ?? new Map<string, { dist: number; combos: number }>())].map(([id, v]) => ({
         id,
@@ -818,11 +842,15 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       (a, b) =>
         (ownedSet ? Number(has(b.id)) - Number(has(a.id)) : 0) || b.combos - a.combos || byName(a.id, b.id),
     );
-  }, [index, chain, openTier, activeRoute, chainTo, ownedSet, startOptions]);
+  }, [index, chain, openTier, activeRoute, chainTo, ownedSet, startOptions, targetOptions]);
 
-  /** 套用替換:第 0 代 → 直接換起點(整條重算);其餘保留之前世代,該代起重新求解。 */
+  /** 套用替換:第 0 代 → 換起點;最頂代 → 換目標(整條重算);其餘保留之前世代,該代起重新求解。 */
   const applyTier = (S: string) => {
     if (!index || !chain || openTier == null || !activeRoute) return;
+    if (openTier === chain.distance) {
+      setChainTo(S); // 換目標 → chainTo 變更會觸發整組狀態重置與重算
+      return;
+    }
     if (openTier === 0) {
       setChainFrom(S);
       setAutoStart(false);
@@ -1343,15 +1371,11 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               meta={metaOf(sp)}
                               owned={ownedSet ? ownedSet.has(sp.toLowerCase()) : undefined}
                               active={openTier === gen}
-                              onClick={
-                                gen < d
-                                  ? () => {
-                                      setOpenTier(openTier === gen ? null : gen);
-                                      setOpenSteps(new Set());
-                                      setTierQ("");
-                                    }
-                                  : undefined
-                              }
+                              onClick={() => {
+                                setOpenTier(openTier === gen ? null : gen);
+                                setOpenSteps(new Set());
+                                setTierQ("");
+                              }}
                               partner={
                                 gen < d
                                   ? (() => {
@@ -1453,6 +1477,11 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               {gen === 0 && (
                                 <p className="mb-1.5 px-1 text-xs font-semibold text-ink-muted">
                                   {t("更換起點:共 {n} 種帕魯能配到「{name}」", { n: tierCandidates.length, name: nameOf(chainTo) })}
+                                </p>
+                              )}
+                              {gen === d && (
+                                <p className="mb-1.5 px-1 text-xs font-semibold text-ink-muted">
+                                  {t("更換目標:從「{name}」出發共 {n} 種帕魯可到達", { name: nameOf(chainFrom), n: tierCandidates.length })}
                                 </p>
                               )}
                               {tierCandidates.length > 12 && (

@@ -2306,5 +2306,6 @@
   "沒有符合的玩家": "No matching players",
   "帕魯玩家查詢工具網": "Palworld Player Lookup",
   "全部帕魯種類": "All Pal species",
-  "自動找最短起點(全部帕魯種類)": "Auto-pick the shortest start (all species)"
+  "自動找最短起點(全部帕魯種類)": "Auto-pick the shortest start (all species)",
+  "更換目標:從「{name}」出發共 {n} 種帕魯可到達": "Change target: {n} Pals reachable from “{name}”"
 }

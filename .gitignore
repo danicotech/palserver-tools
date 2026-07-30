@@ -27,3 +27,7 @@ Thumbs.db
 
 # 本機 Windows 工具二進位(部署走 Docker,不需要)
 backend/pal.exe
+
+# launcher build artifacts (users build their own via go build)
+palserver.exe
+palserver

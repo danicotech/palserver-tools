@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帕魯玩家查詢工具網 · 使用手冊</title>
+<style>
+  :root{--pal:#38bdf8;--ink:#1e293b;--muted:#64748b;--bg:#f8fafc;--card:#fff;--line:#e2e8f0;--sun:#f59e0b;--grass:#22c55e}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.75}
+  .wrap{max-width:980px;margin:0 auto;padding:24px 16px 80px}
+  h1{font-size:1.9rem;margin:.4em 0}
+  h2{font-size:1.4rem;margin-top:2.2em;padding-bottom:.3em;border-bottom:3px solid var(--pal)}
+  h3{font-size:1.1rem;margin-top:1.6em;color:#0369a1}
+  img.shot{width:100%;border-radius:12px;border:1px solid var(--line);box-shadow:0 4px 14px rgb(0 0 0/.08);margin:.5em 0 1.2em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin:1em 0}
+  .tip{border-left:5px solid var(--sun);background:#fffbeb}
+  .ok{border-left:5px solid var(--grass);background:#f0fdf4}
+  table{border-collapse:collapse;width:100%;margin:.8em 0}
+  th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+  th{background:#e0f2fe}
+  code{background:#eef2f7;padding:2px 6px;border-radius:6px;font-size:.92em}
+  kbd{background:var(--ink);color:#fff;padding:2px 8px;border-radius:6px;font-size:.85em}
+  .toc a{display:inline-block;margin:3px 8px 3px 0;padding:6px 14px;background:var(--card);border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--ink);font-weight:600}
+  .toc a:hover{border-color:var(--pal);color:var(--pal)}
+  figure{margin:0}
+  figcaption{font-size:.9em;color:var(--muted);text-align:center;margin-top:-0.8em;margin-bottom:1.4em}
+  .svgbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:1em 0;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>🐏 帕魯玩家查詢工具網 · 使用手冊</h1>
+<p>本手冊涵蓋網站上方導覽列的<strong>全部 9 個分頁</strong>,每個功能都附實際畫面截圖與操作步驟。玩家只需要瀏覽器,不用安裝任何東西。</p>
+
+<div class="toc card">
+  <a href="#arch">系統架構</a><a href="#nav">導覽總覽</a><a href="#dashboard">📊 總覽</a><a href="#players">🧑 玩家查詢</a><a href="#pals">🐾 帕魯查詢</a><a href="#traits">🏷️ 詞條查詢</a><a href="#breeding">🥚 配種表</a><a href="#paldex">📖 圖鑑收服率</a><a href="#boss">👑 首領進度</a><a href="#rank">🏆 排行榜</a><a href="#online">🕐 上線分析</a>
+</div>
+
+<h2 id="arch">系統架構</h2>
+<div class="svgbox">
+<svg viewBox="0 0 900 300" font-family="sans-serif" font-size="14" width="100%">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker></defs>
+  <rect x="20" y="110" width="150" height="70" rx="12" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
+  <text x="95" y="140" text-anchor="middle" font-weight="bold">玩家瀏覽器</text>
+  <text x="95" y="162" text-anchor="middle" fill="#64748b">http://伺服器IP</text>
+  <rect x="250" y="110" width="170" height="70" rx="12" fill="#fff" stroke="#38bdf8" stroke-width="2"/>
+  <text x="335" y="140" text-anchor="middle" font-weight="bold">查詢網站 panel</text>
+  <text x="335" y="162" text-anchor="middle" fill="#64748b">nginx · port 80</text>
+  <rect x="500" y="20" width="180" height="64" rx="12" fill="#fff" stroke="#22c55e" stroke-width="2"/>
+  <text x="590" y="46" text-anchor="middle" font-weight="bold">排程器 scheduler</text>
+  <text x="590" y="68" text-anchor="middle" fill="#64748b">開關服/廣播 · :9000</text>
+  <rect x="500" y="118" width="180" height="64" rx="12" fill="#fff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="590" y="144" text-anchor="middle" font-weight="bold">存檔解析 palsave</text>
+  <text x="590" y="166" text-anchor="middle" fill="#64748b">玩家/帕魯資料 API</text>
+  <rect x="500" y="216" width="180" height="64" rx="12" fill="#fff" stroke="#ef4444" stroke-width="2"/>
+  <text x="590" y="242" text-anchor="middle" font-weight="bold">Palworld 伺服器</text>
+  <text x="590" y="264" text-anchor="middle" fill="#64748b">遊戲本體 · UDP 8211</text>
+  <rect x="760" y="150" width="120" height="96" rx="12" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+  <text x="820" y="186" text-anchor="middle" font-weight="bold">存檔</text>
+  <text x="820" y="208" text-anchor="middle" fill="#64748b" font-size="12">palworld-data/</text>
+  <line x1="170" y1="145" x2="248" y2="145" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="420" y1="130" x2="498" y2="60" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="420" y1="150" x2="498" y2="150" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="590" y1="84" x2="590" y2="116" stroke="#64748b" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <line x1="680" y1="150" x2="758" y2="170" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="680" y1="248" x2="758" y2="228" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="590" y1="182" x2="590" y2="214" stroke="#64748b" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+</svg>
+</div>
+<p>一組 Docker Compose 起四個服務:玩家只接觸<strong>查詢網站</strong>;網站透過排程器 API 讀取由 <strong>palsave</strong> 解析出來的存檔資料,所以看到的永遠是伺服器的真實資料。</p>
+
+<h2 id="nav">導覽總覽</h2>
+<table>
+<tr><th>分頁</th><th>一句話功能</th><th>給誰用</th></tr>
+<tr><td>📊 總覽</td><td>全服重點數字 + 開服狀態 + Top 排行</td><td>所有人打開第一眼</td></tr>
+<tr><td>🧑 玩家查詢</td><td>找某個玩家,看等級/帕魯/圖鑑</td><td>想查自己或朋友</td></tr>
+<tr><td>🐾 帕魯查詢</td><td>全服帕魯搜尋 + 物種報表</td><td>找誰有某隻帕魯</td></tr>
+<tr><td>🏷️ 詞條查詢</td><td>用被動/技能詞條反查帕魯</td><td>配種素材蒐集</td></tr>
+<tr><td>🥚 配種表</td><td>配種計算/反查/配種樹/最短路徑</td><td>配種規劃(本站招牌)</td></tr>
+<tr><td>📖 圖鑑收服率</td><td>每人圖鑑完成度與缺哪些</td><td>收集控</td></tr>
+<tr><td>👑 首領進度</td><td>α/塔王討伐收服進度</td><td>打王進度追蹤</td></tr>
+<tr><td>🏆 排行榜</td><td>玩家/帕魯/能力職多維排行</td><td>競爭樂趣</td></tr>
+<tr><td>🕐 上線分析</td><td>誰常上線、什麼時段最熱鬧</td><td>server 管理與揪團</td></tr>
+</table>
+<div class="card tip">💡 右上角可切換 <strong>繁中/簡中/English/日本語</strong> 四種語言、深淺色主題,以及 🔄 重新載入最新存檔資料。</div>
+
+<h2 id="dashboard">📊 總覽</h2>
+<figure><img class="shot" src="screenshots/01-dashboard.png" alt="總覽"><figcaption>總覽:玩家數/帕魯總數/物種數/開服狀態/全服收服率 + Top 玩家與最熱門帕魯</figcaption></figure>
+<ul>
+<li><strong>伺服器狀態卡</strong>會顯示「營運中/休息中」與下次開服時間(由排程器提供)。</li>
+<li>圖表卡右上角可切換 甜甜圈/圓餅/長條/折線 檢視。</li>
+<li>點任何玩家名或帕魯,會直接跳到對應的查詢分頁。</li>
+</ul>
+
+<h2 id="players">🧑 玩家查詢</h2>
+<figure><img class="shot" src="screenshots/02-players.png" alt="玩家查詢"><figcaption>搜尋玩家 → 點卡片看該玩家全部帕魯與統計</figcaption></figure>
+<ol>
+<li>輸入玩家名稱(支援部分比對),或直接瀏覽全部玩家卡片。</li>
+<li>可依 帕魯數/等級/經驗/圖鑑數 排序。</li>
+<li>點玩家卡 → 彈出詳情:統計磚(等級/帕魯總數/完美個體/α收集…)+ 帕魯清單(依戰力排序,點帕魯看個體值、被動、技能)。</li>
+</ol>
+
+<h2 id="pals">🐾 帕魯查詢</h2>
+<figure><img class="shot" src="screenshots/03-pals.png" alt="帕魯查詢"><figcaption>「全服帕魯搜尋」模式:多條件過濾整個伺服器的每一隻帕魯</figcaption></figure>
+<ul>
+<li><strong>🔎 全服帕魯搜尋</strong>:名稱/屬性/被動詞條/星級/性別/工作適性/IV 等多重過濾;每張卡顯示擁有者。</li>
+<li><strong>📊 物種報表</strong>:每個物種的全服總數、擁有人數、誰抓最多;點列展開全部個體。</li>
+</ul>
+
+<h2 id="traits">🏷️ 詞條查詢</h2>
+<figure><img class="shot" src="screenshots/04-traits.png" alt="詞條查詢"><figcaption>選詞條(可多選 且/或)→ 看誰的哪隻帕魯符合</figcaption></figure>
+<ul>
+<li>詞條依分類分層上色(傳說・帝王/攻擊強化/…),點選即加入條件。</li>
+<li>「且 / 或」切換多詞條的組合邏輯;結果列出每位玩家符合的帕魯。</li>
+</ul>
+
+<h2 id="breeding">🥚 配種表(招牌功能)</h2>
+<p>資料涵蓋 <strong>299 隻可配種帕魯 × 44,851 筆配方(全組合)</strong>。三種模式左上切換;<strong>右側永遠是帕魯清單</strong>:搜尋 + 屬性過濾 + 排序,點卡片就填入目前作用中的欄位。</p>
+
+<h3>模式一:配種計算(A + B = 子代)</h3>
+<figure><img class="shot" src="screenshots/06-breeding-pair-result.png" alt="配種計算"><figcaption>點右側清單選兩隻父母,結果即時出現;可「➕ 新增一組父母」同時比較多組</figcaption></figure>
+<ol>
+<li>點「父母一」欄位(藍框=作用中)→ 點右側帕魯卡填入 → 自動跳到「父母二」。</li>
+<li>結果立即顯示;性別分歧的特例(妮姆芙×芙蕾雅)會列出兩種結果。</li>
+<li>每組下方可一鍵「🔄 反查」或「🌳 配種樹」;第一組 ✕ 是清空,其餘組 ✕ 是刪除。</li>
+</ol>
+
+<h3>模式二:反查組合(子代 → 父母)</h3>
+<figure><img class="shot" src="screenshots/07-breeding-reverse.png" alt="反查"><figcaption>「作為子代」列出所有能生出目標的父母組合;「作為父母」列出目標與所有夥伴的結果</figcaption></figure>
+
+<h3>模式三:帕魯配種樹</h3>
+<div class="svgbox">
+<svg viewBox="0 0 900 240" font-family="sans-serif" font-size="14" width="100%">
+  <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#38bdf8"/></marker></defs>
+  <rect x="20" y="30" width="200" height="54" rx="10" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
+  <text x="120" y="52" text-anchor="middle" font-weight="bold">1. 點右側清單選「目標」</text>
+  <text x="120" y="72" text-anchor="middle" fill="#64748b" font-size="12">樹頂 👑 立即出現</text>
+  <rect x="270" y="30" width="200" height="54" rx="10" fill="#fff" stroke="#38bdf8" stroke-width="2"/>
+  <text x="370" y="52" text-anchor="middle" font-weight="bold">2. 點節點 → 選父母組合</text>
+  <text x="370" y="72" text-anchor="middle" fill="#64748b" font-size="12">往下展開,可無限延伸</text>
+  <rect x="520" y="30" width="170" height="54" rx="10" fill="#fff" stroke="#38bdf8" stroke-width="2"/>
+  <text x="605" y="52" text-anchor="middle" font-weight="bold">3. 玩家視角</text>
+  <text x="605" y="72" text-anchor="middle" fill="#64748b" font-size="12">✓已擁有 / 灰階=缺</text>
+  <rect x="740" y="30" width="140" height="54" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="810" y="52" text-anchor="middle" font-weight="bold">🎉 素材集滿</text>
+  <text x="810" y="72" text-anchor="middle" fill="#64748b" font-size="12">可以開配!</text>
+  <line x1="220" y1="57" x2="268" y2="57" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#b)"/>
+  <line x1="470" y1="57" x2="518" y2="57" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#b)"/>
+  <line x1="690" y1="57" x2="738" y2="57" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#b)"/>
+  <text x="450" y="130" text-anchor="middle" font-weight="bold" fill="#0369a1">🪜 最短路徑:每一列 A + B ⇒ 上一列,由下往上讀</text>
+  <text x="450" y="160" text-anchor="middle" fill="#64748b">點 A 換那一代帕魯(含起點/目標)、點 B 換夥伴 —— 之後路線自動重算</text>
+  <text x="450" y="190" text-anchor="middle" fill="#64748b">⚡ 開關「自動找最短起點」:從你擁有的帕魯挑最短;關閉會還原手動選擇</text>
+</svg>
+</div>
+<figure><img class="shot" src="screenshots/08-breeding-tree.png" alt="配種樹"><figcaption>🌳 樹狀配種:目標在樹頂,點節點展開父母;畫布可拖曳/滾輪縮放;缺的帕魯灰階並列在「還缺」清單</figcaption></figure>
+<figure><img class="shot" src="screenshots/09-breeding-path.png" alt="最短路徑"><figcaption>🪜 最短路徑:自動算出最少代數;A、B、起點、目標全都能點擊就地抽換</figcaption></figure>
+<div class="card ok">✅ <strong>玩家視角</strong>(右上下拉):選「全部帕魯種類/全服所有帕魯/某位玩家」,整個配種樹與路徑會標記 ✓已擁有/缺,並可一鍵從擁有的帕魯自動找最短起點。</div>
+
+<h2 id="paldex">📖 圖鑑收服率</h2>
+<figure><img class="shot" src="screenshots/10-paldex.png" alt="圖鑑"><figcaption>每位玩家的收服達成率;可切換 全部/已收服/未收服 檢視缺了哪些</figcaption></figure>
+
+<h2 id="boss">👑 首領進度</h2>
+<figure><img class="shot" src="screenshots/11-bosses.png" alt="首領"><figcaption>α 首領/塔王名單與各玩家收服狀態</figcaption></figure>
+
+<h2 id="rank">🏆 排行榜</h2>
+<figure><img class="shot" src="screenshots/12-rankings.png" alt="排行榜"><figcaption>玩家排行(圖鑑/等級/完美個體…)、帕魯排行(戰力/IV/好感度)、能力職排行</figcaption></figure>
+
+<h2 id="online">🕐 上線分析</h2>
+<figure><img class="shot" src="screenshots/13-online.png" alt="上線分析"><figcaption>各玩家上線時數與時段熱力,找出全服最熱鬧的時間</figcaption></figure>
+
+<hr style="margin-top:3em">
+<p style="color:var(--muted)">配方資料:<a href="https://github.com/tylercamp/palcalc">tylercamp/palcalc</a>(MIT)· 屬性/稀有度:<a href="https://github.com/oMaN-Rod/palworld-save-pal">palworld-save-pal</a> · 完整專案:<a href="https://github.com/daniel840711/palserver-tools">palserver-tools</a></p>
+</div>
+</body>
+</html>

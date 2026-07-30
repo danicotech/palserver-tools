@@ -28,60 +28,60 @@ services:
       - "127.0.0.1:8212:8212/tcp" # 官方 REST API（僅綁 localhost，勿對外網開放）
       # RCON(25575) 不對外，僅在 compose 內網供 scheduler 使用
     environment:
-      TZ: "Asia/Taipei"
-      PUID: "1000"
-      PGID: "1000"
-      PORT: "8211"
-      PLAYERS: "35"
-      MULTITHREADING: "true"
-      COMMUNITY: "false"
-      SERVER_NAME: "Doggy Palworld"
-      SERVER_DESCRIPTION: "wolf wolf!"
+      TZ: "${TZ:-Asia/Taipei}"
+      PUID: "${PUID:-1000}"
+      PGID: "${PGID:-1000}"
+      PORT: "${PORT:-8211}"
+      PLAYERS: "${PLAYERS:-32}"
+      MULTITHREADING: "${MULTITHREADING:-true}"
+      COMMUNITY: "${COMMUNITY:-false}"
+      SERVER_NAME: "${SERVER_NAME:-My Palworld Server}"
+      SERVER_DESCRIPTION: "${SERVER_DESCRIPTION:-Powered by palserver-tools}"
       # 密碼從專案根目錄 .env 讀取(.env 不進版控);未設定時用佔位值,記得改!
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-CHANGE_ME_ADMIN}" # 需與 config.json rcon.password 一致
       SERVER_PASSWORD: "${SERVER_PASSWORD:-CHANGE_ME_JOIN}"
-      DIFFICULTY: "Hard"
-      RCON_ENABLED: "true"
-      RCON_PORT: "25575"
-      REST_API_ENABLED: "true" # 啟用官方 REST API（port 8212，帳號 admin / 密碼=ADMIN_PASSWORD）
-      REST_API_PORT: "8212"
+      DIFFICULTY: "${DIFFICULTY:-Normal}"
+      RCON_ENABLED: "${RCON_ENABLED:-true}"
+      RCON_PORT: "${RCON_PORT:-25575}"
+      REST_API_ENABLED: "${REST_API_ENABLED:-true}" # 啟用官方 REST API（port 8212，帳號 admin / 密碼=ADMIN_PASSWORD）
+      REST_API_PORT: "${REST_API_PORT:-8212}"
       # ---- 以下遊戲性設定參考 Pal/Saved/Config/WindowsServer/PalWorldSettings.ini 套用 ----
       # 說明：本映像每次啟動會用這些環境變數「重新產生」PalWorldSettings.ini，
       #       所以要改設定請改這裡，直接改 ini 檔會被覆寫。未列出的項目沿用預設（與參考檔相同）。
       PUBLIC_IP: "${PUBLIC_IP:-}" # 對外廣播 IP；若浮動可留空 ""
-      USEAUTH: "False" # ⚠️ 參考檔關閉玩家驗證；公開對外建議改回 True
-      CROSSPLAY_PLATFORMS: "(Steam)" # 參考檔僅允許 Steam 連線
-      EXP_RATE: "0.8"
-      PAL_CAPTURE_RATE: "0.5"
-      PAL_DAMAGE_RATE_ATTACK: "2.0"
-      PAL_DAMAGE_RATE_DEFENSE: "0.7"
-      PLAYER_DAMAGE_RATE_ATTACK: "1.0"
-      PLAYER_DAMAGE_RATE_DEFENSE: "1.5"
-      PLAYER_STOMACH_DECREASE_RATE: "0.5"
-      PLAYER_STAMINA_DECREASE_RATE: "0.6"
-      PLAYER_AUTO_HP_REGEN_RATE: "2.0"
-      PLAYER_AUTO_HP_REGEN_RATE_IN_SLEEP: "8.0"
-      PAL_AUTO_HP_REGEN_RATE_IN_SLEEP: "8.0"
-      BUILD_OBJECT_DAMAGE_RATE: "0.8"
-      BUILD_OBJECT_DETERIORATION_DAMAGE_RATE: "0.0"
-      ITEM_WEIGHT_RATE: "0.6"
-      DROP_ITEM_MAX_NUM: "5000"
-      DROP_ITEM_ALIVE_MAX_HOURS: "0.5"
-      BASE_CAMP_WORKER_MAX_NUM: "25"
-      GUILD_PLAYER_MAX_NUM: "100"
-      BASE_CAMP_MAX_NUM_IN_GUILD: "10"
-      PAL_EGG_DEFAULT_HATCHING_TIME: "2.5" # 孵蛋時間（絕對小時數）
-      COOP_PLAYER_MAX_NUM: "5"
-      SUPPLY_DROP_SPAN: "90"
-      CHAT_POST_LIMIT_PER_MINUTE: "10"
-      ENABLE_PLAYER_TO_PLAYER_DAMAGE: "False"
-      ENABLE_AIM_ASSIST_KEYBOARD: "True"
-      IS_MULTIPLAY: "True"
-      IS_PVP: "False" # 關閉 PvP 模式
-      IS_START_LOCATION_SELECT_BY_MAP: "True"
-      ENABLE_DEFENSE_OTHER_GUILD_PLAYER: "True"
-      SHOW_PLAYER_LIST: "True"
-      ALLOW_GLOBAL_PALBOX_EXPORT: "False"
+      USEAUTH: "${USEAUTH:-True}" # ⚠️ 參考檔關閉玩家驗證；公開對外建議改回 True
+      CROSSPLAY_PLATFORMS: "${CROSSPLAY_PLATFORMS:-(Steam)}" # 參考檔僅允許 Steam 連線
+      EXP_RATE: "${EXP_RATE:-1.0}"
+      PAL_CAPTURE_RATE: "${PAL_CAPTURE_RATE:-1.0}"
+      PAL_DAMAGE_RATE_ATTACK: "${PAL_DAMAGE_RATE_ATTACK:-1.0}"
+      PAL_DAMAGE_RATE_DEFENSE: "${PAL_DAMAGE_RATE_DEFENSE:-1.0}"
+      PLAYER_DAMAGE_RATE_ATTACK: "${PLAYER_DAMAGE_RATE_ATTACK:-1.0}"
+      PLAYER_DAMAGE_RATE_DEFENSE: "${PLAYER_DAMAGE_RATE_DEFENSE:-1.0}"
+      PLAYER_STOMACH_DECREASE_RATE: "${PLAYER_STOMACH_DECREASE_RATE:-1.0}"
+      PLAYER_STAMINA_DECREASE_RATE: "${PLAYER_STAMINA_DECREASE_RATE:-1.0}"
+      PLAYER_AUTO_HP_REGEN_RATE: "${PLAYER_AUTO_HP_REGEN_RATE:-1.0}"
+      PLAYER_AUTO_HP_REGEN_RATE_IN_SLEEP: "${PLAYER_AUTO_HP_REGEN_RATE_IN_SLEEP:-1.0}"
+      PAL_AUTO_HP_REGEN_RATE_IN_SLEEP: "${PAL_AUTO_HP_REGEN_RATE_IN_SLEEP:-1.0}"
+      BUILD_OBJECT_DAMAGE_RATE: "${BUILD_OBJECT_DAMAGE_RATE:-1.0}"
+      BUILD_OBJECT_DETERIORATION_DAMAGE_RATE: "${BUILD_OBJECT_DETERIORATION_DAMAGE_RATE:-0.0}"
+      ITEM_WEIGHT_RATE: "${ITEM_WEIGHT_RATE:-1.0}"
+      DROP_ITEM_MAX_NUM: "${DROP_ITEM_MAX_NUM:-3000}"
+      DROP_ITEM_ALIVE_MAX_HOURS: "${DROP_ITEM_ALIVE_MAX_HOURS:-1.0}"
+      BASE_CAMP_WORKER_MAX_NUM: "${BASE_CAMP_WORKER_MAX_NUM:-15}"
+      GUILD_PLAYER_MAX_NUM: "${GUILD_PLAYER_MAX_NUM:-20}"
+      BASE_CAMP_MAX_NUM_IN_GUILD: "${BASE_CAMP_MAX_NUM_IN_GUILD:-4}"
+      PAL_EGG_DEFAULT_HATCHING_TIME: "${PAL_EGG_DEFAULT_HATCHING_TIME:-72.0}" # 孵蛋時間（絕對小時數）
+      COOP_PLAYER_MAX_NUM: "${COOP_PLAYER_MAX_NUM:-4}"
+      SUPPLY_DROP_SPAN: "${SUPPLY_DROP_SPAN:-180}"
+      CHAT_POST_LIMIT_PER_MINUTE: "${CHAT_POST_LIMIT_PER_MINUTE:-10}"
+      ENABLE_PLAYER_TO_PLAYER_DAMAGE: "${ENABLE_PLAYER_TO_PLAYER_DAMAGE:-False}"
+      ENABLE_AIM_ASSIST_KEYBOARD: "${ENABLE_AIM_ASSIST_KEYBOARD:-True}"
+      IS_MULTIPLAY: "${IS_MULTIPLAY:-True}"
+      IS_PVP: "${IS_PVP:-False}" # 關閉 PvP 模式
+      IS_START_LOCATION_SELECT_BY_MAP: "${IS_START_LOCATION_SELECT_BY_MAP:-True}"
+      ENABLE_DEFENSE_OTHER_GUILD_PLAYER: "${ENABLE_DEFENSE_OTHER_GUILD_PLAYER:-True}"
+      SHOW_PLAYER_LIST: "${SHOW_PLAYER_LIST:-True}"
+      ALLOW_GLOBAL_PALBOX_EXPORT: "${ALLOW_GLOBAL_PALBOX_EXPORT:-False}"
     volumes:
       - ./palworld-data:/palworld # 存檔與設定；可把既有 SaveGames 複製進來
     networks:
@@ -93,7 +93,7 @@ services:
     container_name: palsave
     restart: unless-stopped
     environment:
-      TZ: "Asia/Taipei"
+      TZ: "${TZ:-Asia/Taipei}"
     volumes:
       - ./palworld-data:/palworld:ro # 唯讀掛入存檔；只解析不寫回
     networks:
@@ -105,7 +105,7 @@ services:
     container_name: palscheduler
     restart: unless-stopped # 這個服務要 24 小時常駐
     environment:
-      TZ: "Asia/Taipei" # 讓排程時間對齊台灣時區
+      TZ: "${TZ:-Asia/Taipei}" # 讓排程時間對齊台灣時區
       CONFIG_PATH: "/app/config.json"
       PRESENCE_PATH: "/app/data/presence.json" # 玩家上線時數統計的存放位置
       PRESENCE_INTERVAL_SECONDS: "60" # 每 60 秒取樣一次在線名單
