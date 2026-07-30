@@ -559,17 +559,37 @@ function ParentTraitLine({ node, desired }: { node: BreedingNode; desired: strin
   );
 }
 
+/** 個體在 desired 上的貢獻遮罩。 */
+function traitMaskOf(passives: string[], desired: string[]): number {
+  let m = 0;
+  for (let i = 0; i < desired.length; i++) if (passives.includes(desired[i])) m |= 1 << i;
+  return m;
+}
+
 /** 詞條解算結果:與最短路徑相同的梯度顯示 —— 目標在頂,往下每列 A + B 一次配種,
- *  父母各帶部分詞條(1:3、2:2 皆可),子代繼承聯集。 */
+ *  父母各帶部分詞條(1:3、2:2 皆可),子代繼承聯集。
+ *  每格都可點:葉端親代可切換成其他帶同樣詞條的自有個體(沒得換會說明);
+ *  中間代是配種結果,詞條靠遺傳,不需要玩家已擁有。 */
 function TraitSolutionView({
   solution,
   desired,
   metaOf,
+  owned,
 }: {
   solution: BreedingSolution;
   desired: string[];
   metaOf: (id: string) => PalMeta | undefined;
+  owned: SaveBreedingPal[];
 }) {
+  /** 開著哪一格的面板("{步驟}a"/"{步驟}b")。 */
+  const [openSlot, setOpenSlot] = useState<string | null>(null);
+  /** 各格改選的個體(換路線/換詞條時重置)。 */
+  const [overrides, setOverrides] = useState<Record<string, SaveBreedingPal>>({});
+  useEffect(() => {
+    setOpenSlot(null);
+    setOverrides({});
+  }, [solution]);
+
   const target = solution.target;
   if (!target) {
     return (
@@ -595,19 +615,101 @@ function TraitSolutionView({
   const d = target.generation;
   const shrink = pyramidShrink(d);
   const rowWidth = (gen: number) => ({ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" as const });
+
+  /** 套用使用者改選後的節點(只換 source 個體,物種/詞條貢獻不變)。 */
+  const effective = (n: BreedingNode, slot: string): BreedingNode => {
+    const o = overrides[slot];
+    return o ? { ...n, source: o, requiredCapture: undefined } : n;
+  };
   const ownedOf = (n: BreedingNode) => (n.requiredCapture ? false : n.source ? true : undefined);
+  /** 這一格可切換的自有個體:同物種、性別相容、詞條涵蓋此格原本的貢獻。 */
+  const candidatesFor = (n: BreedingNode): SaveBreedingPal[] => {
+    const sp = n.species.toLowerCase();
+    const genderNeed = n.gender === "m" ? "male" : n.gender === "f" ? "female" : null;
+    return owned.filter(
+      (c) =>
+        normalizeSpecies(c.characterId) === sp &&
+        (!genderNeed || c.gender === genderNeed) &&
+        (traitMaskOf(c.passives, desired) & n.passiveMask) === n.passiveMask,
+    );
+  };
+  const isLeaf = (n: BreedingNode) => !n.parents;
+
+  /** 面板:切換個體 / 遺傳說明 / 沒得換的說明。 */
+  const slotPanel = (n: BreedingNode, slot: string, gen: number) => {
+    if (openSlot !== slot) return null;
+    const name = palInfo(n.species).zh || n.species;
+    if (!isLeaf(n)) {
+      return (
+        <div className="mt-1.5 rounded-xl bg-card-soft/80 p-2.5 text-sm text-ink-muted ring-1 ring-pal/50" style={rowWidth(gen)}>
+          🧬 {t("{name} 是第 {n} 代配種結果:由下面列的親代配出,所選詞條會自動遺傳,玩家不需要已擁有帶詞條的這隻帕魯。", { name, n: n.generation })}
+        </div>
+      );
+    }
+    const cur = effective(n, slot).source;
+    const cands = candidatesFor(n);
+    return (
+      <div className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-pal/50" style={rowWidth(gen)}>
+        {cands.length === 0 ? (
+          <p className="px-1 py-0.5 text-sm text-ink-muted">
+            ⚠ {t("你沒有帶這些詞條的 {name} —— 需要先捕捉,或先用其他帕魯把詞條配上去。", { name })}
+          </p>
+        ) : cands.length === 1 && cur && cands[0].instanceId === cur.instanceId ? (
+          <p className="px-1 py-0.5 text-sm text-ink-muted">{t("你沒有其他帶這些詞條的 {name} 可以切換。", { name })}</p>
+        ) : (
+          <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto">
+            {cands.map((c) => {
+              const active = cur ? c.instanceId === cur.instanceId : false;
+              const traits = c.passives.filter((p) => desired.includes(p));
+              return (
+                <button
+                  key={c.instanceId}
+                  type="button"
+                  onClick={() => {
+                    setOverrides((prev) => ({ ...prev, [slot]: c }));
+                    setOpenSlot(null);
+                  }}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${
+                    active ? "bg-pal text-white ring-pal" : "bg-card text-ink ring-line hover:ring-pal"
+                  }`}
+                >
+                  {c.nickname || palInfo(n.species).zh || n.species}
+                  {c.gender === "male" ? "♂" : "♀"} · Lv.{c.level ?? "—"} · {c.ownerName}
+                  {traits.length > 0 && (
+                    <span className={active ? "text-white/80" : "text-pal"}>({traits.join("、")})</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Card className="overflow-hidden">
-      {/* 目標列(只有結果) */}
+      {/* 目標列(只有結果)+ 將繼承的詞條 */}
       <div style={rowWidth(d)}>
         <PyramidTier id={target.species} gen={d} depth={d} role="target" meta={metaOf(target.species)} />
       </div>
+      <div className="mt-1 flex flex-wrap items-center gap-1 px-1" style={rowWidth(d)}>
+        <span className="text-[11px] text-ink-muted">{t("目標將繼承")}:</span>
+        {desired.map((p) => (
+          <span key={p} className="rounded bg-pal/10 px-1.5 py-0.5 text-[10px] font-bold text-pal">
+            {p}
+          </span>
+        ))}
+      </div>
       {[...steps].reverse().map((s, i) => {
         const gen = Math.max(0, s.generation - 1);
-        const [pa, pb] = s.parents!;
+        const slotA = `${i}a`;
+        const slotB = `${i}b`;
+        const pa = effective(s.parents![0], slotA);
+        const pb = effective(s.parents![1], slotB);
         return (
           <div key={i} className="mt-1.5">
-            {/* 一列 = 這一次配種的 A + B(與最短路徑同樣式) */}
+            {/* 一列 = 這一次配種的 A + B(與最短路徑同樣式;兩格都可點) */}
             <div style={rowWidth(gen)}>
               <PyramidTier
                 id={pa.species}
@@ -616,9 +718,22 @@ function TraitSolutionView({
                 role={gen === 0 ? "start" : "mid"}
                 meta={metaOf(pa.species)}
                 owned={ownedOf(pa)}
-                partner={<PalCell id={pb.species} meta={metaOf(pb.species)} owned={ownedOf(pb)} />}
+                active={openSlot === slotA}
+                onClick={() => setOpenSlot(openSlot === slotA ? null : slotA)}
+                partner={
+                  <PalCell
+                    id={pb.species}
+                    meta={metaOf(pb.species)}
+                    owned={ownedOf(pb)}
+                    active={openSlot === slotB}
+                    title={t("點擊切換這一格的帕魯")}
+                    onClick={() => setOpenSlot(openSlot === slotB ? null : slotB)}
+                  />
+                }
               />
             </div>
+            {slotPanel(pa, slotA, gen)}
+            {slotPanel(pb, slotB, gen)}
             {/* 這一列雙親各帶哪些詞條(聯集會傳給子代) */}
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 px-1" style={rowWidth(gen)}>
               <ParentTraitLine node={pa} desired={desired} />
@@ -1061,9 +1176,30 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const pagedAsChild = usePaged(revAsChild);
   const pagedAsParent = usePaged(revAsParent);
 
+  /** 詞條模式:擁有「帶任一所選詞條」帕魯的物種(配種表命名空間,原大小寫)。 */
+  const traitCarrierSpecies = useMemo<Set<string> | null>(() => {
+    if (!index || !dataset || desired.length === 0) return null;
+    const carriers = new Set<string>();
+    for (const { pal, owner } of dataset.allPals) {
+      if (!inTraitPool(owner.uid)) continue;
+      if (
+        desired.some((d) => pal.passives.includes(d) || pal.mastered_skills.includes(d))
+      )
+        carriers.add(normalizeSpecies(pal.species));
+    }
+    return new Set([...index.speciesSet].filter((s) => carriers.has(s.toLowerCase())));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, dataset, desired, persp]);
+
   /** 最短路徑的「網格即候選」過濾:開著哪個替換面板,右側網格就只顯示該處的合法選項。 */
   const swapFilter = useMemo<Set<string> | null>(() => {
     if (mode !== "chain" || treeSub !== "path") return null;
+    // 詞條模式:挑起點時只顯示「擁有且帶所選詞條」的物種;
+    // 目標不受限 —— 詞條靠多代遺傳帶過去,目標本身不必是玩家已擁有的帶詞條帕魯。
+    if (desired.length > 0) {
+      if (activeSlot === "from" && traitCarrierSpecies) return traitCarrierSpecies;
+      return null;
+    }
     if (openTier != null && chain) {
       if (openTier === chain.distance) return targetOptions ? new Set(targetOptions.keys()) : null;
       if (openTier === 0) return startOptions ? new Set(startOptions.keys()) : null;
@@ -1071,7 +1207,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     }
     if (activeSlot === "from" && chainTo && startOptions) return new Set(startOptions.keys());
     return null;
-  }, [mode, treeSub, openTier, chain, targetOptions, startOptions, tierCandidates, activeSlot, chainTo]);
+  }, [mode, treeSub, openTier, chain, targetOptions, startOptions, tierCandidates, activeSlot, chainTo, desired, traitCarrierSpecies]);
 
   const gridRows = useMemo(() => {
     const raw = q.trim();
@@ -1587,7 +1723,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
             </Card>
           )}
           {treeSub === "path" && desired.length > 0 && chainTo && !traitBusy && traitSolution && (
-            <TraitSolutionView solution={traitSolution} desired={desired} metaOf={metaOf} />
+            <TraitSolutionView solution={traitSolution} desired={desired} metaOf={metaOf} owned={ownedForTraits} />
           )}
           {treeSub === "path" && desired.length > 0 && !chainTo && (
             <Card className="text-center text-sm text-ink-muted">{t("先選一隻目標帕魯,再看帶詞條路線。")}</Card>
