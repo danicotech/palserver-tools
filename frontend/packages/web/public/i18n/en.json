@@ -955,6 +955,7 @@
   "帕魯飽食度降低倍率": "Pal hunger drain multiplier",
   "帕魯（{n} 隻）": "Pals ({n})",
   "帕魯（{n} 隻）· 點卡片看詳情": "Pals ({n}) · click a card for details",
+  "帶此詞條的持有帕魯都配不到目標,無法透過排列組合達成": "None of your Pals carrying this trait can breed toward the target, so no combination can deliver it",
   "帶詞條配種路線": "Trait-carrying breeding route",
   "常見問題": "FAQ",
   "幀時間": "Frame time",

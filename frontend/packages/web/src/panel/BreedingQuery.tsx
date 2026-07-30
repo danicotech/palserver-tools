@@ -620,7 +620,33 @@ function TraitSolutionView({
       </Card>
     );
   }
-  // 依依賴順序攤平配種步驟(葉在前、目標最後),再倒序 → 目標在最上
+  // 使用者有指定起點時,把含起點(虛擬詞條標記)的子樹旋轉到 A 側,
+  // 讓所選起點固定落在梯度最底列 —— 起點徽章與使用者的選擇對齊。
+  const markerMemo = new Map<BreedingNode, boolean>();
+  const containsMarker = (n: BreedingNode): boolean => {
+    const hit = markerMemo.get(n);
+    if (hit !== undefined) return hit;
+    const v = n.source?.passives.includes(TRAIT_FROM_MARKER) || (n.parents?.some(containsMarker) ?? false);
+    markerMemo.set(n, v);
+    return v;
+  };
+  const rotMemo = new Map<BreedingNode, BreedingNode>();
+  const rotate = (n: BreedingNode): BreedingNode => {
+    const hit = rotMemo.get(n);
+    if (hit) return hit;
+    const c: BreedingNode = { ...n };
+    rotMemo.set(n, c);
+    if (n.parents) {
+      let [a, b] = [rotate(n.parents[0]), rotate(n.parents[1])];
+      if (!containsMarker(n.parents[0]) && containsMarker(n.parents[1])) [a, b] = [b, a];
+      c.parents = [a, b];
+    }
+    return c;
+  };
+  const root = fromName ? rotate(target) : target;
+
+  // 依依賴順序攤平配種步驟(葉在前、目標最後),再倒序 → 目標在最上;
+  // 列的「代數」用顯示順序編號(底列=起點=第 0 層),分支樹也能維持金字塔形。
   const steps: BreedingNode[] = [];
   const seen = new Set<BreedingNode>();
   const visit = (n: BreedingNode) => {
@@ -630,8 +656,8 @@ function TraitSolutionView({
     visit(n.parents[1]);
     steps.push(n);
   };
-  visit(target);
-  const d = target.generation;
+  visit(root);
+  const d = steps.length;
   const shrink = pyramidShrink(d);
   const rowWidth = (gen: number) => ({ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" as const });
 
@@ -730,20 +756,26 @@ function TraitSolutionView({
         ))}
       </div>
       {[...steps].reverse().map((s, i) => {
-        const gen = Math.max(0, s.generation - 1);
+        // 顯示層編號:底列(最先要做的那次配種)= 0,往上遞增
+        const gen = steps.length - 1 - i;
         const slotA = `${i}a`;
         const slotB = `${i}b`;
         const pa = effective(s.parents![0], slotA);
         const pb = effective(s.parents![1], slotB);
+        // 起點徽章掛在「使用者所選起點實際加入」的那一列(靠虛擬詞條標記辨識);
+        // 未指定起點時沿用底列 = 起點。
+        const startRow = fromName
+          ? s.parents!.some((x) => !x.parents && x.source?.passives.includes(TRAIT_FROM_MARKER))
+          : gen === 0;
         return (
           <div key={i} className="mt-1.5">
             {/* 一列 = 這一次配種的 A + B(與最短路徑同樣式;兩格都可點) */}
             <div style={rowWidth(gen)}>
               <PyramidTier
                 id={pa.species}
-                gen={gen}
+                gen={startRow ? 0 : Math.max(gen, 1)}
                 depth={d}
-                role={gen === 0 ? "start" : "mid"}
+                role={startRow ? "start" : "mid"}
                 meta={metaOf(pa.species)}
                 owned={ownedOf(pa)}
                 active={openSlot === slotA}
@@ -910,6 +942,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataset, persp]);
 
+
   /** 詞條解算的自有帕魯池(詞條+已學技能一起當可繼承詞條);獨立 memo 避免重複轉換。 */
   const ownedForTraits = useMemo<SaveBreedingPal[]>(() => {
     if (!dataset) return [];
@@ -1011,6 +1044,25 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     }
     return map;
   }, [index, chainFrom]);
+
+  /** 詞條可行性:某詞條要能「配」到目標,至少要有一隻持有牠的自有帕魯
+   *  (性別有效)且其物種在配種圖上真的能配到目標(startOptions)或就是目標本身。
+   *  沒選目標時無從判斷,回 null = 不過濾。 */
+  const feasibleTraits = useMemo<Set<string> | null>(() => {
+    if (!dataset || !chainTo || !startOptions) return null;
+    const reach = new Set([...startOptions.keys()].map((s) => s.toLowerCase()));
+    reach.add(chainTo.toLowerCase());
+    const ok = new Set<string>();
+    for (const { pal, owner } of dataset.allPals) {
+      if (!inTraitPool(owner.uid)) continue;
+      if (pal.gender !== "Male" && pal.gender !== "Female") continue;
+      if (!reach.has(normalizeSpecies(pal.species))) continue;
+      for (const s of pal.passives) ok.add(s);
+      for (const s of pal.mastered_skills) ok.add(s);
+    }
+    return ok;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataset, chainTo, startOptions, persp]);
 
   /** 目前模式下,哪些帕魯已被選入插槽(卡片高亮用)。 */
   const selectedIds = useMemo(() => {
@@ -1640,17 +1692,21 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                       .map(([s, n]) => {
                         const on = desired.includes(s);
                         const full = !on && desired.length >= 4;
+                        // 排列組合可行性:帶此詞條的持有帕魯,其物種必須真能配到目標
+                        const infeasible = !on && feasibleTraits != null && !feasibleTraits.has(s);
+                        const off = full || infeasible;
                         return (
                           <button
                             key={s}
                             type="button"
-                            disabled={full}
+                            disabled={off}
+                            title={infeasible ? t("帶此詞條的持有帕魯都配不到目標,無法透過排列組合達成") : undefined}
                             onClick={() => setDesired(on ? desired.filter((x) => x !== s) : [...desired, s])}
                             className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition ${
                               on
                                 ? "bg-pal text-white ring-pal"
-                                : full
-                                  ? "cursor-not-allowed bg-card text-ink-muted/50 ring-line"
+                                : off
+                                  ? "cursor-not-allowed bg-card text-ink-muted/50 ring-line line-through"
                                   : "bg-card text-ink ring-line hover:ring-pal"
                             }`}
                           >
