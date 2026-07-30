@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" font-family="Segoe UI, Noto Sans TC, sans-serif" font-size="14">
+<rect width="900" height="240" fill="#f8fafc"/>
+<rect x="130" y="20" width="640" height="44" rx="10" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2.5"/>
+<text x="450" y="47" text-anchor="middle" font-weight="bold">🎯 目標(點擊 = 換目標,列出從起點可到達的所有帕魯)</text>
+<text x="450" y="86" text-anchor="middle" fill="#38bdf8" font-size="18">▲</text>
+<rect x="100" y="100" width="700" height="44" rx="10" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+<text x="265" y="127" text-anchor="middle" font-weight="bold">A:第 n 代帕魯(點擊=替換)</text>
+<text x="470" y="127" text-anchor="middle" font-weight="bold" fill="#64748b">+</text>
+<text x="640" y="127" text-anchor="middle" font-weight="bold">B:夥伴 ▾(點擊=換夥伴)</text>
+<text x="450" y="166" text-anchor="middle" fill="#38bdf8" font-size="18">▲</text>
+<rect x="70" y="180" width="760" height="44" rx="10" fill="#fff" stroke="#94a3b8" stroke-width="2"/>
+<text x="290" y="207" text-anchor="middle" font-weight="bold">🏁 起點(點擊 = 換起點,附各候選的最短代數)</text>
+<text x="640" y="207" text-anchor="middle" font-weight="bold">+ B:夥伴 ▾</text>
+<text x="450" y="236" text-anchor="middle" fill="#64748b" font-size="12">由下往上讀:每一列 A + B 配種 ⇒ 生出上一列;任何一格換掉後,其後路線自動重算</text>
+</svg>

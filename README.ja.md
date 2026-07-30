@@ -83,11 +83,39 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<ワールドGUID>/   ← フォル�
 
 | フィールド | 説明 |
 |---|---|
-| `schedule.windows` | 営業時間。例 `{ "days": ["Sat","Sun"], "open": "10:00", "close": "03:00" }`(日付またぎ自動処理;24 時間営業 = 全曜日 `00:00`~`24:00`) |
+| `schedule.windows` | 営業時間テーブル — **詳細ルールは下のサブセクション** |
 | `hooks.onClose.announce` | 閉店前放送:`{ "at": 600, "message": "10 分後に閉店します" }` — この配列だけ編集すれば OK |
 | `api.token` | サイトバックエンドが使う API パスワード(自動生成) |
 
 反映:`docker compose restart scheduler`(または `restart.bat`)。
+
+### `schedule.windows` 完全ガイド(営業時間テーブル)
+
+1 エントリ = 1 つの「営業時間帯」。複数記述できます:
+
+```json
+"windows": [
+  { "label": "weekday-night", "days": ["Mon","Tue","Wed","Thu","Fri"], "open": "19:00", "close": "23:30" },
+  { "label": "weekend",       "days": ["Sat","Sun"],                   "open": "10:00", "close": "03:00" }
+]
+```
+
+| フィールド | ルール |
+|---|---|
+| `label` | 自由なメモ。動作には影響しません |
+| `days` | この時間帯を適用する「**開店当日**」。`Mon`/`Tue`/`Wed`/`Thu`/`Fri`/`Sat`/`Sun` または英語のフルネーム(`Monday`)、大文字小文字は不問 |
+| `open` / `close` | `"HH:MM"`。時は **0–23**、分は 0–59(⚠️ `24:00` という表記は不可) |
+
+**動作ルール:**
+
+- `close` ≤ `open` ⇒ 閉店時刻は自動的に**翌日**扱い:`Sat 10:00 → 03:00` = 土曜 10 時開店、日曜 3 時閉店
+- 日付をまたぐ場合、`days` には「開店する曜日」だけを書けば OK
+- 複数の時間帯は重複可。同じ曜日に朝/夜の 2 枠も可(和集合として扱われます)
+- **24 時間 365 日営業**:全 7 曜日を列挙し `"open": "00:00", "close": "00:00"`(close=open は翌日扱い=まる 24 時間)
+- 特定曜日を完全休業(例:水曜メンテ):どの `days` にも `Wed` を入れないだけ
+- 時刻はすべて `.env` の `TZ` タイムゾーンで計算
+- `open` 時刻に `hooks.onOpen`(コンテナ起動+ようこそ放送)、`close` 時刻に `hooks.onClose`(カウントダウン放送→セーブ→停止)。カウントダウンの**終わり**が close 時刻に一致します
+- 手動オーバーライド:`POST /api/open` / `/api/close` は即時実行、`/api/resume` でスケジュールに復帰(いずれも `api.token` が必要)
 
 ## 🔄 ゲームアップデート後の配合データ更新(任意)
 
@@ -97,6 +125,17 @@ node scripts/fetch-palcalc-breeding.mjs   # レシピ
 node scripts/fetch-pal-meta.mjs           # 属性/図鑑番号/レア度
 pnpm build && cd .. && docker compose up -d --no-deps --build panel
 ```
+
+## 🧱 Docker なし?SteamCMD ネイティブモード
+
+Docker を入れられない環境でも、[`native/`](native/README.md) のスクリプトでゲームサーバーを直接ホストできます:
+
+1. `native\windows\install.bat` をダブルクリック(SteamCMD とサーバー本体を自動ダウンロード)
+2. `native\windows\start.bat` で起動(Linux:`./install.sh` → `./start.sh`)
+3. 設定は `native/server/Pal/Saved/Config/.../PalWorldSettings.ini` を編集(ネイティブモードでは上書きされません)
+
+ネイティブモードはゲームサーバーのインストール/起動/停止/更新をカバー。検索サイトとスケジューラーには引き続き Docker が必要です。
+**セーブは完全互換** — 後でフル構成に移行する場合はワールドフォルダを `backend/palworld-data/` に移すだけ(詳細は [native/README.md](native/README.md))。
 
 ## ❓ FAQ
 

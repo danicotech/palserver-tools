@@ -31,3 +31,8 @@ backend/pal.exe
 # launcher build artifacts (users build their own via go build)
 palserver.exe
 palserver
+
+# native 模式的伺服器本體與 SteamCMD(數 GB,使用者自行安裝)
+native/server/
+native/windows/steamcmd/
+native/linux/steamcmd/

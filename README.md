@@ -83,11 +83,39 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<你的世界GUID>/   ← 整個資�
 
 | 欄位 | 說明 |
 |---|---|
-| `schedule.windows` | 開服時段。例 `{ "days": ["Sat","Sun"], "open": "10:00", "close": "03:00" }`(跨午夜自動處理;24 小時開 = `00:00`~`24:00` 全週) |
+| `schedule.windows` | 開服時段表 —— **完整規則見下方小節** |
 | `hooks.onClose.announce` | 關服前廣播:`{ "at": 600, "message": "10 分鐘後關服" }`,想改時間/文案只改這個陣列 |
 | `api.token` | 網站後台呼叫排程器的密碼(自動隨機產生) |
 
 改完:`docker compose restart scheduler`(或直接 `restart.bat`)。
+
+### `schedule.windows` 完整說明(開服時段表)
+
+每一筆就是一個「開放時段」,可以放多筆:
+
+```json
+"windows": [
+  { "label": "weekday-night", "days": ["Mon","Tue","Wed","Thu","Fri"], "open": "19:00", "close": "23:30" },
+  { "label": "weekend",       "days": ["Sat","Sun"],                   "open": "10:00", "close": "03:00" }
+]
+```
+
+| 欄位 | 規則 |
+|---|---|
+| `label` | 自由命名,純備註,不影響行為 |
+| `days` | 這個時段套用在哪些「**開服當天**」。可寫 `Mon`/`Tue`/`Wed`/`Thu`/`Fri`/`Sat`/`Sun` 或英文全名(如 `Monday`),大小寫不拘 |
+| `open` / `close` | `"HH:MM"`,小時 **0–23**、分 0–59(⚠️ 沒有 `24:00` 這種寫法) |
+
+**行為規則:**
+
+- `close` ≤ `open` ⇒ 關服時間自動落在**隔天**:`Sat 10:00 → 03:00` = 週六早上 10 點開到週日凌晨 3 點
+- 跨午夜時 `days` 只需要列「開服那天」,不用把隔天也加進去
+- 多筆時段可重疊、同一天可拆早晚兩段,效果等同取聯集
+- **24 小時全年無休**:七天全列 + `"open": "00:00", "close": "00:00"`(close=open 視為隔天,即整整 24 小時)
+- 某天完全不開(例:週三維護):不要把 `Wed` 放進任何一筆 `days` 即可
+- 所有時間依 `.env` 的 `TZ` 時區計算
+- 到 `open` 時間 → 執行 `hooks.onOpen`(啟動容器+歡迎廣播);到 `close` 時間 → 執行 `hooks.onClose`(倒數廣播→存檔→關機),倒數的**結尾**會對齊 close 時間
+- 臨時手動接管:`POST /api/open`、`/api/close` 立即開/關,`/api/resume` 交還給排程(皆需 `api.token`)
 
 ## 🔄 遊戲改版後更新配種資料(選配)
 
@@ -97,6 +125,17 @@ node scripts/fetch-palcalc-breeding.mjs   # 配方
 node scripts/fetch-pal-meta.mjs           # 屬性/圖鑑編號/稀有度
 pnpm build && cd .. && docker compose up -d --no-deps --build panel
 ```
+
+## 🧱 沒有 Docker?SteamCMD 原生模式
+
+不能裝 Docker 的電腦,也能用 [`native/`](native/README.md) 資料夾的腳本直接開遊戲伺服器:
+
+1. 雙擊 `native\windows\install.bat`(自動下載 SteamCMD + 伺服器本體)
+2. 雙擊 `native\windows\start.bat` 啟動(Linux:`./install.sh` → `./start.sh`)
+3. 設定改 `native/server/Pal/Saved/Config/.../PalWorldSettings.ini`(原生模式不會被覆寫)
+
+原生模式涵蓋遊戲伺服器的安裝/啟動/停止/更新;查詢網站與自動排程仍需 Docker。
+**兩邊存檔完全互通**,之後想升級整套,把世界資料夾搬到 `backend/palworld-data/` 即可(詳見 [native/README.md](native/README.md))。
 
 ## ❓ 常見問題
 
