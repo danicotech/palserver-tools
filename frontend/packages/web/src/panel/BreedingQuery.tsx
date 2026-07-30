@@ -559,6 +559,9 @@ function ParentTraitLine({ node, desired }: { node: BreedingNode; desired: strin
   );
 }
 
+/** 起點約束用的虛擬詞條:NUL 開頭,絕不會撞到真實詞條/技能名稱。 */
+const TRAIT_FROM_MARKER = "\u0000起點";
+
 /** 個體在 desired 上的貢獻遮罩。 */
 function traitMaskOf(passives: string[], desired: string[]): number {
   let m = 0;
@@ -573,13 +576,24 @@ function traitMaskOf(passives: string[], desired: string[]): number {
 function TraitSolutionView({
   solution,
   desired,
+  maskDesired,
+  fromName,
   metaOf,
   owned,
+  onTargetClick,
+  targetActive,
 }: {
   solution: BreedingSolution;
   desired: string[];
+  /** 解算實際用的需求(可能多一個起點虛擬詞條)—— 只用於遮罩比對,不顯示。 */
+  maskDesired: string[];
+  /** 有套用起點約束時的起點名稱(解不出來時提示可清除起點)。 */
+  fromName?: string;
   metaOf: (id: string) => PalMeta | undefined;
   owned: SaveBreedingPal[];
+  /** 點目標列 → 右側網格變成目標選擇器(與最短路徑的目標抽換一致)。 */
+  onTargetClick?: () => void;
+  targetActive?: boolean;
 }) {
   /** 開著哪一格的面板("{步驟}a"/"{步驟}b")。 */
   const [openSlot, setOpenSlot] = useState<string | null>(null);
@@ -598,6 +612,11 @@ function TraitSolutionView({
         <p className="mt-1 text-sm text-ink-muted">
           {t("試著減少詞條數量、擴大玩家視角範圍,或先取得帶有這些詞條/技能的帕魯。")}
         </p>
+        {fromName && (
+          <p className="mt-1.5 text-sm text-ink-muted">
+            ⚠ {t("目前限制路線必須從 {name} 起手 —— 清除起點或換一隻起點再試。", { name: fromName })}
+          </p>
+        )}
       </Card>
     );
   }
@@ -630,7 +649,8 @@ function TraitSolutionView({
       (c) =>
         normalizeSpecies(c.characterId) === sp &&
         (!genderNeed || c.gender === genderNeed) &&
-        (traitMaskOf(c.passives, desired) & n.passiveMask) === n.passiveMask,
+        // 用 maskDesired(含起點虛擬詞條)比對,起點葉端的候選才不會被誤篩掉
+        (traitMaskOf(c.passives, maskDesired) & n.passiveMask) === n.passiveMask,
     );
   };
   const isLeaf = (n: BreedingNode) => !n.parents;
@@ -689,9 +709,17 @@ function TraitSolutionView({
 
   return (
     <Card className="overflow-hidden">
-      {/* 目標列(只有結果)+ 將繼承的詞條 */}
+      {/* 目標列(只有結果,點擊可抽換目標)+ 將繼承的詞條 */}
       <div style={rowWidth(d)}>
-        <PyramidTier id={target.species} gen={d} depth={d} role="target" meta={metaOf(target.species)} />
+        <PyramidTier
+          id={target.species}
+          gen={d}
+          depth={d}
+          role="target"
+          meta={metaOf(target.species)}
+          onClick={onTargetClick}
+          active={targetActive}
+        />
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-1 px-1" style={rowWidth(d)}>
         <span className="text-[11px] text-ink-muted">{t("目標將繼承")}:</span>
@@ -892,7 +920,9 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       if (pal.gender !== "Male" && pal.gender !== "Female") continue;
       owned.push({
         instanceId: `${owner.uid}#${i++}`,
-        characterId: pal.species,
+        // 統一正規化(去 BOSS_/PREDATOR_/SUMMON_ 等前綴):solveBreeding 只會剝 BOSS_,
+        // 不先處理的話 PREDATOR_/SUMMON_ 變體對不上配方物種,等於整隻被解算器忽略。
+        characterId: normalizeSpecies(pal.species),
         nickname: pal.nickname || undefined,
         level: pal.level,
         gender: pal.gender === "Male" ? "male" : "female",
@@ -912,11 +942,30 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataset, persp]);
 
+  /** 起點約束:有選起點時,把一個「虛擬詞條」記在該物種的自有帕魯身上並加入需求,
+   *  逼解算器讓路線必含至少一隻起點物種的葉端 —— 起點選擇與運算結果從此一致。
+   *  範圍內沒擁有該物種時無法約束(解算器本來就用不到牠),退回不限制。 */
+  const traitSolveInputs = useMemo<{ owned: SaveBreedingPal[]; maskDesired: string[]; fromApplied: boolean }>(() => {
+    if (!chainFrom || desired.length === 0)
+      return { owned: ownedForTraits, maskDesired: desired, fromApplied: false };
+    const fromLower = chainFrom.toLowerCase();
+    let any = false;
+    const owned = ownedForTraits.map((c) => {
+      if (normalizeSpecies(c.characterId) !== fromLower) return c;
+      any = true;
+      return { ...c, passives: [...c.passives, TRAIT_FROM_MARKER] };
+    });
+    return any
+      ? { owned, maskDesired: [...desired, TRAIT_FROM_MARKER], fromApplied: true }
+      : { owned: ownedForTraits, maskDesired: desired, fromApplied: false };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownedForTraits, chainFrom, desired]);
+
   /** 詞條模式解算:重(數秒),故 debounce —— 連續勾選詞條時等停手才算,期間顯示計算中。 */
   const [traitSolution, setTraitSolution] = useState<BreedingSolution | null>(null);
   const [traitBusy, setTraitBusy] = useState(false);
   useEffect(() => {
-    if (!data || !chainTo || desired.length === 0 || !ownedForTraits.length) {
+    if (!data || !chainTo || desired.length === 0 || !traitSolveInputs.owned.length) {
       setTraitSolution(null);
       setTraitBusy(false);
       return;
@@ -924,13 +973,13 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     setTraitBusy(true);
     const id = window.setTimeout(() => {
       try {
-        setTraitSolution(solveBreeding(data, ownedForTraits, chainTo, desired, 4));
+        setTraitSolution(solveBreeding(data, traitSolveInputs.owned, chainTo, traitSolveInputs.maskDesired, 4));
       } finally {
         setTraitBusy(false);
       }
     }, 500);
     return () => window.clearTimeout(id);
-  }, [data, ownedForTraits, chainTo, desired]);
+  }, [data, traitSolveInputs, chainTo, desired]);
 
   /** breeding.json 物種 id 保留原大小寫;插槽存原 id,顯示/查表都直接用。 */
   const species = useMemo(() => (index ? [...index.speciesSet] : []), [index]);
@@ -1723,7 +1772,16 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
             </Card>
           )}
           {treeSub === "path" && desired.length > 0 && chainTo && !traitBusy && traitSolution && (
-            <TraitSolutionView solution={traitSolution} desired={desired} metaOf={metaOf} owned={ownedForTraits} />
+            <TraitSolutionView
+              solution={traitSolution}
+              desired={desired}
+              maskDesired={traitSolveInputs.maskDesired}
+              fromName={traitSolveInputs.fromApplied ? nameOf(chainFrom) : undefined}
+              metaOf={metaOf}
+              owned={traitSolveInputs.owned}
+              onTargetClick={() => setActiveSlot(activeSlot === "to" ? null : "to")}
+              targetActive={activeSlot === "to"}
+            />
           )}
           {treeSub === "path" && desired.length > 0 && !chainTo && (
             <Card className="text-center text-sm text-ink-muted">{t("先選一隻目標帕魯,再看帶詞條路線。")}</Card>

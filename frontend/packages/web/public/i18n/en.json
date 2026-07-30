@@ -1582,6 +1582,7 @@
   "目前狀態符合此後端的還原要求。": "The current state meets this backend's restore requirements.",
   "目前記憶體": "Current memory",
   "目前路徑": "Current path",
+  "目前限制路線必須從 {name} 起手 —— 清除起點或換一隻起點再試。": "The route is currently constrained to start from {name} — clear the start Pal or pick a different one and try again.",
   "目前離線": "Currently offline",
   "目標": "Target",
   "目標子代": "Target child",
