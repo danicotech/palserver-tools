@@ -1113,6 +1113,7 @@
   "提示:朋友連線用的是「遊戲埠 UDP {port}」。若朋友連不進來,先確認伺服器正在運作中、且防火牆有放行。": "Tip: friends connect via game port UDP {port}. If they can't get in, first check the server is running and the firewall allows it.",
   "提醒訊息": "Notices",
   "提高可減少高 Tick 率下的封包裁切、加快玩家載入與切換地圖,代價是上行頻寬。": "Raising it reduces packet clipping at high tick rates and speeds up player loading / map transitions, at the cost of upload bandwidth.",
+  "換其他帶詞條的帕魯當起點(會重新計算路線與代數)": "Use another trait-carrying Pal as the start (route and generations recalculate)",
   "搗蛋貓": "Stamina Reduction",
   "搜尋主動技名稱或輸入 ID…": "Search active skill name or enter ID…",
   "搜尋伺服器…": "Search servers…",

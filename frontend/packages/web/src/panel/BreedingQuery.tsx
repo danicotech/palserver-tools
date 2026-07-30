@@ -582,6 +582,8 @@ function TraitSolutionView({
   owned,
   onTargetClick,
   targetActive,
+  onPickSpecies,
+  speciesIdOf,
 }: {
   solution: BreedingSolution;
   desired: string[];
@@ -594,6 +596,10 @@ function TraitSolutionView({
   /** 點目標列 → 右側網格變成目標選擇器(與最短路徑的目標抽換一致)。 */
   onTargetClick?: () => void;
   targetActive?: boolean;
+  /** 葉端面板選了「其他物種」→ 把牠設為起點並整路重算(代數會變)。 */
+  onPickSpecies?: (speciesId: string) => void;
+  /** 小寫物種鍵 → 配種表原大小寫 id。 */
+  speciesIdOf?: (lower: string) => string | undefined;
 }) {
   /** 開著哪一格的面板("{步驟}a"/"{步驟}b")。 */
   const [openSlot, setOpenSlot] = useState<string | null>(null);
@@ -694,6 +700,27 @@ function TraitSolutionView({
     }
     const cur = effective(n, slot).source;
     const cands = candidatesFor(n);
+    // 跨物種替代:其他物種、帶「此格目前貢獻的任一詞條」的自有帕魯(每物種取詞條最多的一隻)。
+    // 選了 = 把該物種設為起點並整路重算 —— 例如原路線用疾旋鼬帶悠然泳姿,
+    // 也可以改點勾魂魷,由解算器重新排出(可能更多代的)新路線。
+    const contributes = nodeTraits(n, desired);
+    const crossBySpecies = new Map<string, { pal: SaveBreedingPal; traits: string[] }>();
+    if (onPickSpecies && speciesIdOf) {
+      for (const c of owned) {
+        const spLower = normalizeSpecies(c.characterId);
+        if (spLower === n.species.toLowerCase()) continue;
+        const traits = c.passives.filter((p) => desired.includes(p));
+        if (!traits.length) continue;
+        if (contributes.length && !traits.some((p) => contributes.includes(p))) continue;
+        const prev = crossBySpecies.get(spLower);
+        if (!prev || traits.length > prev.traits.length) crossBySpecies.set(spLower, { pal: c, traits });
+      }
+    }
+    const cross = [...crossBySpecies.entries()]
+      .map(([lower, v]) => ({ id: speciesIdOf?.(lower), ...v }))
+      .filter((v): v is { id: string; pal: SaveBreedingPal; traits: string[] } => Boolean(v.id))
+      .sort((a, b) => b.traits.length - a.traits.length)
+      .slice(0, 24);
     return (
       <div className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-pal/50" style={rowWidth(gen)}>
         {cands.length === 0 ? (
@@ -727,6 +754,34 @@ function TraitSolutionView({
                 </button>
               );
             })}
+          </div>
+        )}
+        {cross.length > 0 && (
+          <div className="mt-2 border-t border-line pt-2">
+            <p className="mb-1.5 px-1 text-[11px] font-bold text-ink-muted">
+              🔁 {t("換其他帶詞條的帕魯當起點(會重新計算路線與代數)")}
+            </p>
+            <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
+              {cross.map(({ id, pal, traits }) => {
+                const info = palInfo(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setOpenSlot(null);
+                      onPickSpecies?.(id);
+                    }}
+                    className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-1 text-xs font-semibold text-ink ring-1 ring-line transition hover:ring-pal"
+                  >
+                    {info.iconUrl && <img src={info.iconUrl} alt="" className="size-5 rounded-full bg-card-soft" />}
+                    {info.zh || id}
+                    <span className="text-pal">({traits.join("、")})</span>
+                    <span className="text-ink-muted">{pal.ownerName}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -994,23 +1049,55 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ownedForTraits, chainFrom, desired]);
 
-  /** 詞條模式解算:重(數秒),故 debounce —— 連續勾選詞條時等停手才算,期間顯示計算中。 */
+  /** 詞條模式解算:跑在 Web Worker(數秒的計算放主執行緒會凍住整個 UI),
+   *  加 debounce 連續勾選等停手才送;seq 遞增,舊請求的結果直接丟棄,
+   *  若上一輪還在算就整個 worker 終止重建(真正中止計算,不讓舊工作佔住)。 */
   const [traitSolution, setTraitSolution] = useState<BreedingSolution | null>(null);
   const [traitBusy, setTraitBusy] = useState(false);
+  const traitWorkerRef = useRef<Worker | null>(null);
+  const traitSeqRef = useRef(0);
+  const traitInflightRef = useRef(false);
+  useEffect(
+    () => () => {
+      traitWorkerRef.current?.terminate();
+      traitWorkerRef.current = null;
+    },
+    [],
+  );
   useEffect(() => {
     if (!data || !chainTo || desired.length === 0 || !traitSolveInputs.owned.length) {
+      traitSeqRef.current++; // 讓在途結果作廢
       setTraitSolution(null);
       setTraitBusy(false);
       return;
     }
     setTraitBusy(true);
     const id = window.setTimeout(() => {
-      try {
-        setTraitSolution(solveBreeding(data, traitSolveInputs.owned, chainTo, traitSolveInputs.maskDesired, 4));
-      } finally {
-        setTraitBusy(false);
+      if (traitInflightRef.current && traitWorkerRef.current) {
+        traitWorkerRef.current.terminate(); // 中止上一輪計算
+        traitWorkerRef.current = null;
+        traitInflightRef.current = false;
       }
-    }, 500);
+      if (!traitWorkerRef.current) {
+        traitWorkerRef.current = new Worker(new URL("./traitSolver.worker.ts", import.meta.url), { type: "module" });
+        traitWorkerRef.current.addEventListener("message", (e: MessageEvent<{ seq: number; solution: BreedingSolution | null }>) => {
+          traitInflightRef.current = false;
+          if (e.data.seq !== traitSeqRef.current) return; // 過期結果
+          setTraitSolution(e.data.solution);
+          setTraitBusy(false);
+        });
+      }
+      const seq = ++traitSeqRef.current;
+      traitInflightRef.current = true;
+      traitWorkerRef.current.postMessage({
+        seq,
+        data,
+        owned: traitSolveInputs.owned,
+        targetId: chainTo,
+        desired: traitSolveInputs.maskDesired,
+        maxGenerations: 4,
+      });
+    }, 400);
     return () => window.clearTimeout(id);
   }, [data, traitSolveInputs, chainTo, desired]);
 
@@ -1837,6 +1924,11 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
               owned={traitSolveInputs.owned}
               onTargetClick={() => setActiveSlot(activeSlot === "to" ? null : "to")}
               targetActive={activeSlot === "to"}
+              onPickSpecies={(sp) => {
+                setChainFrom(sp);
+                setAutoStart(false);
+              }}
+              speciesIdOf={(lower) => (index ? [...index.speciesSet].find((s) => s.toLowerCase() === lower) : undefined)}
             />
           )}
           {treeSub === "path" && desired.length > 0 && !chainTo && (
