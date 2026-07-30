@@ -1,0 +1,17 @@
+node_modules/
+dist/
+bundle/
+release/
+*.log
+.DS_Store
+data/
+.env
+
+# v1 reference copy (its own repo: Dalufishe/palserver-GUI) — not part of v2
+deperated/
+
+# wrangler 本地開發狀態(packages/stats)
+.wrangler/
+
+# TypeScript incremental build 產物
+*.tsbuildinfo

@@ -1,0 +1,18 @@
+# Deploys the palserver agent itself as a container.
+# NOTE: when the agent runs in a container, PALSERVER_DATA_DIR must be a
+# path that exists on the HOST at the same location, because instance
+# config/save dirs are bind-mounted into sibling containers via docker.sock.
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: packages/agent/Dockerfile
+    image: palserver/agent:latest
+    restart: unless-stopped
+    ports:
+      - "8250:8250"
+    environment:
+      PALSERVER_DATA_DIR: /var/lib/palserver
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/palserver:/var/lib/palserver

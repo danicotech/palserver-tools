@@ -1,0 +1,584 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Palworld Scheduler API",
+    "version": "1.0.0",
+    "description": "Palworld 伺服器維運 API：排程覆寫（開/關/恢復自動）與完整 RCON。\n\n驗證方式：點右上 **Authorize**，在 `X-Auth-Token` 填入你的 token（對應 config.json 的 api.token）。之後即可對各端點按 **Try it out** 直接調用。\n\n備註：訊息類參數（broadcast/shutdown message）內的空白會被 Palworld 截斷，請用底線 `_` 代替空白。"
+  },
+  "servers": [
+    { "url": "/", "description": "目前主機" }
+  ],
+  "tags": [
+    { "name": "docs", "description": "文件與健康檢查" },
+    { "name": "schedule", "description": "排程覆寫控制" },
+    { "name": "rcon", "description": "完整 RCON 指令" },
+    { "name": "rest-api", "description": "Palworld 官方 REST API（port 8212）代理，回應為結構化 JSON，較 RCON 穩定。需伺服器啟用 RESTAPIEnabled。" },
+    { "name": "palsave", "description": "解析存檔取得玩家帕魯資料（經 palsave sidecar）。RCON/REST 都拿不到帕魯資料。" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "TokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Auth-Token",
+        "description": "填入 config.json 的 api.token"
+      }
+    },
+    "schemas": {
+      "Status": {
+        "type": "object",
+        "properties": {
+          "mode": { "type": "string", "enum": ["AUTO", "FORCE_ON", "FORCE_OFF"], "description": "目前控制模式" },
+          "serverRunning": { "type": "boolean", "description": "Palworld 容器是否執行中" },
+          "inOpenWindow": { "type": "boolean", "description": "現在是否在開放時段內" },
+          "currentLabel": { "type": "string" },
+          "currentCloseAt": { "type": "string" },
+          "nextOpenLabel": { "type": "string" },
+          "nextOpenAt": { "type": "string" },
+          "serverTimeLocal": { "type": "string" }
+        }
+      },
+      "ActionResult": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "action": { "type": "string" }
+        }
+      },
+      "RconResult": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "command": { "type": "string" },
+          "response": { "type": "string", "description": "伺服器回應原文" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean", "example": false },
+          "error": { "type": "string" }
+        }
+      },
+      "ServerInfo": {
+        "type": "object",
+        "description": "GET /api/rest/info 回應",
+        "properties": {
+          "version": { "type": "string", "description": "伺服器版本" },
+          "servername": { "type": "string", "description": "伺服器名稱" },
+          "description": { "type": "string" },
+          "worldguid": { "type": "string", "description": "世界 GUID" }
+        }
+      },
+      "Player": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "accountName": { "type": "string" },
+          "playerId": { "type": "string" },
+          "userId": { "type": "string", "description": "kick/ban 需用此值" },
+          "ip": { "type": "string" },
+          "ping": { "type": "number" },
+          "location_x": { "type": "number" },
+          "location_y": { "type": "number" },
+          "level": { "type": "integer" },
+          "building_count": { "type": "integer" }
+        }
+      },
+      "PlayerList": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer" },
+          "players": { "type": "array", "items": { "$ref": "#/components/schemas/Player" } }
+        }
+      },
+      "Metrics": {
+        "type": "object",
+        "description": "GET /api/rest/metrics 回應",
+        "properties": {
+          "serverfps": { "type": "integer", "description": "伺服器 FPS" },
+          "currentplayernum": { "type": "integer", "description": "目前線上人數" },
+          "serverframetime": { "type": "number", "description": "每幀時間 (ms)" },
+          "maxplayernum": { "type": "integer", "description": "最大人數" },
+          "uptime": { "type": "integer", "description": "運行秒數" },
+          "basecampnum": { "type": "integer", "description": "據點數量" },
+          "days": { "type": "integer", "description": "遊戲內天數" }
+        }
+      },
+      "RestAction": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "action": { "type": "string" }
+        }
+      },
+      "Pal": {
+        "type": "object",
+        "properties": {
+          "species": { "type": "string", "description": "內部代號" },
+          "name_zh": { "type": "string", "description": "中文名（繁體）" },
+          "name_en": { "type": "string", "description": "英文名" },
+          "nickname": { "type": "string" },
+          "paldeck": { "type": "string", "description": "圖鑑編號" },
+          "elements": { "type": "array", "items": { "type": "string" }, "description": "屬性（水/火/草/雷/冰/龍/暗/地/無）" },
+          "level": { "type": "integer" },
+          "exp": { "type": "integer" },
+          "gender": { "type": "string" },
+          "rank": { "type": "integer", "description": "星級 1-5" },
+          "souls": { "type": "object", "description": "靈魂強化等級 {hp, attack, defense, craftspeed}" },
+          "iv_hp": { "type": "integer", "description": "HP 個體值 0-100" },
+          "iv_attack": { "type": "integer", "description": "攻擊個體值 0-100 (Talent_Shot)" },
+          "iv_defense": { "type": "integer", "description": "防禦個體值 0-100" },
+          "hp": { "type": "integer", "description": "目前 HP（已除內部 ×1000）" },
+          "friendship": { "type": "integer", "description": "好感度點數" },
+          "stomach": { "type": "integer", "description": "飽食度" },
+          "food_buff": { "type": "string", "description": "食物狀態效果" },
+          "work": { "type": "object", "description": "工作適性 {中文適性: 等級}" },
+          "is_alpha": { "type": "boolean", "description": "是否為 α/BOSS 變體" },
+          "is_lucky": { "type": "boolean", "description": "是否為 Lucky(閃光)" },
+          "active_skills": { "type": "array", "items": { "type": "string" }, "description": "已裝備主動技能（繁中）" },
+          "mastered_skills": { "type": "array", "items": { "type": "string" }, "description": "已習得主動技能（繁中）" },
+          "passives": { "type": "array", "items": { "type": "string" }, "description": "被動技能（繁中）" }
+        }
+      },
+      "PalPlayer": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "uid": { "type": "string", "description": "存檔內玩家 UID" },
+          "level": { "type": "integer" },
+          "exp": { "type": "integer" },
+          "hp": { "type": "integer", "description": "目前 HP（已除內部 ×1000）" },
+          "shield_hp": { "type": "integer" },
+          "stomach": { "type": "integer", "description": "飽食度" },
+          "hunger": { "type": "string", "description": "飢餓狀態" },
+          "health": { "type": "string", "description": "健康/受傷狀態" },
+          "unused_status_point": { "type": "integer", "description": "未分配能力點" },
+          "status_points": { "type": "object", "description": "已配點 {hp, stamina, attack, weight, capture, workspeed}" },
+          "voice_id": { "type": "integer" },
+          "location": { "type": "object", "description": "最後位置 {x, y, z}" },
+          "pal_count": { "type": "integer" },
+          "pals": { "type": "array", "items": { "$ref": "#/components/schemas/Pal" } }
+        }
+      },
+      "PalsResult": {
+        "type": "object",
+        "properties": {
+          "total_pals": { "type": "integer" },
+          "orphan_pals": { "type": "integer" },
+          "source": { "type": "string", "description": "解析的存檔相對路徑" },
+          "players": { "type": "array", "items": { "$ref": "#/components/schemas/PalPlayer" } }
+        }
+      }
+    }
+  },
+  "security": [{ "TokenAuth": [] }],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": ["docs"],
+        "summary": "健康檢查（免 token）",
+        "security": [],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" } } } } } }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": ["schedule"],
+        "summary": "查詢目前狀態",
+        "responses": {
+          "200": { "description": "狀態快照", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Status" } } } },
+          "401": { "description": "未授權", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/start": {
+      "post": {
+        "tags": ["schedule"],
+        "summary": "強制開啟（FORCE_ON）",
+        "description": "忽略排程保持開啟，直到呼叫 /api/auto。",
+        "responses": {
+          "200": { "description": "已切換", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionResult" } } } }
+        }
+      }
+    },
+    "/api/stop": {
+      "post": {
+        "tags": ["schedule"],
+        "summary": "強制關閉（FORCE_OFF）",
+        "description": "執行 onManualStop 流程（倒數→存檔→關閉）。忽略排程保持關閉，直到 /api/auto 或 /api/start。",
+        "parameters": [
+          { "name": "countdown", "in": "query", "required": false, "schema": { "type": "integer", "default": 15 }, "description": "倒數秒數，覆寫流程中的 countdown 步驟" }
+        ],
+        "responses": {
+          "200": { "description": "已切換", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionResult" } } } }
+        }
+      }
+    },
+    "/api/auto": {
+      "post": {
+        "tags": ["schedule"],
+        "summary": "恢復自動排程（AUTO）",
+        "responses": {
+          "200": { "description": "已切換", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionResult" } } } }
+        }
+      }
+    },
+    "/api/rcon": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "送出任意 RCON 指令",
+        "parameters": [
+          { "name": "command", "in": "query", "required": false, "schema": { "type": "string" }, "description": "RCON 指令；也可改用 JSON body" }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": { "command": { "type": "string", "example": "Broadcast GLHF" } } }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "RCON 回應", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } },
+          "400": { "description": "缺少 command", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "502": { "description": "RCON 失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/broadcast": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "全服廣播 (Broadcast)",
+        "parameters": [
+          { "name": "msg", "in": "query", "required": true, "schema": { "type": "string", "example": "Hello_everyone" }, "description": "訊息（空白用底線）" }
+        ],
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } },
+          "400": { "description": "缺少 msg", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/save": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "存檔 (Save)",
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } }
+        }
+      }
+    },
+    "/api/players": {
+      "get": {
+        "tags": ["rcon"],
+        "summary": "在線玩家（改走 REST）",
+        "description": "已改用官方 REST 取得結構化玩家資料：RCON 的 ShowPlayers 遇含中文（多位元組）玩家名會因帕魯回應封包長度算錯而讀取逾時，故此端點優先走 REST，回傳與 /api/rest/players 相同。REST 未啟用時才退回 RCON（含中文玩家可能逾時）。",
+        "responses": {
+          "200": { "description": "玩家列表", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlayerList" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/info": {
+      "get": {
+        "tags": ["rcon"],
+        "summary": "伺服器資訊 (Info)",
+        "responses": {
+          "200": { "description": "伺服器版本與名稱", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } }
+        }
+      }
+    },
+    "/api/kick": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "踢出玩家 (KickPlayer)",
+        "parameters": [
+          { "name": "steamid", "in": "query", "required": true, "schema": { "type": "string" }, "description": "SteamID（可先呼叫 /api/players 取得）" }
+        ],
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } },
+          "400": { "description": "缺少 steamid", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/ban": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "封鎖玩家 (BanPlayer)",
+        "parameters": [
+          { "name": "steamid", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } },
+          "400": { "description": "缺少 steamid", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/unban": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "解除封鎖 (UnBanPlayer)",
+        "parameters": [
+          { "name": "steamid", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } },
+          "400": { "description": "缺少 steamid", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/shutdown": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "伺服器倒數關閉 (Shutdown)",
+        "description": "Palworld 內建：伺服器自行倒數、存檔、關閉。",
+        "parameters": [
+          { "name": "seconds", "in": "query", "required": false, "schema": { "type": "integer", "default": 60 } },
+          { "name": "message", "in": "query", "required": false, "schema": { "type": "string", "example": "Server_shutting_down" }, "description": "訊息（空白用底線）" }
+        ],
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } }
+        }
+      }
+    },
+    "/api/doexit": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "立即關閉 (DoExit)",
+        "description": "強制停止伺服器，不倒數。",
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } }
+        }
+      }
+    },
+    "/api/teleport": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "傳送 (TeleportToMe / TeleportToPlayer)",
+        "description": "需要遊戲內管理員情境；透過 RCON 多半無效，僅作為通道保留。",
+        "parameters": [
+          { "name": "steamid", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "mode", "in": "query", "required": false, "schema": { "type": "string", "enum": ["tome", "toplayer"], "default": "tome" } }
+        ],
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } },
+          "400": { "description": "缺少 steamid", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/spectate": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "觀戰模式 (ToggleSpectate)",
+        "description": "切換管理員觀戰模式；需要遊戲內管理員情境，透過 RCON 多半無效。",
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } }
+        }
+      }
+    },
+    "/api/adminpassword": {
+      "post": {
+        "tags": ["rcon"],
+        "summary": "取得管理權限 (AdminPassword)",
+        "description": "RCON 連線已完成驗證，一般不需要；僅作為通道保留。",
+        "parameters": [
+          { "name": "password", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "已送出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RconResult" } } } },
+          "400": { "description": "缺少 password", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/info": {
+      "get": {
+        "tags": ["rest-api"],
+        "summary": "伺服器資訊（REST）",
+        "description": "官方 REST GET /v1/api/info，回應為結構化 JSON。",
+        "responses": {
+          "200": { "description": "伺服器資訊", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ServerInfo" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/players": {
+      "get": {
+        "tags": ["rest-api"],
+        "summary": "在線玩家（REST，結構化）",
+        "description": "官方 REST GET /v1/api/players，含等級、座標、ping、建築數等；userId 可用於 kick/ban。",
+        "responses": {
+          "200": { "description": "玩家列表", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlayerList" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/metrics": {
+      "get": {
+        "tags": ["rest-api"],
+        "summary": "伺服器指標（REST）",
+        "description": "官方 REST GET /v1/api/metrics：FPS、線上人數、運行秒數、據點數、遊戲天數。",
+        "responses": {
+          "200": { "description": "指標", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Metrics" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/settings": {
+      "get": {
+        "tags": ["rest-api"],
+        "summary": "伺服器設定（REST）",
+        "description": "官方 REST GET /v1/api/settings，回傳目前生效的 OptionSettings。",
+        "responses": {
+          "200": { "description": "設定物件", "content": { "application/json": { "schema": { "type": "object" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/announce": {
+      "post": {
+        "tags": ["rest-api"],
+        "summary": "廣播訊息（REST）",
+        "description": "官方 REST POST /v1/api/announce。可用 ?msg= 或 JSON body。REST 版本訊息可含空白，不必用底線。",
+        "parameters": [
+          { "name": "msg", "in": "query", "required": false, "schema": { "type": "string", "example": "Hello everyone" } }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": { "application/json": { "schema": { "type": "object", "properties": { "message": { "type": "string", "example": "Hello everyone" } } } } }
+        },
+        "responses": {
+          "200": { "description": "已廣播", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RestAction" } } } },
+          "400": { "description": "缺少訊息", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/kick": {
+      "post": {
+        "tags": ["rest-api"],
+        "summary": "踢出玩家（REST）",
+        "description": "官方 REST POST /v1/api/kick。",
+        "parameters": [
+          { "name": "userid", "in": "query", "required": true, "schema": { "type": "string" }, "description": "玩家 userId（由 /api/rest/players 取得，如 steam_0000...）" },
+          { "name": "message", "in": "query", "required": false, "schema": { "type": "string" }, "description": "顯示原因" }
+        ],
+        "responses": {
+          "200": { "description": "已踢出", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RestAction" } } } },
+          "400": { "description": "缺少 userid", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/ban": {
+      "post": {
+        "tags": ["rest-api"],
+        "summary": "封鎖玩家（REST）",
+        "description": "官方 REST POST /v1/api/ban。",
+        "parameters": [
+          { "name": "userid", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "message", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "已封鎖", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RestAction" } } } },
+          "400": { "description": "缺少 userid", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/unban": {
+      "post": {
+        "tags": ["rest-api"],
+        "summary": "解除封鎖（REST）",
+        "description": "官方 REST POST /v1/api/unban。",
+        "parameters": [
+          { "name": "userid", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "已解封", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RestAction" } } } },
+          "400": { "description": "缺少 userid", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/save": {
+      "post": {
+        "tags": ["rest-api"],
+        "summary": "存檔（REST）",
+        "description": "官方 REST POST /v1/api/save。",
+        "responses": {
+          "200": { "description": "已存檔", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RestAction" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/shutdown": {
+      "post": {
+        "tags": ["rest-api"],
+        "summary": "倒數關閉（REST）",
+        "description": "官方 REST POST /v1/api/shutdown：伺服器倒數 seconds 秒後關閉並顯示 message。",
+        "parameters": [
+          { "name": "seconds", "in": "query", "required": false, "schema": { "type": "integer", "default": 60 } },
+          { "name": "message", "in": "query", "required": false, "schema": { "type": "string", "example": "Server shutting down" } }
+        ],
+        "responses": {
+          "200": { "description": "已排定關閉", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RestAction" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/rest/stop": {
+      "post": {
+        "tags": ["rest-api"],
+        "summary": "立即強制停止（REST）",
+        "description": "官方 REST POST /v1/api/stop：不倒數、不通知，立即停止伺服器。",
+        "responses": {
+          "200": { "description": "已停止", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RestAction" } } } },
+          "502": { "description": "REST 呼叫失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "REST 整合未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/pals/players": {
+      "get": {
+        "tags": ["palsave"],
+        "summary": "玩家清單摘要（先取得 UID）",
+        "description": "只回玩家層級資料（name、uid、level、exp、hp、pal_count…），不含每隻帕魯，回應輕量。先用這個取得玩家 UID，再用 /api/pals?q=<UID> 查完整帕魯。",
+        "parameters": [
+          { "name": "uuid", "in": "query", "required": false, "schema": { "type": "string" }, "description": "以存檔內玩家 UUID（或名稱）部分比對過濾" }
+        ],
+        "responses": {
+          "200": { "description": "玩家清單（players 內每筆為 PalPlayer 去掉 pals 欄位）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PalsResult" } } } },
+          "502": { "description": "呼叫 palsave 失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "存檔解析未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/pals": {
+      "get": {
+        "tags": ["palsave"],
+        "summary": "玩家帕魯資料（解析存檔）",
+        "description": "經 palsave sidecar 解析目前世界的 Level.sav，回傳每位玩家擁有的帕魯（種類中英文名、等級、性別、個體值、α/Lucky）。RCON/REST 皆無此資料。結果依存檔 mtime 快取。",
+        "parameters": [
+          { "name": "uuid", "in": "query", "required": false, "schema": { "type": "string" }, "description": "只查符合的玩家：存檔內玩家 UUID（或名稱），部分比對" }
+        ],
+        "responses": {
+          "200": { "description": "玩家帕魯資料", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PalsResult" } } } },
+          "502": { "description": "呼叫 palsave 失敗", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "存檔解析未啟用", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+  }
+}

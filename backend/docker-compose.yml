@@ -1,0 +1,131 @@
+# Palworld 伺服器 + Go 排程/API 服務
+#
+# 【本檔是伺服器參數的唯一權威來源】
+# palworld / palsave / scheduler 三個服務的定義（含所有遊戲性環境變數）
+# 一律只寫在這裡。上層 palworld-panel/docker-compose.yml 以 include 引入本檔，
+# 只額外疊上前端 panel 與 cloudflared，不會、也不應覆寫任何伺服器參數。
+# → 要調整遊戲數值、排程、存檔路徑，改這份就好。
+#
+# 部署入口在上層（才會一併帶起前端）：
+#   cd .. && docker compose up -d --build
+# 單獨只跑後端（不要前端時）才在本目錄執行：
+#   docker compose up -d --build
+# ⚠️ 兩者的 container_name 相同，請勿同時啟動，否則會搶同一組容器名。
+#
+# ⚠️ 使用前務必：
+#   1) 把 config.json 的 api.token 改成你自己的長隨機字串
+#   2) 修改下方 ADMIN_PASSWORD / SERVER_PASSWORD（並與 config.json 的 rcon.password 一致）
+
+services:
+  # ---- Palworld 專用伺服器（社群映像）----
+  palworld:
+    image: thijsvanloef/palworld-server-docker:latest
+    container_name: palworld # scheduler 以此名稱透過 Docker API 開/關
+    restart: "no" # 由 scheduler 全權控制開關，勿讓 Docker 自動重啟
+    stop_grace_period: 40s # 給伺服器存檔的時間（需 > killGraceSeconds）
+    ports:
+      - "8211:8211/udp" # 遊戲連線埠（對外）
+      - "127.0.0.1:8212:8212/tcp" # 官方 REST API（僅綁 localhost，勿對外網開放）
+      # RCON(25575) 不對外，僅在 compose 內網供 scheduler 使用
+    environment:
+      TZ: "Asia/Taipei"
+      PUID: "1000"
+      PGID: "1000"
+      PORT: "8211"
+      PLAYERS: "35"
+      MULTITHREADING: "true"
+      COMMUNITY: "false"
+      SERVER_NAME: "Doggy Palworld"
+      SERVER_DESCRIPTION: "wolf wolf!"
+      # 密碼從專案根目錄 .env 讀取(.env 不進版控);未設定時用佔位值,記得改!
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-CHANGE_ME_ADMIN}" # 需與 config.json rcon.password 一致
+      SERVER_PASSWORD: "${SERVER_PASSWORD:-CHANGE_ME_JOIN}"
+      DIFFICULTY: "Hard"
+      RCON_ENABLED: "true"
+      RCON_PORT: "25575"
+      REST_API_ENABLED: "true" # 啟用官方 REST API（port 8212，帳號 admin / 密碼=ADMIN_PASSWORD）
+      REST_API_PORT: "8212"
+      # ---- 以下遊戲性設定參考 Pal/Saved/Config/WindowsServer/PalWorldSettings.ini 套用 ----
+      # 說明：本映像每次啟動會用這些環境變數「重新產生」PalWorldSettings.ini，
+      #       所以要改設定請改這裡，直接改 ini 檔會被覆寫。未列出的項目沿用預設（與參考檔相同）。
+      PUBLIC_IP: "${PUBLIC_IP:-}" # 對外廣播 IP；若浮動可留空 ""
+      USEAUTH: "False" # ⚠️ 參考檔關閉玩家驗證；公開對外建議改回 True
+      CROSSPLAY_PLATFORMS: "(Steam)" # 參考檔僅允許 Steam 連線
+      EXP_RATE: "0.8"
+      PAL_CAPTURE_RATE: "0.5"
+      PAL_DAMAGE_RATE_ATTACK: "2.0"
+      PAL_DAMAGE_RATE_DEFENSE: "0.7"
+      PLAYER_DAMAGE_RATE_ATTACK: "1.0"
+      PLAYER_DAMAGE_RATE_DEFENSE: "1.5"
+      PLAYER_STOMACH_DECREASE_RATE: "0.5"
+      PLAYER_STAMINA_DECREASE_RATE: "0.6"
+      PLAYER_AUTO_HP_REGEN_RATE: "2.0"
+      PLAYER_AUTO_HP_REGEN_RATE_IN_SLEEP: "8.0"
+      PAL_AUTO_HP_REGEN_RATE_IN_SLEEP: "8.0"
+      BUILD_OBJECT_DAMAGE_RATE: "0.8"
+      BUILD_OBJECT_DETERIORATION_DAMAGE_RATE: "0.0"
+      ITEM_WEIGHT_RATE: "0.6"
+      DROP_ITEM_MAX_NUM: "5000"
+      DROP_ITEM_ALIVE_MAX_HOURS: "0.5"
+      BASE_CAMP_WORKER_MAX_NUM: "25"
+      GUILD_PLAYER_MAX_NUM: "100"
+      BASE_CAMP_MAX_NUM_IN_GUILD: "10"
+      PAL_EGG_DEFAULT_HATCHING_TIME: "2.5" # 孵蛋時間（絕對小時數）
+      COOP_PLAYER_MAX_NUM: "5"
+      SUPPLY_DROP_SPAN: "90"
+      CHAT_POST_LIMIT_PER_MINUTE: "10"
+      ENABLE_PLAYER_TO_PLAYER_DAMAGE: "False"
+      ENABLE_AIM_ASSIST_KEYBOARD: "True"
+      IS_MULTIPLAY: "True"
+      IS_PVP: "False" # 關閉 PvP 模式
+      IS_START_LOCATION_SELECT_BY_MAP: "True"
+      ENABLE_DEFENSE_OTHER_GUILD_PLAYER: "True"
+      SHOW_PLAYER_LIST: "True"
+      ALLOW_GLOBAL_PALBOX_EXPORT: "False"
+    volumes:
+      - ./palworld-data:/palworld # 存檔與設定；可把既有 SaveGames 複製進來
+    networks:
+      - palnet
+
+  # ---- 存檔解析 sidecar（Python）：解析帕魯資料供 scheduler 內網呼叫 ----
+  palsave:
+    build: ./tools/palsave
+    container_name: palsave
+    restart: unless-stopped
+    environment:
+      TZ: "Asia/Taipei"
+    volumes:
+      - ./palworld-data:/palworld:ro # 唯讀掛入存檔；只解析不寫回
+    networks:
+      - palnet
+
+  # ---- Go 排程器 + Gin API ----
+  scheduler:
+    build: .
+    container_name: palscheduler
+    restart: unless-stopped # 這個服務要 24 小時常駐
+    environment:
+      TZ: "Asia/Taipei" # 讓排程時間對齊台灣時區
+      CONFIG_PATH: "/app/config.json"
+      PRESENCE_PATH: "/app/data/presence.json" # 玩家上線時數統計的存放位置
+      PRESENCE_INTERVAL_SECONDS: "60" # 每 60 秒取樣一次在線名單
+    ports:
+      - "9000:9000" # 外部控制 API（記得改 token、必要時設防火牆）
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - ./data:/app/data # presence.json / roster.json 需落地保存，勿改成匿名 volume
+      - /var/run/docker.sock:/var/run/docker.sock # 讓 scheduler 能開/關 palworld 容器
+    depends_on:
+      - palworld
+      - palsave
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - palnet
+
+networks:
+  palnet:
+    driver: bridge

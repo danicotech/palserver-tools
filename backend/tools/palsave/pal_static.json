@@ -1,0 +1,5577 @@
+{
+"Alpaca": {
+"elements": [
+"無"
+],
+"paldeck": "36",
+"work": {
+"牧場": 1
+}
+},
+"AmaterasuWolf": {
+"elements": [
+"火"
+],
+"paldeck": "61",
+"work": {
+"點火": 2
+}
+},
+"AmaterasuWolf_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "61B",
+"work": {
+"點火": 2
+}
+},
+"Anubis": {
+"elements": [
+"地"
+],
+"paldeck": "100",
+"work": {
+"手工": 4,
+"採礦": 3,
+"搬運": 2
+}
+},
+"BOSS_Alpaca": {
+"elements": [
+"無"
+],
+"paldeck": "36",
+"work": {
+"牧場": 1
+}
+},
+"BOSS_AmaterasuWolf": {
+"elements": [
+"火"
+],
+"paldeck": "61",
+"work": {
+"點火": 2
+}
+},
+"BOSS_AmaterasuWolf_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "61B",
+"work": {
+"點火": 2
+}
+},
+"BOSS_BadCatgirl": {
+"elements": [
+"暗"
+],
+"paldeck": "139",
+"work": {
+"伐木": 2,
+"手工": 3,
+"採集": 2,
+"搬運": 2
+}
+},
+"BOSS_Baphomet": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "40",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2,
+"點火": 1
+}
+},
+"BOSS_Baphomet_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "40B",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2
+}
+},
+"BOSS_Bastet": {
+"elements": [
+"暗"
+],
+"paldeck": "24",
+"work": {
+"牧場": 1
+}
+},
+"BOSS_Bastet_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "24B",
+"work": {
+"牧場": 1,
+"製冷": 1
+}
+},
+"BOSS_BerryGoat": {
+"elements": [
+"草"
+],
+"paldeck": "35",
+"work": {
+"播種": 2,
+"牧場": 1
+}
+},
+"BOSS_BerryGoat_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "35B",
+"work": {
+"播種": 2,
+"牧場": 1
+}
+},
+"BOSS_BirdDragon": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "71",
+"work": {
+"搬運": 3,
+"點火": 1
+}
+},
+"BOSS_BirdDragon_Ice": {
+"elements": [
+"冰",
+"暗"
+],
+"paldeck": "71B",
+"work": {
+"搬運": 3,
+"製冷": 2
+}
+},
+"BOSS_BlackCentaur": {
+"elements": [
+"暗"
+],
+"paldeck": "109",
+"work": {
+"伐木": 2,
+"採礦": 2
+}
+},
+"BOSS_BlackGriffon": {
+"elements": [
+"暗"
+],
+"paldeck": "107",
+"work": {
+"採集": 1
+}
+},
+"BOSS_BlackMetalDragon": {
+"elements": [
+"龍",
+"暗"
+],
+"paldeck": "98",
+"work": {
+"手工": 1,
+"採礦": 4
+}
+},
+"BOSS_BlackPuppy": {
+"elements": [
+"暗"
+],
+"paldeck": "131",
+"work": {
+"採集": 2
+}
+},
+"BOSS_BlueDragon": {
+"elements": [
+"水",
+"龍"
+],
+"paldeck": "82",
+"work": {
+"灌溉": 3
+}
+},
+"BOSS_BlueDragon_Ice": {
+"elements": [
+"冰",
+"龍"
+],
+"paldeck": "82B",
+"work": {
+"製冷": 3
+}
+},
+"BOSS_BluePlatypus": {
+"elements": [
+"水"
+],
+"paldeck": "6",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1
+}
+},
+"BOSS_BluePlatypus_Fire": {
+"elements": [
+"水",
+"火"
+],
+"paldeck": "6B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1,
+"點火": 1
+}
+},
+"BOSS_BlueThunderHorse": {
+"elements": [
+"雷"
+],
+"paldeck": "136",
+"work": {
+"採集": 1,
+"發電": 4
+}
+},
+"BOSS_BlueberryFairy": {
+"elements": [
+"草",
+"暗"
+],
+"paldeck": "138",
+"work": {
+"手工": 1,
+"採集": 2,
+"搬運": 1,
+"播種": 3,
+"製藥": 3
+}
+},
+"BOSS_Boar": {
+"elements": [
+"地"
+],
+"paldeck": "20",
+"work": {
+"採礦": 1
+}
+},
+"BOSS_CandleGhost": {
+"elements": [
+"暗",
+"火"
+],
+"paldeck": "118",
+"work": {
+"手工": 2,
+"採礦": 2,
+"採集": 1,
+"牧場": 1,
+"點火": 3
+}
+},
+"BOSS_CaptainPenguin": {
+"elements": [
+"水",
+"冰"
+],
+"paldeck": "11",
+"work": {
+"手工": 2,
+"採礦": 2,
+"搬運": 2,
+"灌溉": 2,
+"製冷": 2
+}
+},
+"BOSS_CaptainPenguin_Black": {
+"elements": [
+"水",
+"雷"
+],
+"paldeck": "11B",
+"work": {
+"手工": 2,
+"採礦": 2,
+"搬運": 2,
+"灌溉": 2,
+"發電": 2
+}
+},
+"BOSS_Carbunclo": {
+"elements": [
+"草"
+],
+"paldeck": "4",
+"work": {
+"伐木": 1,
+"手工": 1,
+"採集": 1,
+"播種": 1,
+"製藥": 1
+}
+},
+"BOSS_CatBat": {
+"elements": [
+"暗"
+],
+"paldeck": "68",
+"work": {
+"採礦": 2,
+"採集": 2,
+"搬運": 2
+}
+},
+"BOSS_CatMage": {
+"elements": [
+"暗"
+],
+"paldeck": "75",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 2
+}
+},
+"BOSS_CatMage_Fire": {
+"elements": [
+"暗",
+"火"
+],
+"paldeck": "75B",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 2,
+"點火": 2
+}
+},
+"BOSS_CatVampire": {
+"elements": [
+"暗"
+],
+"paldeck": "94",
+"work": {
+"製藥": 3
+}
+},
+"BOSS_ChickenPal": {
+"elements": [
+"無"
+],
+"paldeck": "3",
+"work": {
+"採集": 1,
+"牧場": 1
+}
+},
+"BOSS_ColorfulBird": {
+"elements": [
+"無"
+],
+"paldeck": "27",
+"work": {
+"採集": 1
+}
+},
+"BOSS_CowPal": {
+"elements": [
+"無"
+],
+"paldeck": "29",
+"work": {
+"牧場": 1
+}
+},
+"BOSS_CuteButterfly": {
+"elements": [
+"草"
+],
+"paldeck": "41",
+"work": {
+"播種": 2,
+"製藥": 1
+}
+},
+"BOSS_CuteFox": {
+"elements": [
+"無"
+],
+"paldeck": "14",
+"work": {
+"採集": 1,
+"牧場": 1
+}
+},
+"BOSS_CuteMole": {
+"elements": [
+"地"
+],
+"paldeck": "22",
+"work": {
+"手工": 1,
+"採礦": 1,
+"搬運": 1
+}
+},
+"BOSS_DarkAlien": {
+"elements": [
+"暗"
+],
+"paldeck": "125",
+"work": {
+"伐木": 2,
+"搬運": 2
+}
+},
+"BOSS_DarkCrow": {
+"elements": [
+"暗"
+],
+"paldeck": "44",
+"work": {
+"伐木": 1
+}
+},
+"BOSS_DarkMechaDragon": {
+"elements": [
+"暗",
+"龍"
+],
+"paldeck": "127",
+"work": {
+"採集": 1
+}
+},
+"BOSS_DarkMutant": {
+"elements": [
+"無"
+],
+"paldeck": "63",
+"work": {
+"手工": 3,
+"搬運": 2,
+"製藥": 3
+}
+},
+"BOSS_DarkScorpion": {
+"elements": [
+"暗",
+"地"
+],
+"paldeck": "99",
+"work": {
+"伐木": 2,
+"採礦": 3
+}
+},
+"BOSS_DarkScorpion_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "99B",
+"work": {
+"伐木": 2,
+"採礦": 3
+}
+},
+"BOSS_Deer": {
+"elements": [
+"無"
+],
+"paldeck": "37",
+"work": {
+"伐木": 2
+}
+},
+"BOSS_Deer_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "37B",
+"work": {
+"伐木": 2
+}
+},
+"BOSS_DreamDemon": {
+"elements": [
+"暗"
+],
+"paldeck": "19",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"BOSS_DrillGame": {
+"elements": [
+"地"
+],
+"paldeck": "67",
+"work": {
+"採礦": 3
+}
+},
+"BOSS_Eagle": {
+"elements": [
+"無"
+],
+"paldeck": "47",
+"work": {
+"採集": 2
+}
+},
+"BOSS_ElecCat": {
+"elements": [
+"雷"
+],
+"paldeck": "7",
+"work": {
+"手工": 1,
+"搬運": 1,
+"發電": 1
+}
+},
+"BOSS_ElecPanda": {
+"elements": [
+"雷"
+],
+"paldeck": "103",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"發電": 3
+}
+},
+"BOSS_FairyDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "80",
+"work": {
+"伐木": 2
+}
+},
+"BOSS_FairyDragon_Water": {
+"elements": [
+"龍",
+"水"
+],
+"paldeck": "80B",
+"work": {
+"伐木": 2,
+"灌溉": 3
+}
+},
+"BOSS_FeatherOstrich": {
+"elements": [
+"地"
+],
+"paldeck": "123",
+"work": {
+"採集": 2
+}
+},
+"BOSS_FengyunDeeper": {
+"elements": [
+"無"
+],
+"paldeck": "93",
+"work": {
+"伐木": 2
+}
+},
+"BOSS_FengyunDeeper_Electric": {
+"elements": [
+"雷"
+],
+"paldeck": "93B",
+"work": {
+"伐木": 2,
+"發電": 2
+}
+},
+"BOSS_FireKirin": {
+"elements": [
+"火"
+],
+"paldeck": "58",
+"work": {
+"伐木": 1,
+"點火": 2
+}
+},
+"BOSS_FireKirin_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "58B",
+"work": {
+"伐木": 1,
+"點火": 2
+}
+},
+"BOSS_FlameBambi": {
+"elements": [
+"火"
+],
+"paldeck": "9",
+"work": {
+"點火": 1
+}
+},
+"BOSS_FlameBuffalo": {
+"elements": [
+"火"
+],
+"paldeck": "42",
+"work": {
+"伐木": 1,
+"點火": 2
+}
+},
+"BOSS_FlowerDinosaur": {
+"elements": [
+"草",
+"龍"
+],
+"paldeck": "64",
+"work": {
+"伐木": 2,
+"播種": 2
+}
+},
+"BOSS_FlowerDinosaur_Electric": {
+"elements": [
+"雷",
+"龍"
+],
+"paldeck": "64B",
+"work": {
+"伐木": 2,
+"發電": 2
+}
+},
+"BOSS_FlowerDoll": {
+"elements": [
+"草"
+],
+"paldeck": "87",
+"work": {
+"手工": 2,
+"採集": 2,
+"搬運": 1,
+"播種": 3,
+"製藥": 2
+}
+},
+"BOSS_FlowerRabbit": {
+"elements": [
+"草"
+],
+"paldeck": "28",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1,
+"製藥": 1
+}
+},
+"BOSS_FlyingManta": {
+"elements": [
+"水"
+],
+"paldeck": "25",
+"work": {
+"搬運": 1,
+"灌溉": 1
+}
+},
+"BOSS_FlyingManta_Thunder": {
+"elements": [
+"水",
+"雷"
+],
+"paldeck": "25B",
+"work": {
+"搬運": 1,
+"灌溉": 1,
+"發電": 1
+}
+},
+"BOSS_FoxMage": {
+"elements": [
+"火"
+],
+"paldeck": "76",
+"work": {
+"手工": 3,
+"搬運": 2,
+"點火": 2
+}
+},
+"BOSS_FoxMage_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "76B",
+"work": {
+"手工": 3,
+"搬運": 2,
+"點火": 2
+}
+},
+"BOSS_Ganesha": {
+"elements": [
+"水"
+],
+"paldeck": "16",
+"work": {
+"灌溉": 1
+}
+},
+"BOSS_Garm": {
+"elements": [
+"無"
+],
+"paldeck": "26",
+"work": {
+"採集": 1
+}
+},
+"BOSS_GhostAnglerfish": {
+"elements": [
+"暗",
+"水"
+],
+"paldeck": "153",
+"work": {
+"搬運": 2,
+"灌溉": 4
+}
+},
+"BOSS_GhostAnglerfish_Fire": {
+"elements": [
+"火",
+"水"
+],
+"paldeck": "153B",
+"work": {
+"搬運": 2,
+"灌溉": 4,
+"點火": 3
+}
+},
+"BOSS_GhostBeast": {
+"elements": [
+"暗"
+],
+"paldeck": "66",
+"work": {
+"採礦": 1,
+"採集": 2
+}
+},
+"BOSS_GhostRabbit": {
+"elements": [
+"暗"
+],
+"paldeck": "128",
+"work": {
+"手工": 3,
+"搬運": 2
+}
+},
+"BOSS_GoldenHorse": {
+"elements": [
+"地"
+],
+"paldeck": "140",
+"work": {
+"採集": 2
+}
+},
+"BOSS_Gorilla": {
+"elements": [
+"無"
+],
+"paldeck": "49",
+"work": {
+"伐木": 2,
+"手工": 1,
+"搬運": 3
+}
+},
+"BOSS_Gorilla_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "49B",
+"work": {
+"手工": 1,
+"採礦": 2,
+"搬運": 3
+}
+},
+"BOSS_GrassMammoth": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "90",
+"work": {
+"伐木": 2,
+"採礦": 2,
+"播種": 2
+}
+},
+"BOSS_GrassMammoth_Ice": {
+"elements": [
+"冰",
+"地"
+],
+"paldeck": "90B",
+"work": {
+"伐木": 2,
+"採礦": 2,
+"製冷": 2
+}
+},
+"BOSS_GrassPanda": {
+"elements": [
+"草"
+],
+"paldeck": "33",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"播種": 2
+}
+},
+"BOSS_GrassPanda_Electric": {
+"elements": [
+"雷"
+],
+"paldeck": "33B",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"發電": 2
+}
+},
+"BOSS_GrassRabbitMan": {
+"elements": [
+"草"
+],
+"paldeck": "77",
+"work": {
+"伐木": 2,
+"手工": 3,
+"採集": 3,
+"搬運": 2,
+"播種": 2
+}
+},
+"BOSS_GrimGirl": {
+"elements": [
+"暗"
+],
+"paldeck": "134",
+"work": {
+"伐木": 1,
+"手工": 4,
+"搬運": 2,
+"製藥": 3
+}
+},
+"BOSS_GuardianDog": {
+"elements": [
+"無"
+],
+"paldeck": "121",
+"work": {
+"採集": 2
+}
+},
+"BOSS_HadesBird": {
+"elements": [
+"暗"
+],
+"paldeck": "97",
+"work": {
+"搬運": 3
+}
+},
+"BOSS_HadesBird_Electric": {
+"elements": [
+"暗",
+"雷"
+],
+"paldeck": "97B",
+"work": {
+"搬運": 3,
+"發電": 3
+}
+},
+"BOSS_HawkBird": {
+"elements": [
+"無"
+],
+"paldeck": "38",
+"work": {
+"採集": 2
+}
+},
+"BOSS_Hedgehog": {
+"elements": [
+"雷"
+],
+"paldeck": "12",
+"work": {
+"發電": 1
+}
+},
+"BOSS_Hedgehog_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "12B",
+"work": {
+"製冷": 1
+}
+},
+"BOSS_HerculesBeetle": {
+"elements": [
+"地",
+"草"
+],
+"paldeck": "92",
+"work": {
+"伐木": 3,
+"手工": 1,
+"搬運": 3,
+"播種": 1
+}
+},
+"BOSS_HerculesBeetle_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "92B",
+"work": {
+"手工": 1,
+"採礦": 3,
+"搬運": 3
+}
+},
+"BOSS_Horus": {
+"elements": [
+"火"
+],
+"paldeck": "105",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"BOSS_Horus_Water": {
+"elements": [
+"水"
+],
+"paldeck": "105B",
+"work": {
+"搬運": 3,
+"灌溉": 4
+}
+},
+"BOSS_IceCrocodile": {
+"elements": [
+"冰",
+"水"
+],
+"paldeck": "146",
+"work": {
+"搬運": 1,
+"灌溉": 1,
+"製冷": 2
+}
+},
+"BOSS_IceDeer": {
+"elements": [
+"冰"
+],
+"paldeck": "59",
+"work": {
+"伐木": 2,
+"製冷": 2
+}
+},
+"BOSS_IceFox": {
+"elements": [
+"冰"
+],
+"paldeck": "57",
+"work": {
+"製冷": 2
+}
+},
+"BOSS_IceHorse": {
+"elements": [
+"冰"
+],
+"paldeck": "110",
+"work": {
+"製冷": 4
+}
+},
+"BOSS_IceHorse_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "110B",
+"work": {
+"採集": 4
+}
+},
+"BOSS_IceNarwhal": {
+"elements": [
+"冰",
+"水"
+],
+"paldeck": "154",
+"work": {
+"灌溉": 3,
+"製冷": 4
+}
+},
+"BOSS_IceNarwhal_Fire": {
+"elements": [
+"冰",
+"火"
+],
+"paldeck": "154B",
+"work": {
+"製冷": 4,
+"點火": 3
+}
+},
+"BOSS_IceSeal": {
+"elements": [
+"冰",
+"水"
+],
+"paldeck": "147",
+"work": {
+"灌溉": 2,
+"製冷": 3
+}
+},
+"BOSS_IceWitch": {
+"elements": [
+"冰"
+],
+"paldeck": "142",
+"work": {
+"手工": 2,
+"搬運": 1,
+"製冷": 3,
+"製藥": 2
+}
+},
+"BOSS_JellyfishFairy": {
+"elements": [
+"水"
+],
+"paldeck": "150",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"BOSS_JellyfishGhost": {
+"elements": [
+"水",
+"暗"
+],
+"paldeck": "149",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 2,
+"製藥": 1
+}
+},
+"BOSS_JetDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "111",
+"work": {
+"採集": 3
+}
+},
+"BOSS_Kelpie": {
+"elements": [
+"水"
+],
+"paldeck": "81",
+"work": {
+"灌溉": 1,
+"牧場": 1
+}
+},
+"BOSS_Kelpie_Fire": {
+"elements": [
+"火"
+],
+"paldeck": "81B",
+"work": {
+"牧場": 1,
+"點火": 1
+}
+},
+"BOSS_KendoFrog": {
+"elements": [
+"水"
+],
+"paldeck": "114",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"灌溉": 1
+}
+},
+"BOSS_KendoFrog_Dark": {
+"elements": [
+"水",
+"暗"
+],
+"paldeck": "114B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"灌溉": 1
+}
+},
+"BOSS_KingAlpaca": {
+"elements": [
+"無"
+],
+"paldeck": "89",
+"work": {
+"採集": 1
+}
+},
+"BOSS_KingAlpaca_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "89B",
+"work": {
+"採集": 1,
+"製冷": 3
+}
+},
+"BOSS_KingBahamut": {
+"elements": [
+"火"
+],
+"paldeck": "96",
+"work": {
+"採礦": 4,
+"點火": 3
+}
+},
+"BOSS_KingBahamut_Dragon": {
+"elements": [
+"龍",
+"火"
+],
+"paldeck": "96B",
+"work": {
+"採礦": 4,
+"點火": 4
+}
+},
+"BOSS_Kirin": {
+"elements": [
+"雷"
+],
+"paldeck": "56",
+"work": {
+"伐木": 1,
+"發電": 2
+}
+},
+"BOSS_Kitsunebi": {
+"elements": [
+"火"
+],
+"paldeck": "5",
+"work": {
+"點火": 1
+}
+},
+"BOSS_Kitsunebi_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "5B",
+"work": {
+"製冷": 1
+}
+},
+"BOSS_LavaGirl": {
+"elements": [
+"火"
+],
+"paldeck": "70",
+"work": {
+"手工": 1,
+"搬運": 1,
+"牧場": 1,
+"點火": 1
+}
+},
+"BOSS_LazyCatfish": {
+"elements": [
+"地",
+"水"
+],
+"paldeck": "43",
+"work": {
+"採礦": 2,
+"搬運": 1,
+"灌溉": 1,
+"牧場": 1
+}
+},
+"BOSS_LazyCatfish_Gold": {
+"elements": [
+"地",
+"水"
+],
+"paldeck": "43B",
+"work": {
+"採礦": 2,
+"搬運": 1,
+"灌溉": 1,
+"牧場": 1
+}
+},
+"BOSS_LazyDragon": {
+"elements": [
+"龍",
+"水"
+],
+"paldeck": "85",
+"work": {
+"搬運": 1,
+"灌溉": 2
+}
+},
+"BOSS_LazyDragon_Electric": {
+"elements": [
+"龍",
+"雷"
+],
+"paldeck": "85B",
+"work": {
+"搬運": 1,
+"發電": 3
+}
+},
+"BOSS_LeafMomonga": {
+"elements": [
+"草",
+"無"
+],
+"paldeck": "141",
+"work": {
+"採集": 1,
+"搬運": 1,
+"播種": 2
+}
+},
+"BOSS_LeafPrincess": {
+"elements": [
+"草"
+],
+"paldeck": "115",
+"work": {
+"手工": 2,
+"採集": 1,
+"播種": 2,
+"製藥": 2
+}
+},
+"BOSS_LegendDeer": {
+"elements": [
+"無"
+],
+"paldeck": "156",
+"work": {
+"伐木": 4,
+"採集": 3
+}
+},
+"BOSS_LilyQueen": {
+"elements": [
+"草"
+],
+"paldeck": "104",
+"work": {
+"手工": 3,
+"採集": 2,
+"播種": 4,
+"製藥": 3
+}
+},
+"BOSS_LilyQueen_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "104B",
+"work": {
+"手工": 3,
+"採集": 2,
+"製藥": 3
+}
+},
+"BOSS_LittleBriarRose": {
+"elements": [
+"草"
+],
+"paldeck": "30",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1,
+"製藥": 2
+}
+},
+"BOSS_LizardMan": {
+"elements": [
+"暗"
+],
+"paldeck": "45",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"BOSS_LizardMan_Fire": {
+"elements": [
+"火"
+],
+"paldeck": "45B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"點火": 1
+}
+},
+"BOSS_Manticore": {
+"elements": [
+"火"
+],
+"paldeck": "84",
+"work": {
+"伐木": 2,
+"點火": 3
+}
+},
+"BOSS_Manticore_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "84B",
+"work": {
+"伐木": 2,
+"點火": 3
+}
+},
+"BOSS_MimicDog": {
+"elements": [
+"無"
+],
+"paldeck": "124",
+"work": {
+"採集": 1,
+"搬運": 1
+}
+},
+"BOSS_Monkey": {
+"elements": [
+"草"
+],
+"paldeck": "8",
+"work": {
+"伐木": 1,
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1
+}
+},
+"BOSS_MoonQueen": {
+"elements": [
+"暗",
+"無"
+],
+"paldeck": "113",
+"work": {
+"手工": 4,
+"搬運": 3,
+"製藥": 3
+}
+},
+"BOSS_MopBaby": {
+"elements": [
+"冰"
+],
+"paldeck": "53",
+"work": {
+"採集": 1,
+"製冷": 1
+}
+},
+"BOSS_MopKing": {
+"elements": [
+"冰"
+],
+"paldeck": "54",
+"work": {
+"採集": 2,
+"製冷": 2
+}
+},
+"BOSS_MushroomDragon": {
+"elements": [
+"草"
+],
+"paldeck": "116",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採集": 2,
+"播種": 2
+}
+},
+"BOSS_MushroomDragon_Dark": {
+"elements": [
+"草",
+"暗"
+],
+"paldeck": "116B",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採集": 2,
+"播種": 2
+}
+},
+"BOSS_Mutant": {
+"elements": [
+"無"
+],
+"paldeck": "63",
+"work": {
+"手工": 3,
+"採集": 1,
+"搬運": 1
+}
+},
+"BOSS_MysteryMask": {
+"elements": [
+"暗"
+],
+"paldeck": "133",
+"work": {
+"採集": 1
+}
+},
+"BOSS_NaughtyCat": {
+"elements": [
+"無"
+],
+"paldeck": "52",
+"work": {
+"採集": 2
+}
+},
+"BOSS_NegativeKoala": {
+"elements": [
+"暗"
+],
+"paldeck": "17",
+"work": {
+"手工": 1,
+"採礦": 1,
+"搬運": 1
+}
+},
+"BOSS_NegativeOctopus": {
+"elements": [
+"暗",
+"水"
+],
+"paldeck": "23",
+"work": {
+"採集": 1,
+"搬運": 2,
+"灌溉": 1
+}
+},
+"BOSS_NegativeOctopus_Neutral": {
+"elements": [
+"無",
+"水"
+],
+"paldeck": "23B",
+"work": {
+"採集": 1,
+"搬運": 2,
+"灌溉": 1
+}
+},
+"BOSS_NightBlueHorse": {
+"elements": [
+"暗"
+],
+"paldeck": "129",
+"work": {
+"採集": 2
+}
+},
+"BOSS_NightFox": {
+"elements": [
+"暗"
+],
+"paldeck": "21",
+"work": {
+"採集": 1
+}
+},
+"BOSS_NightLady": {
+"elements": [
+"暗"
+],
+"paldeck": "112",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 4
+}
+},
+"BOSS_NightLady_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "112B",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 4
+}
+},
+"BOSS_OctopusGirl": {
+"elements": [
+"水",
+"暗"
+],
+"paldeck": "151",
+"work": {
+"手工": 2,
+"搬運": 2,
+"灌溉": 2
+}
+},
+"BOSS_Penguin": {
+"elements": [
+"水",
+"冰"
+],
+"paldeck": "10",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1,
+"製冷": 1
+}
+},
+"BOSS_Penguin_Electric": {
+"elements": [
+"水",
+"雷"
+],
+"paldeck": "10B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1,
+"發電": 2
+}
+},
+"BOSS_PinkCat": {
+"elements": [
+"無"
+],
+"paldeck": "2",
+"work": {
+"手工": 1,
+"採礦": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"BOSS_PinkLizard": {
+"elements": [
+"無"
+],
+"paldeck": "69",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2,
+"製藥": 2
+}
+},
+"BOSS_PinkRabbit": {
+"elements": [
+"無"
+],
+"paldeck": "39",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"BOSS_PinkRabbit_Grass": {
+"elements": [
+"草"
+],
+"paldeck": "39B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1
+}
+},
+"BOSS_PlantSlime": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "13",
+"work": {
+"播種": 1
+}
+},
+"BOSS_PlantSlime_Flower": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "13",
+"work": {
+"播種": 1
+}
+},
+"BOSS_Plesiosaur": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "145",
+"work": {
+"採礦": 2,
+"採集": 4,
+"播種": 4
+}
+},
+"BOSS_PoseidonOrca": {
+"elements": [
+"水"
+],
+"paldeck": "155",
+"work": {
+"灌溉": 4
+}
+},
+"BOSS_PurpleSpider": {
+"elements": [
+"暗"
+],
+"paldeck": "135",
+"work": {
+"手工": 2,
+"採集": 2,
+"搬運": 2,
+"製藥": 2
+}
+},
+"BOSS_QueenBee": {
+"elements": [
+"草"
+],
+"paldeck": "51",
+"work": {
+"伐木": 1,
+"手工": 2,
+"採集": 2,
+"播種": 2,
+"製藥": 2
+}
+},
+"BOSS_RaijinDaughter": {
+"elements": [
+"雷"
+],
+"paldeck": "62",
+"work": {
+"手工": 1,
+"搬運": 1,
+"發電": 1
+}
+},
+"BOSS_RaijinDaughter_Water": {
+"elements": [
+"暗",
+"雷"
+],
+"paldeck": "62B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"發電": 1,
+"製藥": 1
+}
+},
+"BOSS_RedArmorBird": {
+"elements": [
+"火"
+],
+"paldeck": "74",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"BOSS_RobinHood": {
+"elements": [
+"草"
+],
+"paldeck": "48",
+"work": {
+"伐木": 1,
+"手工": 2,
+"採集": 2,
+"搬運": 2,
+"播種": 1,
+"製藥": 1
+}
+},
+"BOSS_RobinHood_Ground": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "48B",
+"work": {
+"伐木": 1,
+"手工": 2,
+"採集": 2,
+"搬運": 2,
+"製藥": 1
+}
+},
+"BOSS_Ronin": {
+"elements": [
+"火"
+],
+"paldeck": "72",
+"work": {
+"伐木": 3,
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"點火": 2
+}
+},
+"BOSS_Ronin_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "72B",
+"work": {
+"伐木": 3,
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"點火": 2
+}
+},
+"BOSS_SaintCentaur": {
+"elements": [
+"無"
+],
+"paldeck": "108",
+"work": {
+"伐木": 2,
+"採礦": 2
+}
+},
+"BOSS_SakuraSaurus": {
+"elements": [
+"草"
+],
+"paldeck": "86",
+"work": {
+"播種": 3
+}
+},
+"BOSS_SakuraSaurus_Water": {
+"elements": [
+"草",
+"水"
+],
+"paldeck": "86B",
+"work": {
+"灌溉": 3
+}
+},
+"BOSS_ScorpionMan": {
+"elements": [
+"暗",
+"地"
+],
+"paldeck": "119",
+"work": {
+"伐木": 3,
+"採集": 1,
+"製藥": 1
+}
+},
+"BOSS_Serpent": {
+"elements": [
+"水"
+],
+"paldeck": "65",
+"work": {
+"灌溉": 2
+}
+},
+"BOSS_Serpent_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "65B",
+"work": {
+"採集": 1
+}
+},
+"BOSS_SharkKid": {
+"elements": [
+"水"
+],
+"paldeck": "31",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"BOSS_SharkKid_Fire": {
+"elements": [
+"火"
+],
+"paldeck": "31B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"點火": 2
+}
+},
+"BOSS_SheepBall": {
+"elements": [
+"無"
+],
+"paldeck": "1",
+"work": {
+"手工": 1,
+"搬運": 1,
+"牧場": 1
+}
+},
+"BOSS_SifuDog": {
+"elements": [
+"無"
+],
+"paldeck": "122",
+"work": {
+"伐木": 2,
+"手工": 3,
+"採集": 2,
+"搬運": 2,
+"製藥": 1
+}
+},
+"BOSS_SkyDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "95",
+"work": {
+"手工": 1,
+"採礦": 2,
+"採集": 2,
+"搬運": 3
+}
+},
+"BOSS_SkyDragon_Grass": {
+"elements": [
+"龍",
+"草"
+],
+"paldeck": "95B",
+"work": {
+"手工": 1,
+"採礦": 2,
+"採集": 2,
+"搬運": 3,
+"播種": 2
+}
+},
+"BOSS_SmallArmadillo": {
+"elements": [
+"地"
+],
+"paldeck": "117",
+"work": {
+"採礦": 1
+}
+},
+"BOSS_SnowPeafowl": {
+"elements": [
+"冰"
+],
+"paldeck": "143",
+"work": {
+"採集": 1,
+"製冷": 2
+}
+},
+"BOSS_SnowTigerBeastman": {
+"elements": [
+"冰"
+],
+"paldeck": "137",
+"work": {
+"伐木": 3,
+"採礦": 3,
+"製冷": 4
+}
+},
+"BOSS_SoldierBee": {
+"elements": [
+"草"
+],
+"paldeck": "50",
+"work": {
+"伐木": 1,
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"播種": 1,
+"牧場": 1,
+"製藥": 1
+}
+},
+"BOSS_StuffedShark": {
+"elements": [
+"水"
+],
+"paldeck": "152",
+"work": {
+"搬運": 1,
+"灌溉": 2
+}
+},
+"BOSS_StuffedShark_Fire": {
+"elements": [
+"水",
+"火"
+],
+"paldeck": "152B",
+"work": {
+"搬運": 1,
+"灌溉": 2,
+"點火": 2
+}
+},
+"BOSS_Suzaku": {
+"elements": [
+"火"
+],
+"paldeck": "102",
+"work": {
+"點火": 3
+}
+},
+"BOSS_Suzaku_Water": {
+"elements": [
+"水"
+],
+"paldeck": "102B",
+"work": {
+"灌溉": 3
+}
+},
+"BOSS_SweetsSheep": {
+"elements": [
+"無"
+],
+"paldeck": "34",
+"work": {
+"牧場": 1
+}
+},
+"BOSS_TentacleTurtle": {
+"elements": [
+"水"
+],
+"paldeck": "148",
+"work": {
+"採礦": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"BOSS_TentacleTurtle_Ground": {
+"elements": [
+"水",
+"地"
+],
+"paldeck": "148B",
+"work": {
+"採礦": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"BOSS_ThunderBird": {
+"elements": [
+"雷"
+],
+"paldeck": "73",
+"work": {
+"採集": 1,
+"搬運": 3,
+"發電": 2
+}
+},
+"BOSS_ThunderDog": {
+"elements": [
+"雷"
+],
+"paldeck": "60",
+"work": {
+"發電": 2
+}
+},
+"BOSS_ThunderDragonMan": {
+"elements": [
+"龍",
+"雷"
+],
+"paldeck": "106",
+"work": {
+"手工": 2,
+"搬運": 3,
+"發電": 4
+}
+},
+"BOSS_TropicalOstrich": {
+"elements": [
+"草"
+],
+"paldeck": "144",
+"work": {
+"採礦": 3,
+"採集": 2,
+"播種": 2
+}
+},
+"BOSS_Umihebi": {
+"elements": [
+"龍",
+"水"
+],
+"paldeck": "101",
+"work": {
+"灌溉": 4
+}
+},
+"BOSS_Umihebi_Fire": {
+"elements": [
+"龍",
+"火"
+],
+"paldeck": "101B",
+"work": {
+"點火": 4
+}
+},
+"BOSS_VioletFairy": {
+"elements": [
+"草"
+],
+"paldeck": "78",
+"work": {
+"手工": 2,
+"採集": 2,
+"搬運": 1,
+"播種": 2,
+"製藥": 3
+}
+},
+"BOSS_VolcanicMonster": {
+"elements": [
+"火",
+"地"
+],
+"paldeck": "88",
+"work": {
+"採礦": 3,
+"點火": 3
+}
+},
+"BOSS_VolcanicMonster_Ice": {
+"elements": [
+"冰",
+"地"
+],
+"paldeck": "88B",
+"work": {
+"採礦": 3,
+"製冷": 3
+}
+},
+"BOSS_WeaselDragon": {
+"elements": [
+"冰",
+"龍"
+],
+"paldeck": "55",
+"work": {
+"採集": 1,
+"製冷": 1
+}
+},
+"BOSS_WeaselDragon_Fire": {
+"elements": [
+"火",
+"龍"
+],
+"paldeck": "55B",
+"work": {
+"採集": 1,
+"點火": 2
+}
+},
+"BOSS_Werewolf": {
+"elements": [
+"暗"
+],
+"paldeck": "46",
+"work": {
+"手工": 2
+}
+},
+"BOSS_Werewolf_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "46B",
+"work": {
+"手工": 2,
+"製冷": 3
+}
+},
+"BOSS_WhiteAlienDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "126",
+"work": {
+"採礦": 3
+}
+},
+"BOSS_WhiteDeer": {
+"elements": [
+"無"
+],
+"paldeck": "132",
+"work": {
+"伐木": 4,
+"採集": 1
+}
+},
+"BOSS_WhiteMoth": {
+"elements": [
+"冰"
+],
+"paldeck": "79",
+"work": {
+"牧場": 1,
+"製冷": 2,
+"製藥": 2
+}
+},
+"BOSS_WhiteShieldDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "130",
+"work": {
+"伐木": 3
+}
+},
+"BOSS_WhiteTiger": {
+"elements": [
+"冰"
+],
+"paldeck": "83",
+"work": {
+"伐木": 2,
+"手工": 1,
+"搬運": 3,
+"製冷": 3
+}
+},
+"BOSS_WhiteTiger_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "83B",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採礦": 3,
+"搬運": 3
+}
+},
+"BOSS_WindChimes": {
+"elements": [
+"地"
+],
+"paldeck": "32",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 2
+}
+},
+"BOSS_WindChimes_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "32B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"製冷": 1
+}
+},
+"BOSS_WingGolem": {
+"elements": [
+"地"
+],
+"paldeck": "120",
+"work": {
+"採礦": 4,
+"採集": 3,
+"搬運": 4
+}
+},
+"BOSS_WizardOwl": {
+"elements": [
+"暗"
+],
+"paldeck": "15",
+"work": {
+"採集": 1
+}
+},
+"BOSS_WoolFox": {
+"elements": [
+"無"
+],
+"paldeck": "18",
+"work": {
+"採集": 1,
+"牧場": 1
+}
+},
+"BOSS_YakushimaBoss001": {
+"elements": [
+"暗"
+],
+"paldeck": "",
+"work": {
+"搬運": 4
+}
+},
+"BOSS_Yeti": {
+"elements": [
+"冰"
+],
+"paldeck": "91",
+"work": {
+"伐木": 3,
+"手工": 2,
+"搬運": 4,
+"製冷": 2
+}
+},
+"BOSS_Yeti_Grass": {
+"elements": [
+"草"
+],
+"paldeck": "91B",
+"work": {
+"伐木": 3,
+"手工": 2,
+"搬運": 4,
+"播種": 1
+}
+},
+"BadCatgirl": {
+"elements": [
+"暗"
+],
+"paldeck": "139",
+"work": {
+"伐木": 2,
+"手工": 3,
+"採集": 2,
+"搬運": 2
+}
+},
+"Baphomet": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "40",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2,
+"點火": 1
+}
+},
+"Baphomet_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "40B",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2
+}
+},
+"Baphomet_Dark_Oilrig": {
+"elements": [
+"暗"
+],
+"paldeck": "40B",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2
+}
+},
+"Bastet": {
+"elements": [
+"暗"
+],
+"paldeck": "24",
+"work": {
+"牧場": 1
+}
+},
+"Bastet_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "24B",
+"work": {
+"牧場": 1,
+"製冷": 1
+}
+},
+"BerryGoat": {
+"elements": [
+"草"
+],
+"paldeck": "35",
+"work": {
+"播種": 2,
+"牧場": 1
+}
+},
+"BerryGoat_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "35B",
+"work": {
+"播種": 2,
+"牧場": 1
+}
+},
+"BirdDragon": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "71",
+"work": {
+"搬運": 3,
+"點火": 1
+}
+},
+"BirdDragon_Ice": {
+"elements": [
+"冰",
+"暗"
+],
+"paldeck": "71B",
+"work": {
+"搬運": 3,
+"製冷": 2
+}
+},
+"BlackCentaur": {
+"elements": [
+"暗"
+],
+"paldeck": "109",
+"work": {
+"伐木": 2,
+"採礦": 2
+}
+},
+"BlackGriffon": {
+"elements": [
+"暗"
+],
+"paldeck": "107",
+"work": {
+"採集": 1
+}
+},
+"BlackMetalDragon": {
+"elements": [
+"龍",
+"暗"
+],
+"paldeck": "98",
+"work": {
+"手工": 1,
+"採礦": 4
+}
+},
+"BlackPuppy": {
+"elements": [
+"暗"
+],
+"paldeck": "131",
+"work": {
+"採集": 2
+}
+},
+"BlueDragon": {
+"elements": [
+"水",
+"龍"
+],
+"paldeck": "82",
+"work": {
+"灌溉": 3
+}
+},
+"BlueDragon_Ice": {
+"elements": [
+"冰",
+"龍"
+],
+"paldeck": "82B",
+"work": {
+"製冷": 3
+}
+},
+"BluePlatypus": {
+"elements": [
+"水"
+],
+"paldeck": "6",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1
+}
+},
+"BluePlatypus_Fire": {
+"elements": [
+"水",
+"火"
+],
+"paldeck": "6B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1,
+"點火": 1
+}
+},
+"BlueThunderHorse": {
+"elements": [
+"雷"
+],
+"paldeck": "136",
+"work": {
+"採集": 1,
+"發電": 4
+}
+},
+"BlueberryFairy": {
+"elements": [
+"草",
+"暗"
+],
+"paldeck": "138",
+"work": {
+"手工": 1,
+"採集": 2,
+"搬運": 1,
+"播種": 3,
+"製藥": 3
+}
+},
+"Boar": {
+"elements": [
+"地"
+],
+"paldeck": "20",
+"work": {
+"採礦": 1
+}
+},
+"Boss_Anubis": {
+"elements": [
+"地"
+],
+"paldeck": "100",
+"work": {
+"手工": 4,
+"採礦": 3,
+"搬運": 2
+}
+},
+"CandleGhost": {
+"elements": [
+"暗",
+"火"
+],
+"paldeck": "118",
+"work": {
+"手工": 2,
+"採礦": 2,
+"採集": 1,
+"牧場": 1,
+"點火": 3
+}
+},
+"CaptainPenguin": {
+"elements": [
+"水",
+"冰"
+],
+"paldeck": "11",
+"work": {
+"手工": 2,
+"採礦": 2,
+"搬運": 2,
+"灌溉": 2,
+"製冷": 2
+}
+},
+"CaptainPenguin_Black": {
+"elements": [
+"水",
+"雷"
+],
+"paldeck": "11B",
+"work": {
+"手工": 2,
+"採礦": 2,
+"搬運": 2,
+"灌溉": 2,
+"發電": 2
+}
+},
+"Carbunclo": {
+"elements": [
+"草"
+],
+"paldeck": "4",
+"work": {
+"伐木": 1,
+"手工": 1,
+"採集": 1,
+"播種": 1,
+"製藥": 1
+}
+},
+"CatBat": {
+"elements": [
+"暗"
+],
+"paldeck": "68",
+"work": {
+"採礦": 2,
+"採集": 2,
+"搬運": 2
+}
+},
+"CatMage": {
+"elements": [
+"暗"
+],
+"paldeck": "75",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 2
+}
+},
+"CatMage_Fire": {
+"elements": [
+"暗",
+"火"
+],
+"paldeck": "75B",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 2,
+"點火": 2
+}
+},
+"CatVampire": {
+"elements": [
+"暗"
+],
+"paldeck": "94",
+"work": {
+"製藥": 3
+}
+},
+"ChickenPal": {
+"elements": [
+"無"
+],
+"paldeck": "3",
+"work": {
+"採集": 1,
+"牧場": 1
+}
+},
+"ColorfulBird": {
+"elements": [
+"無"
+],
+"paldeck": "27",
+"work": {
+"採集": 1
+}
+},
+"CowPal": {
+"elements": [
+"無"
+],
+"paldeck": "29",
+"work": {
+"牧場": 1
+}
+},
+"CuteButterfly": {
+"elements": [
+"草"
+],
+"paldeck": "41",
+"work": {
+"播種": 2,
+"製藥": 1
+}
+},
+"CuteFox": {
+"elements": [
+"無"
+],
+"paldeck": "14",
+"work": {
+"採集": 1,
+"牧場": 1
+}
+},
+"CuteMole": {
+"elements": [
+"地"
+],
+"paldeck": "22",
+"work": {
+"手工": 1,
+"採礦": 1,
+"搬運": 1
+}
+},
+"DarkAlien": {
+"elements": [
+"暗"
+],
+"paldeck": "125",
+"work": {
+"伐木": 2,
+"搬運": 2
+}
+},
+"DarkAlien_Oilrig": {
+"elements": [
+"暗"
+],
+"paldeck": "125",
+"work": {
+"伐木": 2,
+"搬運": 2
+}
+},
+"DarkCrow": {
+"elements": [
+"暗"
+],
+"paldeck": "44",
+"work": {
+"伐木": 1
+}
+},
+"DarkMechaDragon": {
+"elements": [
+"暗",
+"龍"
+],
+"paldeck": "127",
+"work": {
+"採集": 1
+}
+},
+"DarkMutant": {
+"elements": [
+"無"
+],
+"paldeck": "63",
+"work": {
+"手工": 3,
+"搬運": 2,
+"製藥": 3
+}
+},
+"DarkScorpion": {
+"elements": [
+"暗",
+"地"
+],
+"paldeck": "99",
+"work": {
+"伐木": 2,
+"採礦": 3
+}
+},
+"DarkScorpion_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "99B",
+"work": {
+"伐木": 2,
+"採礦": 3
+}
+},
+"Deer": {
+"elements": [
+"無"
+],
+"paldeck": "37",
+"work": {
+"伐木": 2
+}
+},
+"Deer_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "37B",
+"work": {
+"伐木": 2
+}
+},
+"DreamDemon": {
+"elements": [
+"暗"
+],
+"paldeck": "19",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"DrillGame": {
+"elements": [
+"地"
+],
+"paldeck": "67",
+"work": {
+"採礦": 3
+}
+},
+"Eagle": {
+"elements": [
+"無"
+],
+"paldeck": "47",
+"work": {
+"採集": 2
+}
+},
+"ElecCat": {
+"elements": [
+"雷"
+],
+"paldeck": "7",
+"work": {
+"手工": 1,
+"搬運": 1,
+"發電": 1
+}
+},
+"ElecPanda": {
+"elements": [
+"雷"
+],
+"paldeck": "103",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"發電": 3
+}
+},
+"FairyDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "80",
+"work": {
+"伐木": 2
+}
+},
+"FairyDragon_Water": {
+"elements": [
+"龍",
+"水"
+],
+"paldeck": "80B",
+"work": {
+"伐木": 2,
+"灌溉": 3
+}
+},
+"FeatherOstrich": {
+"elements": [
+"地"
+],
+"paldeck": "123",
+"work": {
+"採集": 2
+}
+},
+"FengyunDeeper": {
+"elements": [
+"無"
+],
+"paldeck": "93",
+"work": {
+"伐木": 2
+}
+},
+"FengyunDeeper_Electric": {
+"elements": [
+"雷"
+],
+"paldeck": "93B",
+"work": {
+"伐木": 2,
+"發電": 2
+}
+},
+"FireKirin": {
+"elements": [
+"火"
+],
+"paldeck": "58",
+"work": {
+"伐木": 1,
+"點火": 2
+}
+},
+"FireKirin_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "58B",
+"work": {
+"伐木": 1,
+"點火": 2
+}
+},
+"FlameBambi": {
+"elements": [
+"火"
+],
+"paldeck": "9",
+"work": {
+"點火": 1
+}
+},
+"FlameBuffalo": {
+"elements": [
+"火"
+],
+"paldeck": "42",
+"work": {
+"伐木": 1,
+"點火": 2
+}
+},
+"FlowerDinosaur": {
+"elements": [
+"草",
+"龍"
+],
+"paldeck": "64",
+"work": {
+"伐木": 2,
+"播種": 2
+}
+},
+"FlowerDinosaur_Electric": {
+"elements": [
+"雷",
+"龍"
+],
+"paldeck": "64B",
+"work": {
+"伐木": 2,
+"發電": 2
+}
+},
+"FlowerDoll": {
+"elements": [
+"草"
+],
+"paldeck": "87",
+"work": {
+"手工": 2,
+"採集": 2,
+"搬運": 1,
+"播種": 3,
+"製藥": 2
+}
+},
+"FlowerRabbit": {
+"elements": [
+"草"
+],
+"paldeck": "28",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1,
+"製藥": 1
+}
+},
+"FlyingManta": {
+"elements": [
+"水"
+],
+"paldeck": "25",
+"work": {
+"搬運": 1,
+"灌溉": 1
+}
+},
+"FlyingManta_Thunder": {
+"elements": [
+"水",
+"雷"
+],
+"paldeck": "25B",
+"work": {
+"搬運": 1,
+"灌溉": 1,
+"發電": 1
+}
+},
+"FoxMage": {
+"elements": [
+"火"
+],
+"paldeck": "76",
+"work": {
+"手工": 3,
+"搬運": 2,
+"點火": 2
+}
+},
+"FoxMage_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "76B",
+"work": {
+"手工": 3,
+"搬運": 2,
+"點火": 2
+}
+},
+"GYM_BlackGriffon": {
+"elements": [
+"暗"
+],
+"paldeck": "107",
+"work": {
+"採集": 1
+}
+},
+"GYM_BlackGriffon_2": {
+"elements": [
+"暗"
+],
+"paldeck": "107",
+"work": {
+"採集": 1
+}
+},
+"GYM_BlackGriffon_2_Avatar": {
+"elements": [
+"暗"
+],
+"paldeck": "107",
+"work": {
+"採集": 1
+}
+},
+"GYM_ElecPanda": {
+"elements": [
+"雷"
+],
+"paldeck": "103",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"發電": 3
+}
+},
+"GYM_ElecPanda_2": {
+"elements": [
+"雷"
+],
+"paldeck": "103",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"發電": 3
+}
+},
+"GYM_ElecPanda_Otomo": {
+"elements": [
+"雷"
+],
+"paldeck": "103",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"發電": 3
+}
+},
+"GYM_Horus": {
+"elements": [
+"火"
+],
+"paldeck": "105",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"GYM_Horus_2": {
+"elements": [
+"火"
+],
+"paldeck": "105",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"GYM_LilyQueen": {
+"elements": [
+"草"
+],
+"paldeck": "104",
+"work": {
+"手工": 2,
+"採集": 2,
+"播種": 3,
+"製藥": 3
+}
+},
+"GYM_LilyQueen_2": {
+"elements": [
+"草"
+],
+"paldeck": "104",
+"work": {
+"手工": 2,
+"採集": 2,
+"播種": 3,
+"製藥": 3
+}
+},
+"GYM_MoonQueen": {
+"elements": [
+"暗",
+"無"
+],
+"paldeck": "113",
+"work": {
+"手工": 1,
+"搬運": 1
+}
+},
+"GYM_MoonQueen_2": {
+"elements": [
+"暗",
+"無"
+],
+"paldeck": "113",
+"work": {
+"手工": 1,
+"搬運": 1
+}
+},
+"GYM_MoonQueen_2_Servant": {
+"elements": [
+"暗",
+"無"
+],
+"paldeck": "113",
+"work": {
+"手工": 1,
+"搬運": 1
+}
+},
+"GYM_SnowTigerBeastman": {
+"elements": [
+"冰"
+],
+"paldeck": "137",
+"work": {
+"伐木": 2,
+"採礦": 2,
+"製冷": 3
+}
+},
+"GYM_SnowTigerBeastman_2": {
+"elements": [
+"冰"
+],
+"paldeck": "137",
+"work": {
+"伐木": 2,
+"採礦": 2,
+"製冷": 3
+}
+},
+"GYM_ThunderDragonMan": {
+"elements": [
+"龍",
+"雷"
+],
+"paldeck": "106",
+"work": {
+"手工": 2,
+"搬運": 3,
+"發電": 3
+}
+},
+"GYM_ThunderDragonMan_2": {
+"elements": [
+"龍",
+"雷"
+],
+"paldeck": "106",
+"work": {
+"手工": 2,
+"搬運": 3,
+"發電": 3
+}
+},
+"Ganesha": {
+"elements": [
+"水"
+],
+"paldeck": "16",
+"work": {
+"灌溉": 1
+}
+},
+"Garm": {
+"elements": [
+"無"
+],
+"paldeck": "26",
+"work": {
+"採集": 1
+}
+},
+"GhostAnglerfish": {
+"elements": [
+"暗",
+"水"
+],
+"paldeck": "153",
+"work": {
+"搬運": 2,
+"灌溉": 4
+}
+},
+"GhostAnglerfish_Fire": {
+"elements": [
+"火",
+"水"
+],
+"paldeck": "153B",
+"work": {
+"搬運": 2,
+"灌溉": 4,
+"點火": 3
+}
+},
+"GhostBeast": {
+"elements": [
+"暗"
+],
+"paldeck": "66",
+"work": {
+"採礦": 1,
+"採集": 2
+}
+},
+"GhostRabbit": {
+"elements": [
+"暗"
+],
+"paldeck": "128",
+"work": {
+"手工": 3,
+"搬運": 2
+}
+},
+"GoldenHorse": {
+"elements": [
+"地"
+],
+"paldeck": "140",
+"work": {
+"採集": 2
+}
+},
+"Gorilla": {
+"elements": [
+"無"
+],
+"paldeck": "49",
+"work": {
+"伐木": 2,
+"手工": 1,
+"搬運": 3
+}
+},
+"Gorilla_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "49B",
+"work": {
+"手工": 1,
+"採礦": 2,
+"搬運": 3
+}
+},
+"GrassMammoth": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "90",
+"work": {
+"伐木": 2,
+"採礦": 2,
+"播種": 2
+}
+},
+"GrassMammoth_Ice": {
+"elements": [
+"冰",
+"地"
+],
+"paldeck": "90B",
+"work": {
+"伐木": 2,
+"採礦": 2,
+"製冷": 2
+}
+},
+"GrassPanda": {
+"elements": [
+"草"
+],
+"paldeck": "33",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"播種": 2
+}
+},
+"GrassPanda_Electric": {
+"elements": [
+"雷"
+],
+"paldeck": "33B",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"發電": 2
+}
+},
+"GrassRabbitMan": {
+"elements": [
+"草"
+],
+"paldeck": "77",
+"work": {
+"伐木": 2,
+"手工": 3,
+"採集": 3,
+"搬運": 2,
+"播種": 2
+}
+},
+"GrimGirl": {
+"elements": [
+"暗"
+],
+"paldeck": "134",
+"work": {
+"伐木": 1,
+"手工": 4,
+"搬運": 2,
+"製藥": 3
+}
+},
+"GuardianDog": {
+"elements": [
+"無"
+],
+"paldeck": "121",
+"work": {
+"採集": 2
+}
+},
+"HadesBird": {
+"elements": [
+"暗"
+],
+"paldeck": "97",
+"work": {
+"搬運": 3
+}
+},
+"HadesBird_Electric": {
+"elements": [
+"暗",
+"雷"
+],
+"paldeck": "97B",
+"work": {
+"搬運": 3,
+"發電": 3
+}
+},
+"HadesBird_Oilrig": {
+"elements": [
+"暗"
+],
+"paldeck": "97",
+"work": {
+"搬運": 3
+}
+},
+"HawkBird": {
+"elements": [
+"無"
+],
+"paldeck": "38",
+"work": {
+"採集": 2
+}
+},
+"Hedgehog": {
+"elements": [
+"雷"
+],
+"paldeck": "12",
+"work": {
+"發電": 1
+}
+},
+"Hedgehog_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "12B",
+"work": {
+"製冷": 1
+}
+},
+"HerculesBeetle": {
+"elements": [
+"地",
+"草"
+],
+"paldeck": "92",
+"work": {
+"伐木": 3,
+"手工": 1,
+"搬運": 3,
+"播種": 1
+}
+},
+"HerculesBeetle_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "92B",
+"work": {
+"手工": 1,
+"採礦": 3,
+"搬運": 3
+}
+},
+"Horus": {
+"elements": [
+"火"
+],
+"paldeck": "105",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"Horus_Oilrig": {
+"elements": [
+"火"
+],
+"paldeck": "105",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"Horus_Water": {
+"elements": [
+"水"
+],
+"paldeck": "105B",
+"work": {
+"搬運": 3,
+"灌溉": 4
+}
+},
+"IceCrocodile": {
+"elements": [
+"冰",
+"水"
+],
+"paldeck": "146",
+"work": {
+"搬運": 1,
+"灌溉": 1,
+"製冷": 2
+}
+},
+"IceDeer": {
+"elements": [
+"冰"
+],
+"paldeck": "59",
+"work": {
+"伐木": 2,
+"製冷": 2
+}
+},
+"IceFox": {
+"elements": [
+"冰"
+],
+"paldeck": "57",
+"work": {
+"製冷": 2
+}
+},
+"IceHorse": {
+"elements": [
+"冰"
+],
+"paldeck": "110",
+"work": {
+"製冷": 4
+}
+},
+"IceHorse_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "110B",
+"work": {
+"採集": 4
+}
+},
+"IceNarwhal": {
+"elements": [
+"冰",
+"水"
+],
+"paldeck": "154",
+"work": {
+"灌溉": 3,
+"製冷": 4
+}
+},
+"IceNarwhal_Fire": {
+"elements": [
+"冰",
+"火"
+],
+"paldeck": "154B",
+"work": {
+"製冷": 4,
+"點火": 3
+}
+},
+"IceSeal": {
+"elements": [
+"冰",
+"水"
+],
+"paldeck": "147",
+"work": {
+"灌溉": 2,
+"製冷": 3
+}
+},
+"IceWitch": {
+"elements": [
+"冰"
+],
+"paldeck": "142",
+"work": {
+"手工": 2,
+"搬運": 1,
+"製冷": 3,
+"製藥": 2
+}
+},
+"JellyfishFairy": {
+"elements": [
+"水"
+],
+"paldeck": "150",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"JellyfishGhost": {
+"elements": [
+"水",
+"暗"
+],
+"paldeck": "149",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 2,
+"製藥": 1
+}
+},
+"JetDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "111",
+"work": {
+"採集": 3
+}
+},
+"Kelpie": {
+"elements": [
+"水"
+],
+"paldeck": "81",
+"work": {
+"灌溉": 1,
+"牧場": 1
+}
+},
+"Kelpie_Fire": {
+"elements": [
+"火"
+],
+"paldeck": "81B",
+"work": {
+"牧場": 1,
+"點火": 1
+}
+},
+"KendoFrog": {
+"elements": [
+"水"
+],
+"paldeck": "114",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"灌溉": 1
+}
+},
+"KendoFrog_Dark": {
+"elements": [
+"水",
+"暗"
+],
+"paldeck": "114B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"灌溉": 1
+}
+},
+"KingAlpaca": {
+"elements": [
+"無"
+],
+"paldeck": "89",
+"work": {
+"採集": 1
+}
+},
+"KingAlpaca_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "89B",
+"work": {
+"採集": 1,
+"製冷": 3
+}
+},
+"KingBahamut": {
+"elements": [
+"火"
+],
+"paldeck": "96",
+"work": {
+"採礦": 4,
+"點火": 3
+}
+},
+"KingBahamut_Dragon": {
+"elements": [
+"龍",
+"火"
+],
+"paldeck": "96B",
+"work": {
+"採礦": 4,
+"點火": 4
+}
+},
+"Kirin": {
+"elements": [
+"雷"
+],
+"paldeck": "56",
+"work": {
+"伐木": 1,
+"發電": 2
+}
+},
+"Kitsunebi": {
+"elements": [
+"火"
+],
+"paldeck": "5",
+"work": {
+"點火": 1
+}
+},
+"Kitsunebi_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "5B",
+"work": {
+"製冷": 1
+}
+},
+"LavaGirl": {
+"elements": [
+"火"
+],
+"paldeck": "70",
+"work": {
+"手工": 1,
+"搬運": 1,
+"牧場": 1,
+"點火": 1
+}
+},
+"LazyCatfish": {
+"elements": [
+"地",
+"水"
+],
+"paldeck": "43",
+"work": {
+"採礦": 2,
+"搬運": 1,
+"灌溉": 1,
+"牧場": 1
+}
+},
+"LazyCatfish_Gold": {
+"elements": [
+"地",
+"水"
+],
+"paldeck": "43B",
+"work": {
+"採礦": 2,
+"搬運": 1,
+"灌溉": 1,
+"牧場": 1
+}
+},
+"LazyDragon": {
+"elements": [
+"龍",
+"水"
+],
+"paldeck": "85",
+"work": {
+"搬運": 1,
+"灌溉": 2
+}
+},
+"LazyDragon_Electric": {
+"elements": [
+"龍",
+"雷"
+],
+"paldeck": "85B",
+"work": {
+"搬運": 1,
+"發電": 3
+}
+},
+"LeafMomonga": {
+"elements": [
+"草",
+"無"
+],
+"paldeck": "141",
+"work": {
+"採集": 1,
+"搬運": 1,
+"播種": 2
+}
+},
+"LeafPrincess": {
+"elements": [
+"草"
+],
+"paldeck": "115",
+"work": {
+"手工": 2,
+"採集": 1,
+"播種": 2,
+"製藥": 2
+}
+},
+"LegendDeer": {
+"elements": [
+"無"
+],
+"paldeck": "156",
+"work": {
+"伐木": 4,
+"採集": 3
+}
+},
+"LilyQueen": {
+"elements": [
+"草"
+],
+"paldeck": "104",
+"work": {
+"手工": 3,
+"採集": 2,
+"播種": 4,
+"製藥": 3
+}
+},
+"LilyQueen_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "104B",
+"work": {
+"手工": 3,
+"採集": 2,
+"製藥": 3
+}
+},
+"LittleBriarRose": {
+"elements": [
+"草"
+],
+"paldeck": "30",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1,
+"製藥": 2
+}
+},
+"LizardMan": {
+"elements": [
+"暗"
+],
+"paldeck": "45",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"LizardMan_Fire": {
+"elements": [
+"火"
+],
+"paldeck": "45B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"點火": 1
+}
+},
+"LizardMan_Oilrig": {
+"elements": [
+"暗"
+],
+"paldeck": "45",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"Manticore": {
+"elements": [
+"火"
+],
+"paldeck": "84",
+"work": {
+"伐木": 2,
+"點火": 3
+}
+},
+"Manticore_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "84B",
+"work": {
+"伐木": 2,
+"點火": 3
+}
+},
+"MimicDog": {
+"elements": [
+"無"
+],
+"paldeck": "124",
+"work": {
+"採集": 1,
+"搬運": 1
+}
+},
+"Monkey": {
+"elements": [
+"草"
+],
+"paldeck": "8",
+"work": {
+"伐木": 1,
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1
+}
+},
+"MoonQueen": {
+"elements": [
+"暗",
+"無"
+],
+"paldeck": "113",
+"work": {
+"手工": 4,
+"搬運": 3,
+"製藥": 3
+}
+},
+"MopBaby": {
+"elements": [
+"冰"
+],
+"paldeck": "53",
+"work": {
+"採集": 1,
+"製冷": 1
+}
+},
+"MopKing": {
+"elements": [
+"冰"
+],
+"paldeck": "54",
+"work": {
+"採集": 2,
+"製冷": 2
+}
+},
+"MushroomDragon": {
+"elements": [
+"草"
+],
+"paldeck": "116",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採集": 2,
+"播種": 2
+}
+},
+"MushroomDragon_Dark": {
+"elements": [
+"草",
+"暗"
+],
+"paldeck": "116B",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採集": 2,
+"播種": 2
+}
+},
+"Mutant": {
+"elements": [
+"無"
+],
+"paldeck": "63",
+"work": {
+"手工": 3,
+"採集": 1,
+"搬運": 1
+}
+},
+"MysteryMask": {
+"elements": [
+"暗"
+],
+"paldeck": "133",
+"work": {
+"採集": 1
+}
+},
+"NaughtyCat": {
+"elements": [
+"無"
+],
+"paldeck": "52",
+"work": {
+"採集": 2
+}
+},
+"NegativeKoala": {
+"elements": [
+"暗"
+],
+"paldeck": "17",
+"work": {
+"手工": 1,
+"採礦": 1,
+"搬運": 1
+}
+},
+"NegativeOctopus": {
+"elements": [
+"暗",
+"水"
+],
+"paldeck": "23",
+"work": {
+"採集": 1,
+"搬運": 2,
+"灌溉": 1
+}
+},
+"NegativeOctopus_Neutral": {
+"elements": [
+"無",
+"水"
+],
+"paldeck": "23B",
+"work": {
+"採集": 1,
+"搬運": 2,
+"灌溉": 1
+}
+},
+"NightBlueHorse": {
+"elements": [
+"暗"
+],
+"paldeck": "129",
+"work": {
+"採集": 2
+}
+},
+"NightFox": {
+"elements": [
+"暗"
+],
+"paldeck": "21",
+"work": {
+"採集": 1
+}
+},
+"NightLady": {
+"elements": [
+"暗"
+],
+"paldeck": "112",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 4
+}
+},
+"NightLady_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "112B",
+"work": {
+"手工": 2,
+"搬運": 2,
+"製藥": 4
+}
+},
+"OctopusGirl": {
+"elements": [
+"水",
+"暗"
+],
+"paldeck": "151",
+"work": {
+"手工": 2,
+"搬運": 2,
+"灌溉": 2
+}
+},
+"PREDATOR_AmaterasuWolf": {
+"elements": [
+"火"
+],
+"paldeck": "61",
+"work": {
+"點火": 2
+}
+},
+"PREDATOR_Baphomet_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "40B",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2
+}
+},
+"PREDATOR_BirdDragon": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "71",
+"work": {
+"搬運": 3,
+"點火": 1
+}
+},
+"PREDATOR_CandleGhost": {
+"elements": [
+"暗",
+"火"
+],
+"paldeck": "118",
+"work": {
+"手工": 2,
+"採礦": 2,
+"採集": 1,
+"牧場": 1,
+"點火": 3
+}
+},
+"PREDATOR_DrillGame": {
+"elements": [
+"地"
+],
+"paldeck": "67",
+"work": {
+"採礦": 3
+}
+},
+"PREDATOR_FairyDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "80",
+"work": {
+"伐木": 2
+}
+},
+"PREDATOR_FeatherOstrich": {
+"elements": [
+"地"
+],
+"paldeck": "123",
+"work": {
+"採集": 2
+}
+},
+"PREDATOR_FlowerDinosaur": {
+"elements": [
+"草",
+"龍"
+],
+"paldeck": "64",
+"work": {
+"伐木": 2,
+"播種": 2
+}
+},
+"PREDATOR_Garm": {
+"elements": [
+"無"
+],
+"paldeck": "26",
+"work": {
+"採集": 1
+}
+},
+"PREDATOR_GhostBeast": {
+"elements": [
+"暗"
+],
+"paldeck": "66",
+"work": {
+"採礦": 1,
+"採集": 2
+}
+},
+"PREDATOR_GoldenHorse": {
+"elements": [
+"地"
+],
+"paldeck": "140",
+"work": {
+"採集": 2
+}
+},
+"PREDATOR_Gorilla": {
+"elements": [
+"無"
+],
+"paldeck": "49",
+"work": {
+"伐木": 2,
+"手工": 1,
+"搬運": 3
+}
+},
+"PREDATOR_GrassPanda": {
+"elements": [
+"草"
+],
+"paldeck": "33",
+"work": {
+"伐木": 2,
+"手工": 2,
+"搬運": 3,
+"播種": 2
+}
+},
+"PREDATOR_GrimGirl": {
+"elements": [
+"暗"
+],
+"paldeck": "134",
+"work": {
+"伐木": 1,
+"手工": 4,
+"搬運": 2,
+"製藥": 3
+}
+},
+"PREDATOR_HadesBird_Electric": {
+"elements": [
+"暗",
+"雷"
+],
+"paldeck": "97B",
+"work": {
+"搬運": 3,
+"發電": 3
+}
+},
+"PREDATOR_Horus_Water": {
+"elements": [
+"水"
+],
+"paldeck": "105B",
+"work": {
+"搬運": 3,
+"灌溉": 4
+}
+},
+"PREDATOR_LazyDragon": {
+"elements": [
+"龍",
+"水"
+],
+"paldeck": "85",
+"work": {
+"搬運": 1,
+"灌溉": 2
+}
+},
+"PREDATOR_Manticore_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "84B",
+"work": {
+"伐木": 2,
+"點火": 3
+}
+},
+"PREDATOR_MushroomDragon": {
+"elements": [
+"草"
+],
+"paldeck": "116",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採集": 2,
+"播種": 2
+}
+},
+"PREDATOR_MysteryMask": {
+"elements": [
+"暗"
+],
+"paldeck": "133",
+"work": {
+"採集": 1
+}
+},
+"PREDATOR_NightBlueHorse": {
+"elements": [
+"暗"
+],
+"paldeck": "129",
+"work": {
+"採集": 2
+}
+},
+"PREDATOR_PinkLizard": {
+"elements": [
+"無"
+],
+"paldeck": "69",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2,
+"製藥": 2
+}
+},
+"PREDATOR_PurpleSpider": {
+"elements": [
+"暗"
+],
+"paldeck": "135",
+"work": {
+"手工": 2,
+"採集": 2,
+"搬運": 2,
+"製藥": 2
+}
+},
+"PREDATOR_RedArmorBird": {
+"elements": [
+"火"
+],
+"paldeck": "74",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"PREDATOR_Ronin_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "72B",
+"work": {
+"伐木": 3,
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"點火": 2
+}
+},
+"PREDATOR_ScorpionMan": {
+"elements": [
+"暗",
+"地"
+],
+"paldeck": "119",
+"work": {
+"伐木": 3,
+"採集": 1,
+"製藥": 1
+}
+},
+"PREDATOR_SifuDog": {
+"elements": [
+"無"
+],
+"paldeck": "122",
+"work": {
+"伐木": 2,
+"手工": 3,
+"採集": 2,
+"搬運": 2,
+"製藥": 1
+}
+},
+"PREDATOR_ThunderDog": {
+"elements": [
+"雷"
+],
+"paldeck": "60",
+"work": {
+"發電": 2
+}
+},
+"PREDATOR_Umihebi_Fire": {
+"elements": [
+"龍",
+"火"
+],
+"paldeck": "101B",
+"work": {
+"點火": 4
+}
+},
+"PREDATOR_VolcanicMonster_Ice": {
+"elements": [
+"冰",
+"地"
+],
+"paldeck": "88B",
+"work": {
+"採礦": 3,
+"製冷": 3
+}
+},
+"PREDATOR_Werewolf_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "46B",
+"work": {
+"手工": 2,
+"製冷": 3
+}
+},
+"PREDATOR_WhiteTiger_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "83B",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採礦": 3,
+"搬運": 3
+}
+},
+"PREDATOR_Yeti": {
+"elements": [
+"冰"
+],
+"paldeck": "91",
+"work": {
+"伐木": 3,
+"手工": 2,
+"搬運": 4,
+"製冷": 2
+}
+},
+"Penguin": {
+"elements": [
+"水",
+"冰"
+],
+"paldeck": "10",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1,
+"製冷": 1
+}
+},
+"Penguin_Electric": {
+"elements": [
+"水",
+"雷"
+],
+"paldeck": "10B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 1,
+"發電": 2
+}
+},
+"PinkCat": {
+"elements": [
+"無"
+],
+"paldeck": "2",
+"work": {
+"手工": 1,
+"採礦": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"PinkLizard": {
+"elements": [
+"無"
+],
+"paldeck": "69",
+"work": {
+"手工": 2,
+"採礦": 1,
+"搬運": 2,
+"製藥": 2
+}
+},
+"PinkRabbit": {
+"elements": [
+"無"
+],
+"paldeck": "39",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"PinkRabbit_Grass": {
+"elements": [
+"草"
+],
+"paldeck": "39B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 1,
+"播種": 1
+}
+},
+"PlantSlime": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "13",
+"work": {
+"播種": 1
+}
+},
+"PlantSlime_Flower": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "13",
+"work": {
+"播種": 1
+}
+},
+"Plesiosaur": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "145",
+"work": {
+"採礦": 2,
+"採集": 4,
+"播種": 4
+}
+},
+"PoseidonOrca": {
+"elements": [
+"水"
+],
+"paldeck": "155",
+"work": {
+"灌溉": 4
+}
+},
+"PurpleSpider": {
+"elements": [
+"暗"
+],
+"paldeck": "135",
+"work": {
+"手工": 2,
+"採集": 2,
+"搬運": 2,
+"製藥": 2
+}
+},
+"QueenBee": {
+"elements": [
+"草"
+],
+"paldeck": "51",
+"work": {
+"伐木": 1,
+"手工": 2,
+"採集": 2,
+"播種": 2,
+"製藥": 2
+}
+},
+"Quest_Farmer03_PinkCat": {
+"elements": [
+"無"
+],
+"paldeck": "2",
+"work": {
+"手工": 1,
+"採礦": 1,
+"採集": 1,
+"搬運": 1
+}
+},
+"Quest_Farmer03_SheepBall": {
+"elements": [
+"無"
+],
+"paldeck": "1",
+"work": {
+"手工": 1,
+"搬運": 1,
+"牧場": 1
+}
+},
+"RAID_DarkMechaDragon": {
+"elements": [
+"暗",
+"龍"
+],
+"paldeck": "127",
+"work": {
+"採集": 1
+}
+},
+"RAID_DarkMechaDragon_2": {
+"elements": [
+"暗",
+"龍"
+],
+"paldeck": "127",
+"work": {
+"採集": 1
+}
+},
+"RAID_KingBahamut_Dragon": {
+"elements": [
+"龍",
+"火"
+],
+"paldeck": "96B",
+"work": {
+"採礦": 4
+}
+},
+"RAID_KingBahamut_Dragon_2": {
+"elements": [
+"龍",
+"火"
+],
+"paldeck": "96B",
+"work": {
+"採礦": 4
+}
+},
+"RAID_LegendDeer": {
+"elements": [
+"水",
+"草"
+],
+"paldeck": "156",
+"work": {
+"採集": 1
+}
+},
+"RAID_LegendDeer_2": {
+"elements": [
+"水",
+"草"
+],
+"paldeck": "156",
+"work": {
+"採集": 1
+}
+},
+"RAID_NightLady": {
+"elements": [
+"暗"
+],
+"paldeck": "112",
+"work": {
+"手工": 2,
+"搬運": 2
+}
+},
+"RAID_NightLady_Dark": {
+"elements": [
+"暗"
+],
+"paldeck": "112B",
+"work": {
+"手工": 2,
+"搬運": 2
+}
+},
+"RAID_NightLady_Dark_2": {
+"elements": [
+"暗"
+],
+"paldeck": "112B",
+"work": {
+"手工": 2,
+"搬運": 2
+}
+},
+"RAID_YakushimaBoss001_Green": {
+"elements": [],
+"paldeck": "",
+"work": {}
+},
+"RAID_YakushimaBoss002": {
+"elements": [],
+"paldeck": "",
+"work": {}
+},
+"RaijinDaughter": {
+"elements": [
+"雷"
+],
+"paldeck": "62",
+"work": {
+"手工": 1,
+"搬運": 1,
+"發電": 1
+}
+},
+"RaijinDaughter_Water": {
+"elements": [
+"暗",
+"雷"
+],
+"paldeck": "62B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"發電": 1,
+"製藥": 1
+}
+},
+"RedArmorBird": {
+"elements": [
+"火"
+],
+"paldeck": "74",
+"work": {
+"搬運": 3,
+"點火": 3
+}
+},
+"RobinHood": {
+"elements": [
+"草"
+],
+"paldeck": "48",
+"work": {
+"伐木": 1,
+"手工": 2,
+"採集": 2,
+"搬運": 2,
+"播種": 1,
+"製藥": 1
+}
+},
+"RobinHood_Ground": {
+"elements": [
+"草",
+"地"
+],
+"paldeck": "48B",
+"work": {
+"伐木": 1,
+"手工": 2,
+"採集": 2,
+"搬運": 2,
+"製藥": 1
+}
+},
+"Ronin": {
+"elements": [
+"火"
+],
+"paldeck": "72",
+"work": {
+"伐木": 3,
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"點火": 2
+}
+},
+"Ronin_Dark": {
+"elements": [
+"火",
+"暗"
+],
+"paldeck": "72B",
+"work": {
+"伐木": 3,
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"點火": 2
+}
+},
+"SUMMON_DarkAlien": {
+"elements": [
+"暗"
+],
+"paldeck": "125",
+"work": {
+"伐木": 2,
+"搬運": 2
+}
+},
+"SUMMON_DarkAlien_MAX": {
+"elements": [
+"暗"
+],
+"paldeck": "125",
+"work": {
+"伐木": 2,
+"搬運": 2
+}
+},
+"SUMMON_WhiteAlienDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "126",
+"work": {
+"採礦": 3
+}
+},
+"SUMMON_WhiteAlienDragon_MAX": {
+"elements": [
+"龍"
+],
+"paldeck": "126",
+"work": {
+"採礦": 3
+}
+},
+"SaintCentaur": {
+"elements": [
+"無"
+],
+"paldeck": "108",
+"work": {
+"伐木": 2,
+"採礦": 2
+}
+},
+"SakuraSaurus": {
+"elements": [
+"草"
+],
+"paldeck": "86",
+"work": {
+"播種": 3
+}
+},
+"SakuraSaurus_Water": {
+"elements": [
+"草",
+"水"
+],
+"paldeck": "86B",
+"work": {
+"灌溉": 3
+}
+},
+"ScorpionMan": {
+"elements": [
+"暗",
+"地"
+],
+"paldeck": "119",
+"work": {
+"伐木": 3,
+"採集": 1,
+"製藥": 1
+}
+},
+"Serpent": {
+"elements": [
+"水"
+],
+"paldeck": "65",
+"work": {
+"灌溉": 2
+}
+},
+"Serpent_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "65B",
+"work": {
+"採集": 1
+}
+},
+"SharkKid": {
+"elements": [
+"水"
+],
+"paldeck": "31",
+"work": {
+"手工": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"SharkKid_Fire": {
+"elements": [
+"火"
+],
+"paldeck": "31B",
+"work": {
+"手工": 1,
+"搬運": 1,
+"點火": 2
+}
+},
+"SheepBall": {
+"elements": [
+"無"
+],
+"paldeck": "1",
+"work": {
+"手工": 1,
+"搬運": 1,
+"牧場": 1
+}
+},
+"SifuDog": {
+"elements": [
+"無"
+],
+"paldeck": "122",
+"work": {
+"伐木": 2,
+"手工": 3,
+"採集": 2,
+"搬運": 2,
+"製藥": 1
+}
+},
+"SkyDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "95",
+"work": {
+"手工": 1,
+"採礦": 2,
+"採集": 2,
+"搬運": 3
+}
+},
+"SkyDragon_Grass": {
+"elements": [
+"龍",
+"草"
+],
+"paldeck": "95B",
+"work": {
+"手工": 1,
+"採礦": 2,
+"採集": 2,
+"搬運": 3,
+"播種": 2
+}
+},
+"SmallArmadillo": {
+"elements": [
+"地"
+],
+"paldeck": "117",
+"work": {
+"採礦": 1
+}
+},
+"SnowPeafowl": {
+"elements": [
+"冰"
+],
+"paldeck": "143",
+"work": {
+"採集": 1,
+"製冷": 2
+}
+},
+"SnowTigerBeastman": {
+"elements": [
+"冰"
+],
+"paldeck": "137",
+"work": {
+"伐木": 3,
+"採礦": 3,
+"製冷": 4
+}
+},
+"SoldierBee": {
+"elements": [
+"草"
+],
+"paldeck": "50",
+"work": {
+"伐木": 1,
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"播種": 1,
+"牧場": 1,
+"製藥": 1
+}
+},
+"StuffedShark": {
+"elements": [
+"水"
+],
+"paldeck": "152",
+"work": {
+"搬運": 1,
+"灌溉": 2
+}
+},
+"StuffedShark_Fire": {
+"elements": [
+"水",
+"火"
+],
+"paldeck": "152B",
+"work": {
+"搬運": 1,
+"灌溉": 2,
+"點火": 2
+}
+},
+"Suzaku": {
+"elements": [
+"火"
+],
+"paldeck": "102",
+"work": {
+"點火": 3
+}
+},
+"Suzaku_Water": {
+"elements": [
+"水"
+],
+"paldeck": "102B",
+"work": {
+"灌溉": 3
+}
+},
+"SweetsSheep": {
+"elements": [
+"無"
+],
+"paldeck": "34",
+"work": {
+"牧場": 1
+}
+},
+"TentacleTurtle": {
+"elements": [
+"水"
+],
+"paldeck": "148",
+"work": {
+"採礦": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"TentacleTurtle_Ground": {
+"elements": [
+"水",
+"地"
+],
+"paldeck": "148B",
+"work": {
+"採礦": 1,
+"搬運": 1,
+"灌溉": 2
+}
+},
+"ThunderBird": {
+"elements": [
+"雷"
+],
+"paldeck": "73",
+"work": {
+"採集": 1,
+"搬運": 3,
+"發電": 2
+}
+},
+"ThunderDog": {
+"elements": [
+"雷"
+],
+"paldeck": "60",
+"work": {
+"發電": 2
+}
+},
+"ThunderDragonMan": {
+"elements": [
+"龍",
+"雷"
+],
+"paldeck": "106",
+"work": {
+"手工": 2,
+"搬運": 3,
+"發電": 4
+}
+},
+"TropicalOstrich": {
+"elements": [
+"草"
+],
+"paldeck": "144",
+"work": {
+"採礦": 3,
+"採集": 2,
+"播種": 2
+}
+},
+"Umihebi": {
+"elements": [
+"龍",
+"水"
+],
+"paldeck": "101",
+"work": {
+"灌溉": 4
+}
+},
+"Umihebi_Fire": {
+"elements": [
+"龍",
+"火"
+],
+"paldeck": "101B",
+"work": {
+"點火": 4
+}
+},
+"VioletFairy": {
+"elements": [
+"草"
+],
+"paldeck": "78",
+"work": {
+"手工": 2,
+"採集": 2,
+"搬運": 1,
+"播種": 2,
+"製藥": 3
+}
+},
+"VolcanicMonster": {
+"elements": [
+"火",
+"地"
+],
+"paldeck": "88",
+"work": {
+"採礦": 3,
+"點火": 3
+}
+},
+"VolcanicMonster_Ice": {
+"elements": [
+"冰",
+"地"
+],
+"paldeck": "88B",
+"work": {
+"採礦": 3,
+"製冷": 3
+}
+},
+"WeaselDragon": {
+"elements": [
+"冰",
+"龍"
+],
+"paldeck": "55",
+"work": {
+"採集": 1,
+"製冷": 1
+}
+},
+"WeaselDragon_Fire": {
+"elements": [
+"火",
+"龍"
+],
+"paldeck": "55B",
+"work": {
+"採集": 1,
+"點火": 2
+}
+},
+"Werewolf": {
+"elements": [
+"暗"
+],
+"paldeck": "46",
+"work": {
+"手工": 2
+}
+},
+"Werewolf_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "46B",
+"work": {
+"手工": 2,
+"製冷": 3
+}
+},
+"WhiteAlienDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "126",
+"work": {
+"採礦": 3
+}
+},
+"WhiteDeer": {
+"elements": [
+"無"
+],
+"paldeck": "132",
+"work": {
+"伐木": 4,
+"採集": 1
+}
+},
+"WhiteMoth": {
+"elements": [
+"冰"
+],
+"paldeck": "79",
+"work": {
+"牧場": 1,
+"製冷": 2,
+"製藥": 2
+}
+},
+"WhiteShieldDragon": {
+"elements": [
+"龍"
+],
+"paldeck": "130",
+"work": {
+"伐木": 3
+}
+},
+"WhiteTiger": {
+"elements": [
+"冰"
+],
+"paldeck": "83",
+"work": {
+"伐木": 2,
+"手工": 1,
+"搬運": 3,
+"製冷": 3
+}
+},
+"WhiteTiger_Ground": {
+"elements": [
+"地"
+],
+"paldeck": "83B",
+"work": {
+"伐木": 2,
+"手工": 1,
+"採礦": 3,
+"搬運": 3
+}
+},
+"WindChimes": {
+"elements": [
+"地"
+],
+"paldeck": "32",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 2
+}
+},
+"WindChimes_Ice": {
+"elements": [
+"冰"
+],
+"paldeck": "32B",
+"work": {
+"手工": 1,
+"採集": 1,
+"搬運": 2,
+"製冷": 1
+}
+},
+"WingGolem": {
+"elements": [
+"地"
+],
+"paldeck": "120",
+"work": {
+"採礦": 4,
+"採集": 3,
+"搬運": 4
+}
+},
+"WingGolem_Oilrig": {
+"elements": [
+"地"
+],
+"paldeck": "120",
+"work": {
+"採礦": 4,
+"採集": 3,
+"搬運": 4
+}
+},
+"WizardOwl": {
+"elements": [
+"暗"
+],
+"paldeck": "15",
+"work": {
+"採集": 1
+}
+},
+"WoolFox": {
+"elements": [
+"無"
+],
+"paldeck": "18",
+"work": {
+"採集": 1,
+"牧場": 1
+}
+},
+"YakushimaBoss001": {
+"elements": [
+"暗"
+],
+"paldeck": "",
+"work": {
+"搬運": 4
+}
+},
+"YakushimaBoss001_Small": {
+"elements": [
+"暗"
+],
+"paldeck": "",
+"work": {
+"搬運": 1
+}
+},
+"YakushimaMonster001": {
+"elements": [
+"草"
+],
+"paldeck": "",
+"work": {
+"搬運": 1
+}
+},
+"YakushimaMonster001_Blue": {
+"elements": [
+"水"
+],
+"paldeck": "",
+"work": {
+"搬運": 1
+}
+},
+"YakushimaMonster001_Pink": {
+"elements": [
+"無"
+],
+"paldeck": "",
+"work": {
+"搬運": 1
+}
+},
+"YakushimaMonster001_Purple": {
+"elements": [
+"暗"
+],
+"paldeck": "",
+"work": {
+"搬運": 1
+}
+},
+"YakushimaMonster001_Rainbow": {
+"elements": [
+"無"
+],
+"paldeck": "",
+"work": {
+"搬運": 1
+}
+},
+"YakushimaMonster001_Red": {
+"elements": [
+"火"
+],
+"paldeck": "",
+"work": {
+"搬運": 1
+}
+},
+"YakushimaMonster002": {
+"elements": [
+"無"
+],
+"paldeck": "",
+"work": {
+"伐木": 1
+}
+},
+"YakushimaMonster003": {
+"elements": [
+"無"
+],
+"paldeck": "",
+"work": {
+"採集": 1
+}
+},
+"YakushimaMonster003_Purple": {
+"elements": [
+"無"
+],
+"paldeck": "",
+"work": {
+"採集": 1
+}
+},
+"Yeti": {
+"elements": [
+"冰"
+],
+"paldeck": "91",
+"work": {
+"伐木": 3,
+"手工": 2,
+"搬運": 4,
+"製冷": 2
+}
+},
+"Yeti_Grass": {
+"elements": [
+"草"
+],
+"paldeck": "91B",
+"work": {
+"伐木": 3,
+"手工": 2,
+"搬運": 4,
+"播種": 1
+}
+}
+}

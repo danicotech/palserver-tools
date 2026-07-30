@@ -1,0 +1,2078 @@
+{
+"Alpaca": {
+"en": "Melpaca",
+"zh": "美露帕"
+},
+"AmaterasuWolf": {
+"en": "Kitsun",
+"zh": "蒼焰狼"
+},
+"AmaterasuWolf_Dark": {
+"en": "Kitsun Noct",
+"zh": "幽焰狼"
+},
+"Anubis": {
+"en": "Anubis",
+"zh": "阿努比斯"
+},
+"BOSS_Alpaca": {
+"en": "Pompous Shanks Melpaca",
+"zh": "美腿傲人的 美露帕"
+},
+"BOSS_AmaterasuWolf": {
+"en": "Guardian of the Azure Flame Kitsun",
+"zh": "蒼炎守護神 蒼焰狼"
+},
+"BOSS_AmaterasuWolf_Dark": {
+"en": "Guardian of the Dark Flame Kitsun Noct",
+"zh": "幽炎守護神 幽焰狼"
+},
+"BOSS_BadCatgirl": {
+"en": "Night Shade Hunter Nyafia",
+"zh": "暗影獵人 妮瞅莎"
+},
+"BOSS_Baphomet": {
+"en": "Hyena of the Wild Incineram",
+"zh": "荒野鬣狗 炎魔羊"
+},
+"BOSS_Baphomet_Dark": {
+"en": "Hyena of the Darkest Night Incineram Noct",
+"zh": "暗夜鬣狗 暗魔羊"
+},
+"BOSS_Bastet": {
+"en": "Noble Glimmer Mau",
+"zh": "高貴光耀 喵絲特"
+},
+"BOSS_Bastet_Ice": {
+"en": "Serene Glimmer Mau Cryst",
+"zh": "澄澈光耀 冰絲特"
+},
+"BOSS_BerryGoat": {
+"en": "Walking Farm Caprity",
+"zh": "會走路的農場 灌木羊"
+},
+"BOSS_BerryGoat_Dark": {
+"en": "Tainted Farm Caprity Noct",
+"zh": "憂鬱的農場 鬱木羊"
+},
+"BOSS_BirdDragon": {
+"en": "Aerial Marauder Vanwyrm",
+"zh": "大空的襲擊者 烽歌龍"
+},
+"BOSS_BirdDragon_Ice": {
+"en": "Marauder of Frozen Skies Vanwyrm Cryst",
+"zh": "霜天的襲擊者 霜歌龍"
+},
+"BOSS_BlackCentaur": {
+"en": "Dark Knight of Legend Necromus",
+"zh": "傳說中的黑騎士 混沌騎士"
+},
+"BOSS_BlackGriffon": {
+"en": "Unknown Life Form Shadowbeak",
+"zh": "未知生命體 異構格里芬"
+},
+"BOSS_BlackMetalDragon": {
+"en": "Monarch of the Steel Dragon Astegon",
+"zh": "鋼鐵龍王 魔淵龍"
+},
+"BOSS_BlackPuppy": {
+"en": "Jet-Black Little Hero Smokie",
+"zh": "漆黑的小小勇者 墨丸"
+},
+"BOSS_BlueDragon": {
+"en": "Lady of the Lake Azurobe",
+"zh": "湖中女王 碧海龍"
+},
+"BOSS_BlueDragon_Ice": {
+"en": "Lady of the Frozen Lake Azurobe Cryst",
+"zh": "凍湖女王 碧月龍"
+},
+"BOSS_BluePlatypus": {
+"en": "Rowdy Wave Ripper Fuack",
+"zh": "頑皮的衝浪小子 衝浪鴨"
+},
+"BOSS_BluePlatypus_Fire": {
+"en": "Runaway Wave Rider Fuack Ignis",
+"zh": "暴走的衝浪小子 熱浪鴨"
+},
+"BOSS_BlueThunderHorse": {
+"en": "Blue Lightning Steed Azurmane",
+"zh": "蒼雷駿馬 馭雷馬"
+},
+"BOSS_BlueberryFairy": {
+"en": "Indigo Handmaiden Prunelia",
+"zh": "靛青的侍女 梅莉姆"
+},
+"BOSS_Boar": {
+"en": "Woodland Ruffian Rushoar",
+"zh": "森林莽者 草莽豬"
+},
+"BOSS_CandleGhost": {
+"en": "Flickering Flame Sootseer",
+"zh": "幽遠之炎 恐炬靈"
+},
+"BOSS_CaptainPenguin": {
+"en": "Pioneer of the Frozen Sea Penking",
+"zh": "冰海開拓者 企丸王"
+},
+"BOSS_CaptainPenguin_Black": {
+"en": "Pioneer of the Black Penking Lux",
+"zh": "漆黑開拓者 閃丸王"
+},
+"BOSS_Carbunclo": {
+"en": "Coward of the Steppe Lifmunk",
+"zh": "草原第一膽小鬼 翠葉鼠"
+},
+"BOSS_CatBat": {
+"en": "Trickster Tombat",
+"zh": "詭計之星 貓蝠怪"
+},
+"BOSS_CatMage": {
+"en": "Phantasmal Feline Katress",
+"zh": "暗黑貓魔導士 暗巫貓"
+},
+"BOSS_CatMage_Fire": {
+"en": "Fire Licked Feline Katress Ignis",
+"zh": "熾熱貓魔導士 熾巫貓"
+},
+"BOSS_CatVampire": {
+"en": "Gloom-Shrouded Bloodsucker Felbat",
+"zh": "黃昏吸血鬼 夜幕魔蝠"
+},
+"BOSS_ChickenPal": {
+"en": "Plump & Juicy Chikipi",
+"zh": "肥美多汁 皮皮雞"
+},
+"BOSS_ColorfulBird": {
+"en": "Boom or Bust Tocotoco",
+"zh": "爆炸就是藝術 炸蛋鳥"
+},
+"BOSS_CowPal": {
+"en": "Grade A Beef Mozzarina",
+"zh": "A5和牛 波霸牛"
+},
+"BOSS_CuteButterfly": {
+"en": "Butterfly Promenade Cinnamoth",
+"zh": "夢蝶之舞 幻悅蝶"
+},
+"BOSS_CuteFox": {
+"en": "Star of the Steppe Vixy",
+"zh": "草原偶像 玉藻狐"
+},
+"BOSS_CuteMole": {
+"en": "Underground Explorer Fuddler",
+"zh": "地底探險家 遁地鼠"
+},
+"BOSS_DarkAlien": {
+"en": "Interloper from Outer Space Xenovader",
+"zh": "外域生命態來襲 傑諾貝達"
+},
+"BOSS_DarkCrow": {
+"en": "Shadow-Cloaked Schemer Cawgnito",
+"zh": "暗中蠢動的黑鳥 黑鴉隱士"
+},
+"BOSS_DarkMechaDragon": {
+"en": "Invader from Space Xenolord",
+"zh": "來自宇宙的侵略者 傑諾多蘭"
+},
+"BOSS_DarkMutant": {
+"en": "BOSS_NAME_DarkMutant DarkMutant",
+"zh": "zh_Hans_Text DarkMutant"
+},
+"BOSS_DarkScorpion": {
+"en": "Unstoppable Stinger Menasting",
+"zh": "貫穿星辰之槍 冥鎧蠍"
+},
+"BOSS_DarkScorpion_Ground": {
+"en": "Gold-Piercing Spear Menasting Terra",
+"zh": "鍍金重矛 金鎧蠍"
+},
+"BOSS_Deer": {
+"en": "Protector of the Herd Eikthyrdeer",
+"zh": "守護族群的長老 紫霞鹿"
+},
+"BOSS_Deer_Ground": {
+"en": "Antler of Gold Eikthyrdeer Terra",
+"zh": "黃金之角 祇嶽鹿"
+},
+"BOSS_DreamDemon": {
+"en": "Daedream",
+"zh": "食夢者 寐魔"
+},
+"BOSS_DrillGame": {
+"en": "Drilling Machine Digtoise",
+"zh": "旋轉削巖機 碎巖龜"
+},
+"BOSS_Eagle": {
+"en": "Proud Courier Galeclaw",
+"zh": "孤高的搬運工 天擒鳥"
+},
+"BOSS_ElecCat": {
+"en": "Livewire Tabby Sparkit",
+"zh": "淘氣的虎斑貓 伏特喵"
+},
+"BOSS_ElecPanda": {
+"en": "Claws of Lightning Grizzbolt",
+"zh": "雷鳴雙爪 暴電熊"
+},
+"BOSS_FairyDragon": {
+"en": "Gentle Sky Dragon Elphidran",
+"zh": "溫厚的天空龍 精靈龍"
+},
+"BOSS_FairyDragon_Water": {
+"en": "Beast of the Tides Elphidran Aqua",
+"zh": "漩渦的怪物 水靈龍"
+},
+"BOSS_FeatherOstrich": {
+"en": "Brilliant Steps Dazemu",
+"zh": "凱旋進擊 戰冠雀"
+},
+"BOSS_FengyunDeeper": {
+"en": "Drifting Cloud Fenglope",
+"zh": "遊雲 雲海鹿"
+},
+"BOSS_FengyunDeeper_Electric": {
+"en": "Drifting Thundercloud Fenglope Lux",
+"zh": "奔雷 雷隱鹿"
+},
+"BOSS_FireKirin": {
+"en": "Steed of Flames Pyrin",
+"zh": "熱砂上奔馳的駿馬 火麒麟"
+},
+"BOSS_FireKirin_Dark": {
+"en": "Steed of Darkness Pyrin Noct",
+"zh": "暗炎駿馬 邪麒麟"
+},
+"BOSS_FlameBambi": {
+"en": "Chief of the Herd Rooby",
+"zh": "族群老大 燎火鹿"
+},
+"BOSS_FlameBuffalo": {
+"en": "Blazing Brute Arsox",
+"zh": "熾烈燃燒的角獸 熾焰牛"
+},
+"BOSS_FlowerDinosaur": {
+"en": "Guardian of Blossoming Gardens Dinossom",
+"zh": "花園守護龍 花冠龍"
+},
+"BOSS_FlowerDinosaur_Electric": {
+"en": "Guardian of Lightning Dinossom Lux",
+"zh": "雷電守護龍 雷冠龍"
+},
+"BOSS_FlowerDoll": {
+"en": "Lady of the Flower Garden Petallia",
+"zh": "花園公主 花麗娜"
+},
+"BOSS_FlowerRabbit": {
+"en": "Star of the Flower Beds Flopie",
+"zh": "花田偶像 波娜兔"
+},
+"BOSS_FlyingManta": {
+"en": "Soaring Skyfish Celaray",
+"zh": "空遊之魚 魯米兒"
+},
+"BOSS_FlyingManta_Thunder": {
+"en": "Sky-Swimming Fish Celaray Lux",
+"zh": "空吟之魚 雷米兒"
+},
+"BOSS_FoxMage": {
+"en": "Fire Licked Furball Wixen",
+"zh": "炎狐魔導士 焰巫狐"
+},
+"BOSS_FoxMage_Dark": {
+"en": "Phantasmal Furball Wixen Noct",
+"zh": "暗狐魔導士 幽巫狐"
+},
+"BOSS_Ganesha": {
+"en": "Adorable Watering Can Teafant",
+"zh": "方便的澆水壺 壺小象"
+},
+"BOSS_Garm": {
+"en": "Hunter of the Steppe Direhowl",
+"zh": "草原獵人 獵狼"
+},
+"BOSS_GhostAnglerfish": {
+"en": "Temptation in the Deep Ghangler",
+"zh": "於深海點亮的誘惑 冥燈魚"
+},
+"BOSS_GhostAnglerfish_Fire": {
+"en": "Longing in the Deep Ghangler Ignis",
+"zh": "於深海燃燒的誘惑 炙燈魚"
+},
+"BOSS_GhostBeast": {
+"en": "Messenger of Death Maraith",
+"zh": "冥界使者 噬魂獸"
+},
+"BOSS_GhostRabbit": {
+"en": "Soul of the Dark Rabbit Nitemary",
+"zh": "獵魂的黑兔 魅愛莉"
+},
+"BOSS_GoldenHorse": {
+"en": "Guardian Beast of Twilight Gildane",
+"zh": "黃昏的守護獸 金馳獸"
+},
+"BOSS_Gorilla": {
+"en": "Jungle Punk Gorirat",
+"zh": "不服來戰 鐵拳猿"
+},
+"BOSS_Gorilla_Ground": {
+"en": "Up for a Brawl Gorirat Terra",
+"zh": "手癢難耐 石掌猿"
+},
+"BOSS_GrassMammoth": {
+"en": "King of the Forest Mammorest",
+"zh": "暴亂雙牙 森猛獁"
+},
+"BOSS_GrassMammoth_Ice": {
+"en": "Frozen King Mammorest Cryst",
+"zh": "結冰雙牙 雪猛獁"
+},
+"BOSS_GrassPanda": {
+"en": "Guardian of the Forest Mossanda",
+"zh": "森林中的異類 葉胖達"
+},
+"BOSS_GrassPanda_Electric": {
+"en": "Inheritor of the Storm Mossanda Lux",
+"zh": "遭雷劈的異類 雷胖達"
+},
+"BOSS_GrassRabbitMan": {
+"en": "Gale of the Forest Verdash",
+"zh": "穿梭森林的疾風 踏春兔"
+},
+"BOSS_GrimGirl": {
+"en": "Crimson Butcher Splatterina",
+"zh": "染血的肢解者 幽戀娜"
+},
+"BOSS_GuardianDog": {
+"en": "Unwavering Loyalty Yakumo",
+"zh": "叛逆的忠犬 八雲犬"
+},
+"BOSS_HadesBird": {
+"en": "Wings of The Underworld Helzephyr",
+"zh": "冥府之翼 雷冥鳥"
+},
+"BOSS_HadesBird_Electric": {
+"en": "Wings of Thunder Helzephyr Lux",
+"zh": "雷霆之翼 雷鳴鳥"
+},
+"BOSS_HawkBird": {
+"en": "Wings of the Firmament Nitewing",
+"zh": "翔空之翼 疾風隼"
+},
+"BOSS_Hedgehog": {
+"en": "Don't Touch! Jolthog",
+"zh": "別碰，危險！ 電棘鼠"
+},
+"BOSS_Hedgehog_Ice": {
+"en": "Watch Your Feet! Jolthog Cryst",
+"zh": "別踩，危險！ 冰刺鼠"
+},
+"BOSS_HerculesBeetle": {
+"en": "Unyielding Colossus Warsect",
+"zh": "重鎧鬥士 鎧格力斯"
+},
+"BOSS_HerculesBeetle_Ground": {
+"en": "Golden Armor Warrior Warsect Terra",
+"zh": "金甲戰士 格魯力斯"
+},
+"BOSS_Horus": {
+"en": "Sentinel of Dawn Faleris",
+"zh": "炎空霸者 荷魯斯"
+},
+"BOSS_Horus_Water": {
+"en": "Sentinel of the Tides Faleris Aqua",
+"zh": "水天霸者 伊西斯"
+},
+"BOSS_IceCrocodile": {
+"en": "Walking Refrigerator Munchill",
+"zh": "會走路的冰箱 肚肚鱷"
+},
+"BOSS_IceDeer": {
+"en": "Frosthorn Beast Reindrix",
+"zh": "冰雪角獸 嚴冬鹿"
+},
+"BOSS_IceFox": {
+"en": "Claws of Ice Foxcicle",
+"zh": "冰結白狐 吹雪狐"
+},
+"BOSS_IceHorse": {
+"en": "Legendary Steed of Ice Frostallion",
+"zh": "傳說中的冰天馬 喚冬獸"
+},
+"BOSS_IceHorse_Dark": {
+"en": "Legendary Steed of Darkness Frostallion Noct",
+"zh": "傳說中的暗天馬 喚夜獸"
+},
+"BOSS_IceNarwhal": {
+"en": "Nice Ice Lance Whalaska",
+"zh": "敦厚冰山 涼晶鯨"
+},
+"BOSS_IceNarwhal_Fire": {
+"en": "Nice Crimson Lance Whalaska Ignis",
+"zh": "紅溫冰山 桃晶鯨"
+},
+"BOSS_IceSeal": {
+"en": "Idol on Ice Polapup",
+"zh": "冰上偶像 香草豹冰"
+},
+"BOSS_IceWitch": {
+"en": "Icy Smile Icelyn",
+"zh": "凍結的微笑 冰姬靈"
+},
+"BOSS_JellyfishFairy": {
+"en": "Sunlight Drifter Jelliette",
+"zh": "浮於映日的妖精 海月仙"
+},
+"BOSS_JellyfishGhost": {
+"en": "Shade Drifter Jellroy",
+"zh": "浮於日蔭的妖精 海月靈"
+},
+"BOSS_JetDragon": {
+"en": "Legendary Celestial Dragon Jetragon",
+"zh": "傳說中的流星龍 空渦龍"
+},
+"BOSS_Kelpie": {
+"en": "Child of the Deep Kelpsea",
+"zh": "深海之子 水靈兒"
+},
+"BOSS_Kelpie_Fire": {
+"en": "Child of Molten Depths Kelpsea Ignis",
+"zh": "熔岩之子 火靈兒"
+},
+"BOSS_KendoFrog": {
+"en": "Harakiri Master Croajiro",
+"zh": "切腹大師 武道蛙"
+},
+"BOSS_KendoFrog_Dark": {
+"en": "Natural Born Killer Croajiro Noct",
+"zh": "暗殺大師 極道蛙"
+},
+"BOSS_KingAlpaca": {
+"en": "Supreme Fluff Commander Kingpaca",
+"zh": "毛茸茸的霸主 君王美露帕"
+},
+"BOSS_KingAlpaca_Ice": {
+"en": "Azure Fluff Commander Kingpaca Cryst",
+"zh": "藍色絨毛的霸主 冰帝美露帕"
+},
+"BOSS_KingBahamut": {
+"en": "Cursed Tyrant Blazamut",
+"zh": "煉獄暴君 焰煌"
+},
+"BOSS_KingBahamut_Dragon": {
+"en": "Incarnation of the Eternal Flame Blazamut Ryu",
+"zh": "永炎現世 歿殃"
+},
+"BOSS_Kirin": {
+"en": "Swift Deity Univolt",
+"zh": "疾風迅雷 雷角馬"
+},
+"BOSS_Kitsunebi": {
+"en": "Revealer of Paths Foxparks",
+"zh": "旅途明燈 火絨狐"
+},
+"BOSS_Kitsunebi_Ice": {
+"en": "Icy Blossom Voyager Foxparks Cryst",
+"zh": "冰紛旅途 雪絨狐"
+},
+"BOSS_LavaGirl": {
+"en": "Molten Daughter Flambelle",
+"zh": "熔岩的女兒 融焰娘"
+},
+"BOSS_LazyCatfish": {
+"en": "Perpetual Procrastinator Dumud",
+"zh": "明天開始努力 趴趴鯰"
+},
+"BOSS_LazyCatfish_Gold": {
+"en": "Piece of Cake Dumud Gild",
+"zh": "已經不想努力了 梆梆鯰"
+},
+"BOSS_LazyDragon": {
+"en": "Gluttonous Dragon Relaxaurus",
+"zh": "暴食龍 佩克龍"
+},
+"BOSS_LazyDragon_Electric": {
+"en": "Gluttonous Thunder Dragon Relaxaurus Lux",
+"zh": "雷鳴的暴食龍 派克龍"
+},
+"BOSS_LeafMomonga": {
+"en": "Percussive Maintenance Herbil",
+"zh": "捶一頓就老實了 達鼠泥"
+},
+"BOSS_LeafPrincess": {
+"en": "Primal Source of Hay Fever Lullu",
+"zh": "花粉症的元兇 春彩娘"
+},
+"BOSS_LegendDeer": {
+"en": "King of Salvation Hartalis",
+"zh": "救贖之王 默世鹿"
+},
+"BOSS_LilyQueen": {
+"en": "Lily Empress Lyleen",
+"zh": "百合花女帝 百合女王"
+},
+"BOSS_LilyQueen_Dark": {
+"en": "Empress of the Abyss Lyleen Noct",
+"zh": "深淵女帝 黑月女王"
+},
+"BOSS_LittleBriarRose": {
+"en": "Thorny Rose Bristla",
+"zh": "荊棘之花 荊棘魔仙"
+},
+"BOSS_LizardMan": {
+"en": "Self-Proclaimed Genius Leezpunk",
+"zh": "自稱天才的 朋克蜥"
+},
+"BOSS_LizardMan_Fire": {
+"en": "Self-Proclaimed Fashionista Leezpunk Ignis",
+"zh": "自稱時尚領袖的 熱血蜥"
+},
+"BOSS_Manticore": {
+"en": "Crimson Goliath Blazehowl",
+"zh": "百焰之王 獄焰王"
+},
+"BOSS_Manticore_Dark": {
+"en": "Inferno Goliath Blazehowl Noct",
+"zh": "暗焰之王 獄閻王"
+},
+"BOSS_MimicDog": {
+"en": "Treasure Trove Mimog",
+"zh": "珠光寶氣 旺財"
+},
+"BOSS_Monkey": {
+"en": "Dexterous Primate Tanzee",
+"zh": "金手指 新葉猿"
+},
+"BOSS_MoonQueen": {
+"en": "Crescent of the Darkest Night Selyne",
+"zh": "懸於夜空的明月 輝月伊"
+},
+"BOSS_MopBaby": {
+"en": "Curious Floof Swee",
+"zh": "神秘的毛茸茸 毛撣兒"
+},
+"BOSS_MopKing": {
+"en": "King of the Floof Sweepa",
+"zh": "神秘的毛茸茸之王 毛老爹"
+},
+"BOSS_MushroomDragon": {
+"en": "Creeping Mushroom Shroomer",
+"zh": "閒散蘑菇 菇咚"
+},
+"BOSS_MushroomDragon_Dark": {
+"en": "Dangerous Mushroom Shroomer Noct",
+"zh": "危險蘑菇 菇波"
+},
+"BOSS_Mutant": {
+"en": "Extraterrestrial Lunaris",
+"zh": "來自宇宙 秘斯媞雅"
+},
+"BOSS_MysteryMask": {
+"en": "Hundred-Faced Apostle Omascul",
+"zh": "百面使徒 面懼"
+},
+"BOSS_NaughtyCat": {
+"en": "Marshmallow Body Grintale",
+"zh": "棉花糖體型的 笑魘貓"
+},
+"BOSS_NegativeKoala": {
+"en": "Several Sleepless Nights Later Depresso",
+"zh": "通宵了三晚的 瞅什魔"
+},
+"BOSS_NegativeOctopus": {
+"en": "Emotionless Killamari",
+"zh": "木有感情 勾魂魷"
+},
+"BOSS_NegativeOctopus_Neutral": {
+"en": "Devoid of Emotion Killamari Primo",
+"zh": "真的木有感情 蝕魂魷"
+},
+"BOSS_NightBlueHorse": {
+"en": "Midnight Blue Mane Starryon",
+"zh": "紺青之鬃 夜冥駒"
+},
+"BOSS_NightFox": {
+"en": "Dusken Aristocrat Nox",
+"zh": "夜之貴公子 露娜蒂"
+},
+"BOSS_NightLady": {
+"en": "Eclipsed Siren Bellanoir",
+"zh": "狂亂淑女 貝菈諾娃"
+},
+"BOSS_NightLady_Dark": {
+"en": "Twilight Siren Bellanoir Libero",
+"zh": "幽玄魔女 貝菈露潔"
+},
+"BOSS_OctopusGirl": {
+"en": "Trickster of the Sea Gloopie",
+"zh": "大海的淘氣包 墨沫姬"
+},
+"BOSS_Penguin": {
+"en": "Ate Too Much Pengullet",
+"zh": "吃太多了 企丸丸"
+},
+"BOSS_Penguin_Electric": {
+"en": "Had One Too Many Pengullet Lux",
+"zh": "喝太多了 閃丸丸"
+},
+"BOSS_PinkCat": {
+"en": "The Cat's Pajamas Cattiva",
+"zh": "超級囂張 搗蛋貓"
+},
+"BOSS_PinkLizard": {
+"en": "Pal on the Prowl Lovander",
+"zh": "貪圖愛的帕魯 博愛蜥"
+},
+"BOSS_PinkRabbit": {
+"en": "Heart-Melting Smile Ribbuny",
+"zh": "閃亮亮微笑 姬小兔"
+},
+"BOSS_PinkRabbit_Grass": {
+"en": "Sparkling Smile Ribbuny Botan",
+"zh": "亮閃閃微笑 艾小兔"
+},
+"BOSS_PlantSlime": {
+"en": "Suddenly Transformed Gumoss",
+"zh": "突然變異 葉泥泥"
+},
+"BOSS_PlantSlime_Flower": {
+"en": "Gumoss (Flower)",
+"zh": "葉泥泥 (花)"
+},
+"BOSS_Plesiosaur": {
+"en": "Ancient Bloombringer Braloha",
+"zh": "開花的古代龍 梁葉龍"
+},
+"BOSS_PoseidonOrca": {
+"en": "Legend of the Seas Neptilius",
+"zh": "傳說中的海獸 海皇鯨"
+},
+"BOSS_PurpleSpider": {
+"en": "Tactician of the Thread Realm Tarantriss",
+"zh": "網上戰略家 桃蛛娘"
+},
+"BOSS_QueenBee": {
+"en": "Empress of the Hive Elizabee",
+"zh": "萬軍之女王 女皇蜂"
+},
+"BOSS_RaijinDaughter": {
+"en": "Born of the Storm Dazzi",
+"zh": "雷雲末裔 雷鳴童子"
+},
+"BOSS_RaijinDaughter_Water": {
+"en": "Born of the Thunderclouds Dazzi Noct",
+"zh": "陰雲末裔 天陰童子"
+},
+"BOSS_RedArmorBird": {
+"en": "Wings of Inferno Ragnahawk",
+"zh": "豪炎之翼 燧火鳥"
+},
+"BOSS_RobinHood": {
+"en": "Archer of the Forest Robinquill",
+"zh": "森林弓兵 羽箭射手"
+},
+"BOSS_RobinHood_Ground": {
+"en": "Archer of the Sands Robinquill Terra",
+"zh": "沙漠弓兵 山嶽射手"
+},
+"BOSS_Ronin": {
+"en": "Vagrant Warrior Bushi",
+"zh": "流浪武士 浪刃武士"
+},
+"BOSS_Ronin_Dark": {
+"en": "Samurai of Darkness Bushi Noct",
+"zh": "暗夜刺客 鬼刃武士"
+},
+"BOSS_SaintCentaur": {
+"en": "Holy Knight of Legend Paladius",
+"zh": "傳說中的聖騎士 聖光騎士"
+},
+"BOSS_SakuraSaurus": {
+"en": "Winds of Spring Broncherry",
+"zh": "告春之風 連理龍"
+},
+"BOSS_SakuraSaurus_Water": {
+"en": "Waves of Summer Broncherry Aqua",
+"zh": "告夏之波 海誓龍"
+},
+"BOSS_ScorpionMan": {
+"en": "Bad Boy Prixter",
+"zh": "壞東西 蠱刺妖"
+},
+"BOSS_Serpent": {
+"en": "The Ocean's Wrath Surfent",
+"zh": "浪濤化身 滑水蛇"
+},
+"BOSS_Serpent_Ground": {
+"en": "The Desert's Wrath Surfent Terra",
+"zh": "沙塵化身 流沙蛇"
+},
+"BOSS_SharkKid": {
+"en": "Sea Thug Gobfin",
+"zh": "海上暴徒 鯊小子"
+},
+"BOSS_SharkKid_Fire": {
+"en": "Volcano Thug Gobfin Ignis",
+"zh": "火山暴徒 紅小鯊"
+},
+"BOSS_SheepBall": {
+"en": "Big Floof Lamball",
+"zh": "大號軟綿綿 棉悠悠"
+},
+"BOSS_SifuDog": {
+"en": "State of Enlightenment Dogen",
+"zh": "頓悟之境 汪宗師"
+},
+"BOSS_SkyDragon": {
+"en": "Snow-White Soarer Quivern",
+"zh": "純白之翼 天羽龍"
+},
+"BOSS_SkyDragon_Grass": {
+"en": "Evergreen Flyer Quivern Botan",
+"zh": "新綠之翼 翠羽龍"
+},
+"BOSS_SmallArmadillo": {
+"en": "Armored to the Teeth Kikit",
+"zh": "全副武裝 球犰"
+},
+"BOSS_SnowPeafowl": {
+"en": "Snowlaced Feather Mantle Frostplume",
+"zh": "立冬羽衣 白真雪雀"
+},
+"BOSS_SnowTigerBeastman": {
+"en": "King of Frostfang Bastigor",
+"zh": "冰雪牙王 霜牙王"
+},
+"BOSS_SoldierBee": {
+"en": "Guardian Commander Beegarde",
+"zh": "守衛隊長 騎士蜂"
+},
+"BOSS_StuffedShark": {
+"en": "Eyes from the Abyss Finsider",
+"zh": "來自深淵的窺視 布偶鯊"
+},
+"BOSS_StuffedShark_Fire": {
+"en": "Eyes from the Flames Finsider Ignis",
+"zh": "來自深淵的窺視 粉粉布偶鯊"
+},
+"BOSS_Suzaku": {
+"en": "Ruler of the Crimson Dawn Suzaku",
+"zh": "天空王者 朱雀"
+},
+"BOSS_Suzaku_Water": {
+"en": "Ruler of the Cobalt Dusk Suzaku Aqua",
+"zh": "天空蒼王 清雀"
+},
+"BOSS_SweetsSheep": {
+"en": "Giant Cotton Candy Woolipop",
+"zh": "特大棉花糖 棉花糖"
+},
+"BOSS_TentacleTurtle": {
+"en": "Mini Fortress Turtacle",
+"zh": "小小要塞 盔盔仔"
+},
+"BOSS_TentacleTurtle_Ground": {
+"en": "Golden Fortress Turtacle Terra",
+"zh": "金色要塞 金盔仔"
+},
+"BOSS_ThunderBird": {
+"en": "Wings of Thunder Beakon",
+"zh": "雷霆之翼 迅雷鳥"
+},
+"BOSS_ThunderDog": {
+"en": "Electro-Charged Zoomies Rayhound",
+"zh": "迅雷跑者 霹靂犬"
+},
+"BOSS_ThunderDragonMan": {
+"en": "Roaring Thunder Orserk",
+"zh": "雷霆萬鈞 波魯傑克斯"
+},
+"BOSS_TropicalOstrich": {
+"en": "No Dance, No Life Palumba",
+"zh": "No Dance No Life 咕咕桑葩"
+},
+"BOSS_Umihebi": {
+"en": "Emperor of the Sea Jormuntide",
+"zh": "海上霸者 覆海龍"
+},
+"BOSS_Umihebi_Fire": {
+"en": "Volcanic Emperor Jormuntide Ignis",
+"zh": "火山霸者 騰炎龍"
+},
+"BOSS_VioletFairy": {
+"en": "Voice of the Violets Vaelet",
+"zh": "紫羅蘭之夢 薇莉塔"
+},
+"BOSS_VolcanicMonster": {
+"en": "Lava-Devouring Juggernaut Reptyro",
+"zh": "吞食熔岩之獸 熔岩獸"
+},
+"BOSS_VolcanicMonster_Ice": {
+"en": "Ice-Breaking Juggernaut Reptyro Cryst",
+"zh": "吞食碎冰之獸 寒霜獸"
+},
+"BOSS_WeaselDragon": {
+"en": "Dancer on the Steppe Chillet",
+"zh": "草原舞者 疾旋鼬"
+},
+"BOSS_WeaselDragon_Fire": {
+"en": "Cherry Blossom Dancer Chillet Ignis",
+"zh": "櫻花舞者 桃旋鼬"
+},
+"BOSS_Werewolf": {
+"en": "Enraptured by Moonlight Loupmoon",
+"zh": "沉醉月色 月鐮魔"
+},
+"BOSS_Werewolf_Ice": {
+"en": "Enraptured by the Frozen Moonlight Loupmoon Cryst",
+"zh": "沉醉霜月 霜鐮魔"
+},
+"BOSS_WhiteAlienDragon": {
+"en": "Planet-Devouring Dragon Xenogard",
+"zh": "噬星之龍 傑諾路達"
+},
+"BOSS_WhiteDeer": {
+"en": "Beast of Salvation Celesdir",
+"zh": "救贖之獸 淨世鹿"
+},
+"BOSS_WhiteMoth": {
+"en": "Pallid Lady Sibelyx",
+"zh": "純白貴婦 綢笠蛾"
+},
+"BOSS_WhiteShieldDragon": {
+"en": "Guardian Dragon of Ironclad Silvegis",
+"zh": "鐵壁的守護龍 艾基魯迦"
+},
+"BOSS_WhiteTiger": {
+"en": "Predator of Snowy Peaks Cryolinx",
+"zh": "雪山的捕食者 冰棘獸"
+},
+"BOSS_WhiteTiger_Ground": {
+"en": "Predator of the Earth Cryolinx Terra",
+"zh": "大地的捕食者 金棘獸"
+},
+"BOSS_WindChimes": {
+"en": "Bringer of Luck Hangyu",
+"zh": "幸運之手 吊縛靈"
+},
+"BOSS_WindChimes_Ice": {
+"en": "Glacial Harbinger Hangyu Cryst",
+"zh": "冰河之手 冰縛靈"
+},
+"BOSS_WingGolem": {
+"en": "Suit of Armor Knocklem",
+"zh": "會動的巨大鎧甲 泰鋒"
+},
+"BOSS_WizardOwl": {
+"en": "Purveyor of Wisdom Hoocrates",
+"zh": "睿智的傳道者 啼卡爾"
+},
+"BOSS_WoolFox": {
+"en": "Darling Furball Cremis",
+"zh": "惹人愛的毛茸茸 米露菲"
+},
+"BOSS_YakushimaBoss001": {
+"en": "Eye of Cthulhu",
+"zh": "克蘇魯之眼"
+},
+"BOSS_Yeti": {
+"en": "Guardian of the Snowy Mountain Wumpo",
+"zh": "雪原巨人 白絨雪怪"
+},
+"BOSS_Yeti_Grass": {
+"en": "Guardian of the Grassy Fields Wumpo Botan",
+"zh": "南國巨人 綠苔絨怪"
+},
+"BadCatgirl": {
+"en": "Nyafia",
+"zh": "妮瞅莎"
+},
+"Baphomet": {
+"en": "Incineram",
+"zh": "炎魔羊"
+},
+"Baphomet_Dark": {
+"en": "Incineram Noct",
+"zh": "暗魔羊"
+},
+"Baphomet_Dark_Oilrig": {
+"en": "Incineram Noct",
+"zh": "暗魔羊"
+},
+"Bastet": {
+"en": "Mau",
+"zh": "喵絲特"
+},
+"Bastet_Ice": {
+"en": "Mau Cryst",
+"zh": "冰絲特"
+},
+"BerryGoat": {
+"en": "Caprity",
+"zh": "灌木羊"
+},
+"BerryGoat_Dark": {
+"en": "Caprity Noct",
+"zh": "鬱木羊"
+},
+"BirdDragon": {
+"en": "Vanwyrm",
+"zh": "烽歌龍"
+},
+"BirdDragon_Ice": {
+"en": "Vanwyrm Cryst",
+"zh": "霜歌龍"
+},
+"BlackCentaur": {
+"en": "Necromus",
+"zh": "混沌騎士"
+},
+"BlackGriffon": {
+"en": "Shadowbeak",
+"zh": "異構格里芬"
+},
+"BlackMetalDragon": {
+"en": "Astegon",
+"zh": "魔淵龍"
+},
+"BlackPuppy": {
+"en": "Smokie",
+"zh": "墨丸"
+},
+"BlueDragon": {
+"en": "Azurobe",
+"zh": "碧海龍"
+},
+"BlueDragon_Ice": {
+"en": "Azurobe Cryst",
+"zh": "碧月龍"
+},
+"BluePlatypus": {
+"en": "Fuack",
+"zh": "衝浪鴨"
+},
+"BluePlatypus_Fire": {
+"en": "Fuack Ignis",
+"zh": "熱浪鴨"
+},
+"BlueThunderHorse": {
+"en": "Azurmane",
+"zh": "馭雷馬"
+},
+"BlueberryFairy": {
+"en": "Prunelia",
+"zh": "梅莉姆"
+},
+"Boar": {
+"en": "Rushoar",
+"zh": "草莽豬"
+},
+"Boss_Anubis": {
+"en": "Guardian of the Dark Sun Anubis",
+"zh": "暮日守護者 阿努比斯"
+},
+"CandleGhost": {
+"en": "Sootseer",
+"zh": "恐炬靈"
+},
+"CaptainPenguin": {
+"en": "Penking",
+"zh": "企丸王"
+},
+"CaptainPenguin_Black": {
+"en": "Penking Lux",
+"zh": "閃丸王"
+},
+"Carbunclo": {
+"en": "Lifmunk",
+"zh": "翠葉鼠"
+},
+"CatBat": {
+"en": "Tombat",
+"zh": "貓蝠怪"
+},
+"CatMage": {
+"en": "Katress",
+"zh": "暗巫貓"
+},
+"CatMage_Fire": {
+"en": "Katress Ignis",
+"zh": "熾巫貓"
+},
+"CatVampire": {
+"en": "Felbat",
+"zh": "夜幕魔蝠"
+},
+"ChickenPal": {
+"en": "Chikipi",
+"zh": "皮皮雞"
+},
+"ColorfulBird": {
+"en": "Tocotoco",
+"zh": "炸蛋鳥"
+},
+"CowPal": {
+"en": "Mozzarina",
+"zh": "波霸牛"
+},
+"CuteButterfly": {
+"en": "Cinnamoth",
+"zh": "幻悅蝶"
+},
+"CuteFox": {
+"en": "Vixy",
+"zh": "玉藻狐"
+},
+"CuteMole": {
+"en": "Fuddler",
+"zh": "遁地鼠"
+},
+"DarkAlien": {
+"en": "Xenovader",
+"zh": "傑諾貝達"
+},
+"DarkAlien_Oilrig": {
+"en": "Xenovader",
+"zh": "傑諾貝達"
+},
+"DarkCrow": {
+"en": "Cawgnito",
+"zh": "黑鴉隱士"
+},
+"DarkMechaDragon": {
+"en": "Xenolord",
+"zh": "傑諾多蘭"
+},
+"DarkMutant": {
+"en": "DarkMutant",
+"zh": "DarkMutant"
+},
+"DarkScorpion": {
+"en": "Menasting",
+"zh": "冥鎧蠍"
+},
+"DarkScorpion_Ground": {
+"en": "Menasting Terra",
+"zh": "金鎧蠍"
+},
+"Deer": {
+"en": "Eikthyrdeer",
+"zh": "紫霞鹿"
+},
+"Deer_Ground": {
+"en": "Eikthyrdeer Terra",
+"zh": "祇嶽鹿"
+},
+"DreamDemon": {
+"en": "Daedream",
+"zh": "寐魔"
+},
+"DrillGame": {
+"en": "Digtoise",
+"zh": "碎巖龜"
+},
+"Eagle": {
+"en": "Galeclaw",
+"zh": "天擒鳥"
+},
+"ElecCat": {
+"en": "Sparkit",
+"zh": "伏特喵"
+},
+"ElecPanda": {
+"en": "Grizzbolt",
+"zh": "暴電熊"
+},
+"FairyDragon": {
+"en": "Elphidran",
+"zh": "精靈龍"
+},
+"FairyDragon_Water": {
+"en": "Elphidran Aqua",
+"zh": "水靈龍"
+},
+"FeatherOstrich": {
+"en": "Dazemu",
+"zh": "戰冠雀"
+},
+"FengyunDeeper": {
+"en": "Fenglope",
+"zh": "雲海鹿"
+},
+"FengyunDeeper_Electric": {
+"en": "Fenglope Lux",
+"zh": "雷隱鹿"
+},
+"FireKirin": {
+"en": "Pyrin",
+"zh": "火麒麟"
+},
+"FireKirin_Dark": {
+"en": "Pyrin Noct",
+"zh": "邪麒麟"
+},
+"FlameBambi": {
+"en": "Rooby",
+"zh": "燎火鹿"
+},
+"FlameBuffalo": {
+"en": "Arsox",
+"zh": "熾焰牛"
+},
+"FlowerDinosaur": {
+"en": "Dinossom",
+"zh": "花冠龍"
+},
+"FlowerDinosaur_Electric": {
+"en": "Dinossom Lux",
+"zh": "雷冠龍"
+},
+"FlowerDoll": {
+"en": "Petallia",
+"zh": "花麗娜"
+},
+"FlowerRabbit": {
+"en": "Flopie",
+"zh": "波娜兔"
+},
+"FlyingManta": {
+"en": "Celaray",
+"zh": "魯米兒"
+},
+"FlyingManta_Thunder": {
+"en": "Celaray Lux",
+"zh": "雷米兒"
+},
+"FoxMage": {
+"en": "Wixen",
+"zh": "焰巫狐"
+},
+"FoxMage_Dark": {
+"en": "Wixen Noct",
+"zh": "幽巫狐"
+},
+"GYM_BlackGriffon": {
+"en": "Victor & Shadowbeak",
+"zh": "維克托 & 異構格里芬"
+},
+"GYM_BlackGriffon_2": {
+"en": "Victor & Shadowbeak II",
+"zh": "維克托 & 異構格里芬 II"
+},
+"GYM_BlackGriffon_2_Avatar": {
+"en": "Victor & Shadowbeak",
+"zh": "維克托 & 異構格里芬"
+},
+"GYM_ElecPanda": {
+"en": "Zoe & Grizzbolt",
+"zh": "佐伊 & 暴電熊"
+},
+"GYM_ElecPanda_2": {
+"en": "Zoe & Grizzbolt II",
+"zh": "佐伊 & 暴電熊 II"
+},
+"GYM_ElecPanda_Otomo": {
+"en": "Zoe & Grizzbolt",
+"zh": "佐伊 & 暴電熊"
+},
+"GYM_Horus": {
+"en": "Marcus & Faleris",
+"zh": "馬庫斯 & 荷魯斯"
+},
+"GYM_Horus_2": {
+"en": "Marcus & Faleris II",
+"zh": "馬庫斯 & 荷魯斯 II"
+},
+"GYM_LilyQueen": {
+"en": "Lily & Lyleen",
+"zh": "莉莉 & 百合女王"
+},
+"GYM_LilyQueen_2": {
+"en": "Lily & Lyleen II",
+"zh": "莉莉 & 百合女王 II"
+},
+"GYM_MoonQueen": {
+"en": "Saya & Selyne",
+"zh": "紗夜 & 輝月伊"
+},
+"GYM_MoonQueen_2": {
+"en": "Saya & Selyne II",
+"zh": "紗夜 & 輝月伊 II"
+},
+"GYM_MoonQueen_2_Servant": {
+"en": "Selyne",
+"zh": "輝月伊"
+},
+"GYM_SnowTigerBeastman": {
+"en": "Bjorn & Bastigor",
+"zh": "比約恩 & 霜牙王"
+},
+"GYM_SnowTigerBeastman_2": {
+"en": "Bjorn & Bastigor II",
+"zh": "比約恩 & 霜牙王 II"
+},
+"GYM_ThunderDragonMan": {
+"en": "Axel & Orserk",
+"zh": "阿克塞爾 & 波魯傑克斯"
+},
+"GYM_ThunderDragonMan_2": {
+"en": "Axel & Orserk II",
+"zh": "阿克塞爾 & 波魯傑克斯 II"
+},
+"Ganesha": {
+"en": "Teafant",
+"zh": "壺小象"
+},
+"Garm": {
+"en": "Direhowl",
+"zh": "獵狼"
+},
+"GhostAnglerfish": {
+"en": "Ghangler",
+"zh": "冥燈魚"
+},
+"GhostAnglerfish_Fire": {
+"en": "Ghangler Ignis",
+"zh": "炙燈魚"
+},
+"GhostBeast": {
+"en": "Maraith",
+"zh": "噬魂獸"
+},
+"GhostRabbit": {
+"en": "Nitemary",
+"zh": "魅愛莉"
+},
+"GoldenHorse": {
+"en": "Gildane",
+"zh": "金馳獸"
+},
+"Gorilla": {
+"en": "Gorirat",
+"zh": "鐵拳猿"
+},
+"Gorilla_Ground": {
+"en": "Gorirat Terra",
+"zh": "石掌猿"
+},
+"GrassMammoth": {
+"en": "Mammorest",
+"zh": "森猛獁"
+},
+"GrassMammoth_Ice": {
+"en": "Mammorest Cryst",
+"zh": "雪猛獁"
+},
+"GrassPanda": {
+"en": "Mossanda",
+"zh": "葉胖達"
+},
+"GrassPanda_Electric": {
+"en": "Mossanda Lux",
+"zh": "雷胖達"
+},
+"GrassRabbitMan": {
+"en": "Verdash",
+"zh": "踏春兔"
+},
+"GrimGirl": {
+"en": "Splatterina",
+"zh": "幽戀娜"
+},
+"GuardianDog": {
+"en": "Yakumo",
+"zh": "八雲犬"
+},
+"HadesBird": {
+"en": "Helzephyr",
+"zh": "雷冥鳥"
+},
+"HadesBird_Electric": {
+"en": "Helzephyr Lux",
+"zh": "雷鳴鳥"
+},
+"HadesBird_Oilrig": {
+"en": "Helzephyr",
+"zh": "雷冥鳥"
+},
+"HawkBird": {
+"en": "Nitewing",
+"zh": "疾風隼"
+},
+"Hedgehog": {
+"en": "Jolthog",
+"zh": "電棘鼠"
+},
+"Hedgehog_Ice": {
+"en": "Jolthog Cryst",
+"zh": "冰刺鼠"
+},
+"HerculesBeetle": {
+"en": "Warsect",
+"zh": "鎧格力斯"
+},
+"HerculesBeetle_Ground": {
+"en": "Warsect Terra",
+"zh": "格魯力斯"
+},
+"Horus": {
+"en": "Faleris",
+"zh": "荷魯斯"
+},
+"Horus_Oilrig": {
+"en": "Faleris",
+"zh": "荷魯斯"
+},
+"Horus_Water": {
+"en": "Faleris Aqua",
+"zh": "伊西斯"
+},
+"IceCrocodile": {
+"en": "Munchill",
+"zh": "肚肚鱷"
+},
+"IceDeer": {
+"en": "Reindrix",
+"zh": "嚴冬鹿"
+},
+"IceFox": {
+"en": "Foxcicle",
+"zh": "吹雪狐"
+},
+"IceHorse": {
+"en": "Frostallion",
+"zh": "喚冬獸"
+},
+"IceHorse_Dark": {
+"en": "Frostallion Noct",
+"zh": "喚夜獸"
+},
+"IceNarwhal": {
+"en": "Whalaska",
+"zh": "涼晶鯨"
+},
+"IceNarwhal_Fire": {
+"en": "Whalaska Ignis",
+"zh": "桃晶鯨"
+},
+"IceSeal": {
+"en": "Polapup",
+"zh": "香草豹冰"
+},
+"IceWitch": {
+"en": "Icelyn",
+"zh": "冰姬靈"
+},
+"JellyfishFairy": {
+"en": "Jelliette",
+"zh": "海月仙"
+},
+"JellyfishGhost": {
+"en": "Jellroy",
+"zh": "海月靈"
+},
+"JetDragon": {
+"en": "Jetragon",
+"zh": "空渦龍"
+},
+"Kelpie": {
+"en": "Kelpsea",
+"zh": "水靈兒"
+},
+"Kelpie_Fire": {
+"en": "Kelpsea Ignis",
+"zh": "火靈兒"
+},
+"KendoFrog": {
+"en": "Croajiro",
+"zh": "武道蛙"
+},
+"KendoFrog_Dark": {
+"en": "Croajiro Noct",
+"zh": "極道蛙"
+},
+"KingAlpaca": {
+"en": "Kingpaca",
+"zh": "君王美露帕"
+},
+"KingAlpaca_Ice": {
+"en": "Kingpaca Cryst",
+"zh": "冰帝美露帕"
+},
+"KingBahamut": {
+"en": "Blazamut",
+"zh": "焰煌"
+},
+"KingBahamut_Dragon": {
+"en": "Blazamut Ryu",
+"zh": "歿殃"
+},
+"Kirin": {
+"en": "Univolt",
+"zh": "雷角馬"
+},
+"Kitsunebi": {
+"en": "Foxparks",
+"zh": "火絨狐"
+},
+"Kitsunebi_Ice": {
+"en": "Foxparks Cryst",
+"zh": "雪絨狐"
+},
+"LavaGirl": {
+"en": "Flambelle",
+"zh": "融焰娘"
+},
+"LazyCatfish": {
+"en": "Dumud",
+"zh": "趴趴鯰"
+},
+"LazyCatfish_Gold": {
+"en": "Dumud Gild",
+"zh": "梆梆鯰"
+},
+"LazyDragon": {
+"en": "Relaxaurus",
+"zh": "佩克龍"
+},
+"LazyDragon_Electric": {
+"en": "Relaxaurus Lux",
+"zh": "派克龍"
+},
+"LeafMomonga": {
+"en": "Herbil",
+"zh": "達鼠泥"
+},
+"LeafPrincess": {
+"en": "Lullu",
+"zh": "春彩娘"
+},
+"LegendDeer": {
+"en": "Hartalis",
+"zh": "默世鹿"
+},
+"LilyQueen": {
+"en": "Lyleen",
+"zh": "百合女王"
+},
+"LilyQueen_Dark": {
+"en": "Lyleen Noct",
+"zh": "黑月女王"
+},
+"LittleBriarRose": {
+"en": "Bristla",
+"zh": "荊棘魔仙"
+},
+"LizardMan": {
+"en": "Leezpunk",
+"zh": "朋克蜥"
+},
+"LizardMan_Fire": {
+"en": "Leezpunk Ignis",
+"zh": "熱血蜥"
+},
+"LizardMan_Oilrig": {
+"en": "Leezpunk",
+"zh": "朋克蜥"
+},
+"Manticore": {
+"en": "Blazehowl",
+"zh": "獄焰王"
+},
+"Manticore_Dark": {
+"en": "Blazehowl Noct",
+"zh": "獄閻王"
+},
+"MimicDog": {
+"en": "Mimog",
+"zh": "旺財"
+},
+"Monkey": {
+"en": "Tanzee",
+"zh": "新葉猿"
+},
+"MoonQueen": {
+"en": "Selyne",
+"zh": "輝月伊"
+},
+"MopBaby": {
+"en": "Swee",
+"zh": "毛撣兒"
+},
+"MopKing": {
+"en": "Sweepa",
+"zh": "毛老爹"
+},
+"MushroomDragon": {
+"en": "Shroomer",
+"zh": "菇咚"
+},
+"MushroomDragon_Dark": {
+"en": "Shroomer Noct",
+"zh": "菇波"
+},
+"Mutant": {
+"en": "Lunaris",
+"zh": "秘斯媞雅"
+},
+"MysteryMask": {
+"en": "Omascul",
+"zh": "面懼"
+},
+"NaughtyCat": {
+"en": "Grintale",
+"zh": "笑魘貓"
+},
+"NegativeKoala": {
+"en": "Depresso",
+"zh": "瞅什魔"
+},
+"NegativeOctopus": {
+"en": "Killamari",
+"zh": "勾魂魷"
+},
+"NegativeOctopus_Neutral": {
+"en": "Killamari Primo",
+"zh": "蝕魂魷"
+},
+"NightBlueHorse": {
+"en": "Starryon",
+"zh": "夜冥駒"
+},
+"NightFox": {
+"en": "Nox",
+"zh": "露娜蒂"
+},
+"NightLady": {
+"en": "Bellanoir",
+"zh": "貝菈諾娃"
+},
+"NightLady_Dark": {
+"en": "Bellanoir Libero",
+"zh": "貝菈露潔"
+},
+"OctopusGirl": {
+"en": "Gloopie",
+"zh": "墨沫姬"
+},
+"PREDATOR_AmaterasuWolf": {
+"en": "Rampaging Kitsun",
+"zh": "狂暴化的 蒼焰狼"
+},
+"PREDATOR_Baphomet_Dark": {
+"en": "Rampaging Incineram Noct",
+"zh": "狂暴化的 暗魔羊"
+},
+"PREDATOR_BirdDragon": {
+"en": "Rampaging Vanwyrm",
+"zh": "狂暴化的 烽歌龍"
+},
+"PREDATOR_CandleGhost": {
+"en": "Rampaging Sootseer",
+"zh": "狂暴化的 恐炬靈"
+},
+"PREDATOR_DrillGame": {
+"en": "Rampaging Digtoise",
+"zh": "狂暴化的 碎巖龜"
+},
+"PREDATOR_FairyDragon": {
+"en": "Rampaging Elphidran",
+"zh": "狂暴化的 精靈龍"
+},
+"PREDATOR_FeatherOstrich": {
+"en": "Rampaging Dazemu",
+"zh": "狂暴化的 戰冠雀"
+},
+"PREDATOR_FlowerDinosaur": {
+"en": "Rampaging Dinossom",
+"zh": "狂暴化的 花冠龍"
+},
+"PREDATOR_Garm": {
+"en": "Rampaging Direhowl",
+"zh": "狂暴化的 獵狼"
+},
+"PREDATOR_GhostBeast": {
+"en": "Rampaging Maraith",
+"zh": "狂暴化的 噬魂獸"
+},
+"PREDATOR_GoldenHorse": {
+"en": "Rampaging Gildane",
+"zh": "狂暴化的 金馳獸"
+},
+"PREDATOR_Gorilla": {
+"en": "Rampaging Gorirat",
+"zh": "狂暴化的 鐵拳猿"
+},
+"PREDATOR_GrassPanda": {
+"en": "Rampaging Mossanda",
+"zh": "狂暴化的 葉胖達"
+},
+"PREDATOR_GrimGirl": {
+"en": "Rampaging Splatterina",
+"zh": "狂暴化的 幽戀娜"
+},
+"PREDATOR_HadesBird_Electric": {
+"en": "Rampaging Helzephyr Lux",
+"zh": "狂暴化的 雷鳴鳥"
+},
+"PREDATOR_Horus_Water": {
+"en": "Rampaging Faleris Aqua",
+"zh": "狂暴化的 伊西斯"
+},
+"PREDATOR_LazyDragon": {
+"en": "Rampaging Relaxaurus",
+"zh": "狂暴化的 佩克龍"
+},
+"PREDATOR_Manticore_Dark": {
+"en": "Rampaging Blazehowl Noct",
+"zh": "狂暴化的 獄閻王"
+},
+"PREDATOR_MushroomDragon": {
+"en": "Rampaging Shroomer",
+"zh": "狂暴化的 菇咚"
+},
+"PREDATOR_MysteryMask": {
+"en": "Rampaging Omascul",
+"zh": "狂暴化的 面懼"
+},
+"PREDATOR_NightBlueHorse": {
+"en": "Rampaging Starryon",
+"zh": "狂暴化的 夜冥駒"
+},
+"PREDATOR_PinkLizard": {
+"en": "Rampaging Lovander",
+"zh": "狂暴化的 博愛蜥"
+},
+"PREDATOR_PurpleSpider": {
+"en": "Rampaging Tarantriss",
+"zh": "狂暴化的 桃蛛娘"
+},
+"PREDATOR_RedArmorBird": {
+"en": "Rampaging Ragnahawk",
+"zh": "狂暴化的 燧火鳥"
+},
+"PREDATOR_Ronin_Dark": {
+"en": "Rampaging Bushi Noct",
+"zh": "狂暴化的 鬼刃武士"
+},
+"PREDATOR_ScorpionMan": {
+"en": "Rampaging Prixter",
+"zh": "狂暴化的 蠱刺妖"
+},
+"PREDATOR_SifuDog": {
+"en": "Rampaging Dogen",
+"zh": "狂暴化的 汪宗師"
+},
+"PREDATOR_ThunderDog": {
+"en": "Rampaging Rayhound",
+"zh": "狂暴化的 霹靂犬"
+},
+"PREDATOR_Umihebi_Fire": {
+"en": "Rampaging Jormuntide Ignis",
+"zh": "狂暴化的 騰炎龍"
+},
+"PREDATOR_VolcanicMonster_Ice": {
+"en": "Rampaging Reptyro Cryst",
+"zh": "狂暴化的 寒霜獸"
+},
+"PREDATOR_Werewolf_Ice": {
+"en": "Rampaging Loupmoon Cryst",
+"zh": "狂暴化的 霜鐮魔"
+},
+"PREDATOR_WhiteTiger_Ground": {
+"en": "Rampaging Cryolinx Terra",
+"zh": "狂暴化的 金棘獸"
+},
+"PREDATOR_Yeti": {
+"en": "Rampaging Wumpo",
+"zh": "狂暴化的 白絨雪怪"
+},
+"Penguin": {
+"en": "Pengullet",
+"zh": "企丸丸"
+},
+"Penguin_Electric": {
+"en": "Pengullet Lux",
+"zh": "閃丸丸"
+},
+"PinkCat": {
+"en": "Cattiva",
+"zh": "搗蛋貓"
+},
+"PinkLizard": {
+"en": "Lovander",
+"zh": "博愛蜥"
+},
+"PinkRabbit": {
+"en": "Ribbuny",
+"zh": "姬小兔"
+},
+"PinkRabbit_Grass": {
+"en": "Ribbuny Botan",
+"zh": "艾小兔"
+},
+"PlantSlime": {
+"en": "Gumoss",
+"zh": "葉泥泥"
+},
+"PlantSlime_Flower": {
+"en": "Gumoss (Flower)",
+"zh": "葉泥泥 (花)"
+},
+"Plesiosaur": {
+"en": "Braloha",
+"zh": "梁葉龍"
+},
+"PoseidonOrca": {
+"en": "Neptilius",
+"zh": "海皇鯨"
+},
+"PurpleSpider": {
+"en": "Tarantriss",
+"zh": "桃蛛娘"
+},
+"QueenBee": {
+"en": "Elizabee",
+"zh": "女皇蜂"
+},
+"Quest_Farmer03_PinkCat": {
+"en": "Cattiva",
+"zh": "搗蛋貓"
+},
+"Quest_Farmer03_SheepBall": {
+"en": "Lamball",
+"zh": "棉悠悠"
+},
+"RAID_DarkMechaDragon": {
+"en": "Invader from Space Xenolord",
+"zh": "來自宇宙的侵略者 傑諾多蘭"
+},
+"RAID_DarkMechaDragon_2": {
+"en": "Invader from Space (Ultra) Xenolord",
+"zh": "來自宇宙的侵略者【極】 傑諾多蘭"
+},
+"RAID_KingBahamut_Dragon": {
+"en": "Incarnation of the Eternal Flame Blazamut Ryu",
+"zh": "永炎現世 歿殃"
+},
+"RAID_KingBahamut_Dragon_2": {
+"en": "Incarnation of the Eternal Flame (Ultra) Blazamut Ryu",
+"zh": "永炎現世【極】 歿殃"
+},
+"RAID_LegendDeer": {
+"en": "King of Salvation Hartalis",
+"zh": "救贖之王 默世鹿"
+},
+"RAID_LegendDeer_2": {
+"en": "King of Salvation Hartalis",
+"zh": "救贖之王【極】 默世鹿"
+},
+"RAID_NightLady": {
+"en": "Eclipsed Siren Bellanoir",
+"zh": "狂亂淑女 貝菈諾娃"
+},
+"RAID_NightLady_Dark": {
+"en": "Twilight Siren Bellanoir Libero",
+"zh": "幽玄魔女 貝菈露潔"
+},
+"RAID_NightLady_Dark_2": {
+"en": "Twilight Siren (Ultra) Bellanoir Libero",
+"zh": "幽玄魔女【極】 貝菈露潔"
+},
+"RAID_YakushimaBoss001_Green": {
+"en": "True Eye of Cthulhu",
+"zh": "克蘇魯真眼"
+},
+"RAID_YakushimaBoss002": {
+"en": "Moon Lord",
+"zh": "月亮領主"
+},
+"RaijinDaughter": {
+"en": "Dazzi",
+"zh": "雷鳴童子"
+},
+"RaijinDaughter_Water": {
+"en": "Dazzi Noct",
+"zh": "天陰童子"
+},
+"RedArmorBird": {
+"en": "Ragnahawk",
+"zh": "燧火鳥"
+},
+"RobinHood": {
+"en": "Robinquill",
+"zh": "羽箭射手"
+},
+"RobinHood_Ground": {
+"en": "Robinquill Terra",
+"zh": "山嶽射手"
+},
+"Ronin": {
+"en": "Bushi",
+"zh": "浪刃武士"
+},
+"Ronin_Dark": {
+"en": "Bushi Noct",
+"zh": "鬼刃武士"
+},
+"SUMMON_DarkAlien": {
+"en": "Xenovader",
+"zh": "傑諾貝達"
+},
+"SUMMON_DarkAlien_MAX": {
+"en": "Xenovader",
+"zh": "傑諾貝達"
+},
+"SUMMON_WhiteAlienDragon": {
+"en": "Xenogard",
+"zh": "傑諾路達"
+},
+"SUMMON_WhiteAlienDragon_MAX": {
+"en": "Xenogard",
+"zh": "傑諾路達"
+},
+"SaintCentaur": {
+"en": "Paladius",
+"zh": "聖光騎士"
+},
+"SakuraSaurus": {
+"en": "Broncherry",
+"zh": "連理龍"
+},
+"SakuraSaurus_Water": {
+"en": "Broncherry Aqua",
+"zh": "海誓龍"
+},
+"ScorpionMan": {
+"en": "Prixter",
+"zh": "蠱刺妖"
+},
+"Serpent": {
+"en": "Surfent",
+"zh": "滑水蛇"
+},
+"Serpent_Ground": {
+"en": "Surfent Terra",
+"zh": "流沙蛇"
+},
+"SharkKid": {
+"en": "Gobfin",
+"zh": "鯊小子"
+},
+"SharkKid_Fire": {
+"en": "Gobfin Ignis",
+"zh": "紅小鯊"
+},
+"SheepBall": {
+"en": "Lamball",
+"zh": "棉悠悠"
+},
+"SifuDog": {
+"en": "Dogen",
+"zh": "汪宗師"
+},
+"SkyDragon": {
+"en": "Quivern",
+"zh": "天羽龍"
+},
+"SkyDragon_Grass": {
+"en": "Quivern Botan",
+"zh": "翠羽龍"
+},
+"SmallArmadillo": {
+"en": "Kikit",
+"zh": "球犰"
+},
+"SnowPeafowl": {
+"en": "Frostplume",
+"zh": "白真雪雀"
+},
+"SnowTigerBeastman": {
+"en": "Bastigor",
+"zh": "霜牙王"
+},
+"SoldierBee": {
+"en": "Beegarde",
+"zh": "騎士蜂"
+},
+"StuffedShark": {
+"en": "Finsider",
+"zh": "布偶鯊"
+},
+"StuffedShark_Fire": {
+"en": "Finsider Ignis",
+"zh": "粉粉布偶鯊"
+},
+"Suzaku": {
+"en": "Suzaku",
+"zh": "朱雀"
+},
+"Suzaku_Water": {
+"en": "Suzaku Aqua",
+"zh": "清雀"
+},
+"SweetsSheep": {
+"en": "Woolipop",
+"zh": "棉花糖"
+},
+"TentacleTurtle": {
+"en": "Turtacle",
+"zh": "盔盔仔"
+},
+"TentacleTurtle_Ground": {
+"en": "Turtacle Terra",
+"zh": "金盔仔"
+},
+"ThunderBird": {
+"en": "Beakon",
+"zh": "迅雷鳥"
+},
+"ThunderDog": {
+"en": "Rayhound",
+"zh": "霹靂犬"
+},
+"ThunderDragonMan": {
+"en": "Orserk",
+"zh": "波魯傑克斯"
+},
+"TropicalOstrich": {
+"en": "Palumba",
+"zh": "咕咕桑葩"
+},
+"Umihebi": {
+"en": "Jormuntide",
+"zh": "覆海龍"
+},
+"Umihebi_Fire": {
+"en": "Jormuntide Ignis",
+"zh": "騰炎龍"
+},
+"VioletFairy": {
+"en": "Vaelet",
+"zh": "薇莉塔"
+},
+"VolcanicMonster": {
+"en": "Reptyro",
+"zh": "熔岩獸"
+},
+"VolcanicMonster_Ice": {
+"en": "Reptyro Cryst",
+"zh": "寒霜獸"
+},
+"WeaselDragon": {
+"en": "Chillet",
+"zh": "疾旋鼬"
+},
+"WeaselDragon_Fire": {
+"en": "Chillet Ignis",
+"zh": "桃旋鼬"
+},
+"Werewolf": {
+"en": "Loupmoon",
+"zh": "月鐮魔"
+},
+"Werewolf_Ice": {
+"en": "Loupmoon Cryst",
+"zh": "霜鐮魔"
+},
+"WhiteAlienDragon": {
+"en": "Xenogard",
+"zh": "傑諾路達"
+},
+"WhiteDeer": {
+"en": "Celesdir",
+"zh": "淨世鹿"
+},
+"WhiteMoth": {
+"en": "Sibelyx",
+"zh": "綢笠蛾"
+},
+"WhiteShieldDragon": {
+"en": "Silvegis",
+"zh": "艾基魯迦"
+},
+"WhiteTiger": {
+"en": "Cryolinx",
+"zh": "冰棘獸"
+},
+"WhiteTiger_Ground": {
+"en": "Cryolinx Terra",
+"zh": "金棘獸"
+},
+"WindChimes": {
+"en": "Hangyu",
+"zh": "吊縛靈"
+},
+"WindChimes_Ice": {
+"en": "Hangyu Cryst",
+"zh": "冰縛靈"
+},
+"WingGolem": {
+"en": "Knocklem",
+"zh": "泰鋒"
+},
+"WingGolem_Oilrig": {
+"en": "Knocklem",
+"zh": "泰鋒"
+},
+"WizardOwl": {
+"en": "Hoocrates",
+"zh": "啼卡爾"
+},
+"WoolFox": {
+"en": "Cremis",
+"zh": "米露菲"
+},
+"YakushimaBoss001": {
+"en": "Eye of Cthulhu",
+"zh": "克蘇魯之眼"
+},
+"YakushimaBoss001_Small": {
+"en": "Demon Eye",
+"zh": "惡魔眼"
+},
+"YakushimaMonster001": {
+"en": "Green Slime",
+"zh": "綠史萊姆"
+},
+"YakushimaMonster001_Blue": {
+"en": "Blue Slime",
+"zh": "藍史萊姆"
+},
+"YakushimaMonster001_Pink": {
+"en": "Illuminant Slime",
+"zh": "夜明史萊姆"
+},
+"YakushimaMonster001_Purple": {
+"en": "Purple Slime",
+"zh": "紫史萊姆"
+},
+"YakushimaMonster001_Rainbow": {
+"en": "Rainbow Slime",
+"zh": "彩虹史萊姆"
+},
+"YakushimaMonster001_Red": {
+"en": "Red Slime",
+"zh": "紅史萊姆"
+},
+"YakushimaMonster002": {
+"en": "Enchanted Sword",
+"zh": "附魔劍"
+},
+"YakushimaMonster003": {
+"en": "Cave Bat",
+"zh": "洞穴蝙蝠"
+},
+"YakushimaMonster003_Purple": {
+"en": "Illuminant Bat",
+"zh": "夜明蝙蝠"
+},
+"Yeti": {
+"en": "Wumpo",
+"zh": "白絨雪怪"
+},
+"Yeti_Grass": {
+"en": "Wumpo Botan",
+"zh": "綠苔絨怪"
+}
+}

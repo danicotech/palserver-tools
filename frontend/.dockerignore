@@ -1,0 +1,13 @@
+.git
+.agents
+.claude
+.codex
+node_modules
+**/node_modules
+**/dist
+dist
+**/rwd-audit
+logs
+release
+*.log
+.DS_Store

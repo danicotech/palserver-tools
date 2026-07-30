@@ -1,0 +1,462 @@
+{
+ "Alien": {
+  "en": "Otherworldly Cells",
+  "zh": "未知生物細胞"
+ },
+ "CoolTimeReduction_Down_1": {
+  "en": "Easygoing",
+  "zh": "慢性子"
+ },
+ "CoolTimeReduction_Up_1": {
+  "en": "Serenity",
+  "zh": "沉著冷靜"
+ },
+ "CoolTimeReduction_Up_2": {
+  "en": "Impatient",
+  "zh": "急性子"
+ },
+ "CraftSpeed_down1": {
+  "en": "Clumsy",
+  "zh": "笨手笨腳"
+ },
+ "CraftSpeed_down2": {
+  "en": "Slacker",
+  "zh": "偷懶成癮"
+ },
+ "CraftSpeed_up1": {
+  "en": "Serious",
+  "zh": "認真"
+ },
+ "CraftSpeed_up2": {
+  "en": "Artisan",
+  "zh": "工匠精神"
+ },
+ "CraftSpeed_up3": {
+  "en": "Remarkable Craftsmanship",
+  "zh": "卓絕技藝"
+ },
+ "Deffence_down1": {
+  "en": "Downtrodden",
+  "zh": "弱不禁風"
+ },
+ "Deffence_down2": {
+  "en": "Brittle",
+  "zh": "骨質疏鬆"
+ },
+ "Deffence_up1": {
+  "en": "Hard Skin",
+  "zh": "堅硬皮膚"
+ },
+ "Deffence_up2": {
+  "en": "Burly Body",
+  "zh": "頑強肉體"
+ },
+ "Deffence_up3": {
+  "en": "Diamond Body",
+  "zh": "金剛之軀"
+ },
+ "ElementBoost_Aqua_1_PAL": {
+  "en": "Hydromaniac",
+  "zh": "喜歡戲水"
+ },
+ "ElementBoost_Aqua_2_PAL": {
+  "en": "Lord of the Sea",
+  "zh": "海皇"
+ },
+ "ElementBoost_Dark_1_PAL": {
+  "en": "Veil of Darkness",
+  "zh": "夜幕"
+ },
+ "ElementBoost_Dark_2_PAL": {
+  "en": "Lord of the Underworld",
+  "zh": "冥王"
+ },
+ "ElementBoost_Dragon_1_PAL": {
+  "en": "Blood of the Dragon",
+  "zh": "龍之血脈"
+ },
+ "ElementBoost_Dragon_2_PAL": {
+  "en": "Divine Dragon",
+  "zh": "神龍"
+ },
+ "ElementBoost_Earth_1_PAL": {
+  "en": "Power of Gaia",
+  "zh": "大地之力"
+ },
+ "ElementBoost_Earth_2_PAL": {
+  "en": "Earth Emperor",
+  "zh": "巖帝"
+ },
+ "ElementBoost_Fire_1_PAL": {
+  "en": "Pyromaniac",
+  "zh": "喜歡玩火"
+ },
+ "ElementBoost_Fire_2_PAL": {
+  "en": "Flame Emperor",
+  "zh": "炎帝"
+ },
+ "ElementBoost_Ice_1_PAL": {
+  "en": "Coldblooded",
+  "zh": "冷血"
+ },
+ "ElementBoost_Ice_2_PAL": {
+  "en": "Ice Emperor",
+  "zh": "冰帝"
+ },
+ "ElementBoost_Leaf_1_PAL": {
+  "en": "Fragrant Foliage",
+  "zh": "草木馨香"
+ },
+ "ElementBoost_Leaf_2_PAL": {
+  "en": "Spirit Emperor",
+  "zh": "精靈王"
+ },
+ "ElementBoost_Normal_1_PAL": {
+  "en": "Zen Mind",
+  "zh": "禪境"
+ },
+ "ElementBoost_Normal_2_PAL": {
+  "en": "Celestial Emperor",
+  "zh": "聖天"
+ },
+ "ElementBoost_Thunder_1_PAL": {
+  "en": "Capacitor",
+  "zh": "電容"
+ },
+ "ElementBoost_Thunder_2_PAL": {
+  "en": "Lord of Lightning",
+  "zh": "雷帝"
+ },
+ "ElementResist_Aqua_1_PAL": {
+  "en": "Waterproof",
+  "zh": "防水性能"
+ },
+ "ElementResist_Dark_1_PAL": {
+  "en": "Cheery",
+  "zh": "陽光開朗"
+ },
+ "ElementResist_Dragon_1_PAL": {
+  "en": "Dragonkiller",
+  "zh": "屠龍者"
+ },
+ "ElementResist_Earth_1_PAL": {
+  "en": "Earthquake Resistant",
+  "zh": "抗震結構"
+ },
+ "ElementResist_Fire_1_PAL": {
+  "en": "Suntan Lover",
+  "zh": "擁抱烈日"
+ },
+ "ElementResist_Ice_1_PAL": {
+  "en": "Heated Body",
+  "zh": "高溫體質"
+ },
+ "ElementResist_Leaf_1_PAL": {
+  "en": "Botanical Barrier",
+  "zh": "除草效果"
+ },
+ "ElementResist_Normal_1_PAL": {
+  "en": "Abnormal",
+  "zh": "一反常態"
+ },
+ "ElementResist_Thunder_1_PAL": {
+  "en": "Insulated Body",
+  "zh": "絕緣體"
+ },
+ "EternalFlame": {
+  "en": "Eternal Flame",
+  "zh": "永炎"
+ },
+ "Invader": {
+  "en": "Invader",
+  "zh": "侵略者"
+ },
+ "Legend": {
+  "en": "Legend",
+  "zh": "傳說"
+ },
+ "MoveSpeed_up_1": {
+  "en": "Nimble",
+  "zh": "靈活"
+ },
+ "MoveSpeed_up_2": {
+  "en": "Runner",
+  "zh": "運動健將"
+ },
+ "MoveSpeed_up_3": {
+  "en": "Swift",
+  "zh": "神速"
+ },
+ "Nocturnal": {
+  "en": "Nocturnal",
+  "zh": "夜行性"
+ },
+ "NonKilling": {
+  "en": "Mercy Hit",
+  "zh": "手下留情"
+ },
+ "Noukin": {
+  "en": "Musclehead",
+  "zh": "腦筋"
+ },
+ "Nushi": {
+  "en": "Lunker",
+  "zh": "湖之主"
+ },
+ "PAL_ALLAttack_down1": {
+  "en": "Coward",
+  "zh": "膽小"
+ },
+ "PAL_ALLAttack_down2": {
+  "en": "Pacifist",
+  "zh": "消極主義者"
+ },
+ "PAL_ALLAttack_up1": {
+  "en": "Brave",
+  "zh": "勇敢"
+ },
+ "PAL_ALLAttack_up2": {
+  "en": "Ferocious",
+  "zh": "兇猛"
+ },
+ "PAL_ALLAttack_up3": {
+  "en": "Demon God",
+  "zh": "鬼神"
+ },
+ "PAL_CorporateSlave": {
+  "en": "Work Slave",
+  "zh": "社畜"
+ },
+ "PAL_FullStomach_Down_1": {
+  "en": "Dainty Eater",
+  "zh": "小胃"
+ },
+ "PAL_FullStomach_Down_2": {
+  "en": "Diet Lover",
+  "zh": "節食大師"
+ },
+ "PAL_FullStomach_Down_3": {
+  "en": "Mastery of Fasting",
+  "zh": "極限絕食"
+ },
+ "PAL_FullStomach_Up_1": {
+  "en": "Glutton",
+  "zh": "貪吃"
+ },
+ "PAL_FullStomach_Up_2": {
+  "en": "Bottomless Stomach",
+  "zh": "無底之胃"
+ },
+ "PAL_Sanity_Down_1": {
+  "en": "Positive Thinker",
+  "zh": "積極思維"
+ },
+ "PAL_Sanity_Down_2": {
+  "en": "Workaholic",
+  "zh": "工作狂"
+ },
+ "PAL_Sanity_Down_3": {
+  "en": "Heart of the Immovable King",
+  "zh": "明鏡止水"
+ },
+ "PAL_Sanity_Up_1": {
+  "en": "Unstable",
+  "zh": "情緒不穩"
+ },
+ "PAL_Sanity_Up_2": {
+  "en": "Destructive",
+  "zh": "毀滅慾望"
+ },
+ "PAL_conceited": {
+  "en": "Conceited",
+  "zh": "自戀狂"
+ },
+ "PAL_masochist": {
+  "en": "Masochist",
+  "zh": "受虐狂"
+ },
+ "PAL_oraora": {
+  "en": "Aggressive",
+  "zh": "強勢"
+ },
+ "PAL_rude": {
+  "en": "Hooligan",
+  "zh": "粗暴"
+ },
+ "PAL_sadist": {
+  "en": "Sadist",
+  "zh": "虐待狂"
+ },
+ "Rare": {
+  "en": "Lucky",
+  "zh": "稀有"
+ },
+ "SalePrice_Down_1": {
+  "en": "Shabby",
+  "zh": "寒酸"
+ },
+ "SalePrice_Up_1": {
+  "en": "Noble",
+  "zh": "高貴"
+ },
+ "SalePrice_Up_2": {
+  "en": "Fine Furs",
+  "zh": "貴族"
+ },
+ "Salvation": {
+  "en": "Savior",
+  "zh": "救世主"
+ },
+ "Stamina_Down_1": {
+  "en": "Sickly",
+  "zh": "家裡蹲"
+ },
+ "Stamina_Up_1": {
+  "en": "Infinite Stamina",
+  "zh": "無限精力"
+ },
+ "Stamina_Up_2": {
+  "en": "Fit as a Fiddle",
+  "zh": "健康寶寶"
+ },
+ "Stamina_Up_3": {
+  "en": "Eternal Engine",
+  "zh": "永動機"
+ },
+ "SwimSpeed_up_1": {
+  "en": "Sleek Stroke",
+  "zh": "悠然泳姿"
+ },
+ "SwimSpeed_up_2": {
+  "en": "Ace Swimmer",
+  "zh": "游泳健將"
+ },
+ "SwimSpeed_up_3": {
+  "en": "King of the Waves",
+  "zh": "破浪王者"
+ },
+ "Test_PalEgg_HatchingSpeed_Up": {
+  "en": "Philanthropist",
+  "zh": "博愛主義者"
+ },
+ "TrainerATK_UP_1": {
+  "en": "Vanguard",
+  "zh": "突襲指揮官"
+ },
+ "TrainerDEF_UP_1": {
+  "en": "Stronghold Strategist",
+  "zh": "鐵壁軍師"
+ },
+ "TrainerLogging_up1": {
+  "en": "Logging Foreman",
+  "zh": "採伐領袖"
+ },
+ "TrainerMining_up1": {
+  "en": "Mine Foreman",
+  "zh": "礦山首領"
+ },
+ "TrainerWorkSpeed_UP_1": {
+  "en": "Motivational Leader",
+  "zh": "啦啦隊"
+ },
+ "Vampire": {
+  "en": "Vampiric",
+  "zh": "吸血鬼"
+ },
+ "Witch": {
+  "en": "Siren of the Void",
+  "zh": "魔女"
+ },
+ "WorldTree_CraftSpeed": {
+  "en": "Demon’s Hand",
+  "zh": "惡魔之手"
+ },
+ "WorldTree_MoveSpeed": {
+  "en": "Dimensional Leap",
+  "zh": "次元跳躍"
+ },
+ "WorldTree_ATK_DEF": {
+  "en": "God of Destruction",
+  "zh": "破壞神"
+ },
+ "WorldTree_Sanity": {
+  "en": "Hermit Sage",
+  "zh": "仙人"
+ },
+ "WorldTree_DEF": {
+  "en": "Sanctified Meat Shield",
+  "zh": "守護聖盾"
+ },
+ "WorldTree_ATK": {
+  "en": "Twin-Edged Holy Blade",
+  "zh": "雙刃聖劍"
+ },
+ "WorldTree_FullStomach": {
+  "en": "World Tree Seedbed",
+  "zh": "神樹苗床"
+ },
+ "MutationPal_Babysitter": {
+  "en": "Babysitter",
+  "zh": "寶寶保母"
+ },
+ "MutationPal_ExplosionResist": {
+  "en": "Heavily Armored",
+  "zh": "重裝甲"
+ },
+ "MutationPal_Mutant": {
+  "en": "Idiosyncratic",
+  "zh": "特殊體質"
+ },
+ "MutationPal_Immortal": {
+  "en": "Immortality",
+  "zh": "不死之身"
+ },
+ "SelfDeathAddItemDrop_up_3": {
+  "en": "Lavish Hospitality",
+  "zh": "慷慨就義"
+ },
+ "RideJumpCount_Increase1": {
+  "en": "Lightfooted",
+  "zh": "身輕如燕"
+ },
+ "WorkSuitabilityAddRank_MonsterFarm_2": {
+  "en": "Ranch Master",
+  "zh": "牧場之主"
+ },
+ "RideJumpCount_Increase2": {
+  "en": "Skymarcher",
+  "zh": "凌空微步"
+ },
+ "WorkSuitabilityAddRank_MonsterFarm_1": {
+  "en": "Farmhand",
+  "zh": "牧場之子"
+ },
+ "AutoHPRegeneRate_Passive": {
+  "en": "Healing Coach",
+  "zh": "療癒教練"
+ },
+ "ReloadSpeedUp_Passive": {
+  "en": "Reload Master",
+  "zh": "裝填大師"
+ },
+ "SelfDeathAddItemDrop_up_2": {
+  "en": "Service-Minded",
+  "zh": "奉獻精神"
+ },
+ "PlayerSP_DecreaseRate_Passive": {
+  "en": "Wellness Watcher",
+  "zh": "防過勞幫手"
+ },
+ "MiniNushi": {
+  "en": "Whopper",
+  "zh": "Whopper"
+ },
+ "Deffence_up2_2": {
+  "en": "Heavyweight",
+  "zh": "重量級"
+ },
+ "NightOwl": {
+  "en": "Night Owl",
+  "zh": "夜貓子"
+ }
+}

@@ -1,0 +1,35 @@
+# 部署入口:前端查詢網站,並 include 後端整組服務(伺服器/排程器/存檔解析)。
+#
+# 【職責分界】
+#   backend/docker-compose.yml … palworld / palsave / scheduler
+#                                 伺服器參數(遊戲數值、排程、存檔路徑)的唯一權威來源。
+#   本檔                        … 只負責前端 panel。
+#   本檔「不覆寫」任何後端服務設定;要改伺服器參數請改 backend/docker-compose.yml。
+#
+# include 的相對路徑是以「被引入檔案所在目錄」解析,
+# 所以 backend 那份裡的 ./palworld-data、./config.json 都會正確指到 backend/ 底下。
+#
+# 常用指令(在本目錄執行):
+#   只建/起前端(不動遊戲): docker compose up -d --no-deps --build panel
+#   完整重建全部(停機時段): docker compose up -d --build
+#
+# 想把網站公開到外網:在主機自行架反向代理/隧道指向本機 80 埠,
+# 或新增 gitignored 的 docker-compose.override.yml 疊加你自己的對外服務。
+name: palscheduler
+
+include:
+  - path: ./backend/docker-compose.yml
+
+services:
+  # ---- 前端查詢網站(Vite SPA,nginx 提供)----
+  # nginx 反向代理 /api/* → scheduler:9000(服務名由 backend 那份定義)。
+  panel:
+    build: ./frontend
+    container_name: palworld-panel
+    restart: unless-stopped
+    ports:
+      - "80:80" # 本機瀏覽器開 http://localhost
+    depends_on:
+      - scheduler
+    networks:
+      - palnet

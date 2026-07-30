@@ -1,0 +1,1538 @@
+{
+ "EPalWazaID::AcidRain": {
+  "en": "Acid Rain",
+  "zh": "酸雨"
+ },
+ "EPalWazaID::AirBlade": {
+  "en": "Air Blade",
+  "zh": "真空刃"
+ },
+ "EPalWazaID::AirCanon": {
+  "en": "Air Cannon",
+  "zh": "空氣彈"
+ },
+ "EPalWazaID::Apocalypse": {
+  "en": "Apocalypse",
+  "zh": "啟示錄"
+ },
+ "EPalWazaID::AquaJet": {
+  "en": "Hydro Jet",
+  "zh": "水流射擊"
+ },
+ "EPalWazaID::BeamSlicer": {
+  "en": "Beam Slicer",
+  "zh": "切割龍息"
+ },
+ "EPalWazaID::BlastCanon": {
+  "en": "Blast Cannon",
+  "zh": "綻裂龍息"
+ },
+ "EPalWazaID::BlizzardLance": {
+  "en": "Iceberg",
+  "zh": "冰刺"
+ },
+ "EPalWazaID::BlueThunderHorse_PartnerSkill": {
+  "en": "BlueThunderHorse_PartnerSkill",
+  "zh": "BlueThunderHorse_PartnerSkill"
+ },
+ "EPalWazaID::BubbleShot": {
+  "en": "Bubble Blast",
+  "zh": "泡泡射擊"
+ },
+ "EPalWazaID::BubbleShower": {
+  "en": "Poison Shower",
+  "zh": "毒雨"
+ },
+ "EPalWazaID::ChargeCanon": {
+  "en": "Charge Cannon",
+  "zh": "龍息炮"
+ },
+ "EPalWazaID::Commet": {
+  "en": "Comet Strike",
+  "zh": "隕星"
+ },
+ "EPalWazaID::CommetRain": {
+  "en": "Meteorain",
+  "zh": "隕星雨"
+ },
+ "EPalWazaID::CrossThunder": {
+  "en": "Cross Lightning",
+  "zh": "十字雷擊"
+ },
+ "EPalWazaID::CrossWind": {
+  "en": "Crosswind",
+  "zh": "十字風切"
+ },
+ "EPalWazaID::DarkArrow": {
+  "en": "Dark Arrow",
+  "zh": "黑暗箭"
+ },
+ "EPalWazaID::DarkBall": {
+  "en": "Dark Ball",
+  "zh": "暗黑球"
+ },
+ "EPalWazaID::DarkCanon": {
+  "en": "Dark Cannon",
+  "zh": "黑暗彈"
+ },
+ "EPalWazaID::DarkLaser": {
+  "en": "Dark Laser",
+  "zh": "暗黑雷射"
+ },
+ "EPalWazaID::DarkLegion": {
+  "en": "Dark Whisp",
+  "zh": "黑暗之擁"
+ },
+ "EPalWazaID::DarkPulse": {
+  "en": "Umbral Surge",
+  "zh": "黑暗霰射"
+ },
+ "EPalWazaID::DarkWave": {
+  "en": "Shadow Burst",
+  "zh": "暗影波動"
+ },
+ "EPalWazaID::DiamondFall": {
+  "en": "Diamond Rain",
+  "zh": "晶鑽之雨"
+ },
+ "EPalWazaID::DiversionLaser": {
+  "en": "Torrential Blast",
+  "zh": "分流水炮"
+ },
+ "EPalWazaID::DoubleIcicleThrow": {
+  "en": "Double Blizzard Spike",
+  "zh": "極寒雙星"
+ },
+ "EPalWazaID::DragonBreath": {
+  "en": "Draconic Breath",
+  "zh": "龍息"
+ },
+ "EPalWazaID::DragonCanon": {
+  "en": "Dragon Cannon",
+  "zh": "龍息彈"
+ },
+ "EPalWazaID::DragonMeteor": {
+  "en": "Dragon Meteor",
+  "zh": "龍彗星"
+ },
+ "EPalWazaID::DragonWave": {
+  "en": "Dragon Burst",
+  "zh": "龍之波動"
+ },
+ "EPalWazaID::ElecWave": {
+  "en": "Shockwave",
+  "zh": "衝擊波"
+ },
+ "EPalWazaID::EnergyShot": {
+  "en": "Ice Missile",
+  "zh": "冰導彈"
+ },
+ "EPalWazaID::Eruption": {
+  "en": "Volcanic Rain",
+  "zh": "熔岩爆發"
+ },
+ "EPalWazaID::FireBall": {
+  "en": "Fire Ball",
+  "zh": "烈焰球"
+ },
+ "EPalWazaID::FireBlast": {
+  "en": "Ignis Blast",
+  "zh": "烈焰射擊"
+ },
+ "EPalWazaID::FireSeed": {
+  "en": "Spirit Fire",
+  "zh": "烈焰濺射"
+ },
+ "EPalWazaID::FlameFunnel": {
+  "en": "Flame Funnel",
+  "zh": "流火"
+ },
+ "EPalWazaID::FlameWall": {
+  "en": "Flame Wall",
+  "zh": "爆烈火牆"
+ },
+ "EPalWazaID::Flamethrower": {
+  "en": "Ignis Breath",
+  "zh": "烈焰放射"
+ },
+ "EPalWazaID::FlareArrow": {
+  "en": "Flare Arrow",
+  "zh": "烈焰箭"
+ },
+ "EPalWazaID::FlareTornado": {
+  "en": "Flare Storm",
+  "zh": "烈焰風暴"
+ },
+ "EPalWazaID::FlareTwister": {
+  "en": "Flare Twister",
+  "zh": "炎龍舞"
+ },
+ "EPalWazaID::FrostBreath": {
+  "en": "Crystal Breath",
+  "zh": "凜冬之息"
+ },
+ "EPalWazaID::Funnel_DreamDemon": {
+  "en": "Funnel_DreamDemon",
+  "zh": "Funnel_DreamDemon"
+ },
+ "EPalWazaID::Funnel_RaijinDaughter": {
+  "en": "Funnel_RaijinDaughter",
+  "zh": "Funnel_RaijinDaughter"
+ },
+ "EPalWazaID::Funnel_RaijinDaughter_Water": {
+  "en": "Funnel_RaijinDaughter_Water",
+  "zh": "Funnel_RaijinDaughter_Water"
+ },
+ "EPalWazaID::GhostFlame": {
+  "en": "Spirit Flame",
+  "zh": "鬼火"
+ },
+ "EPalWazaID::GrassTornado": {
+  "en": "Grass Tornado",
+  "zh": "綠野颶風"
+ },
+ "EPalWazaID::GravityShot": {
+  "en": "Dark Shot",
+  "zh": "暗能彈"
+ },
+ "EPalWazaID::HealingTree": {
+  "en": "HealingTree",
+  "zh": "HealingTree"
+ },
+ "EPalWazaID::HolyBlast": {
+  "en": "Holy Burst",
+  "zh": "光擊陣"
+ },
+ "EPalWazaID::Human_Punch": {
+  "en": "Punch",
+  "zh": "擊打"
+ },
+ "EPalWazaID::Human_Rolling": {
+  "en": "Human_Rolling",
+  "zh": "Human_Rolling"
+ },
+ "EPalWazaID::HydroPump": {
+  "en": "Hydro Laser",
+  "zh": "高壓水炮"
+ },
+ "EPalWazaID::HydroSlicer": {
+  "en": "Hydro Slicer",
+  "zh": "水刀切割"
+ },
+ "EPalWazaID::HyperBeam": {
+  "en": "Pal Blast",
+  "zh": "帕魯光束"
+ },
+ "EPalWazaID::IceAge": {
+  "en": "Absolute Frost",
+  "zh": "冰極凍域"
+ },
+ "EPalWazaID::IceBlade": {
+  "en": "Icicle Cutter",
+  "zh": "冰刃"
+ },
+ "EPalWazaID::IceMissile": {
+  "en": "Ice Missile",
+  "zh": "冰雪飛彈"
+ },
+ "EPalWazaID::IceWall": {
+  "en": "Freeze Wall",
+  "zh": "寒冰之壁"
+ },
+ "EPalWazaID::IcicleLine": {
+  "en": "Icicle Line",
+  "zh": "冰鋒之路"
+ },
+ "EPalWazaID::IciclePierce": {
+  "en": "Icicle Bullet",
+  "zh": "冰霜連彈"
+ },
+ "EPalWazaID::IcicleThrow": {
+  "en": "Blizzard Spike",
+  "zh": "鑽石星辰"
+ },
+ "EPalWazaID::Inferno": {
+  "en": "Ignis Rage",
+  "zh": "地獄火"
+ },
+ "EPalWazaID::Intimidate": {
+  "en": "Intimidate",
+  "zh": "恐嚇"
+ },
+ "EPalWazaID::LightningStrike": {
+  "en": "Lightning Strike",
+  "zh": "閃電衝擊"
+ },
+ "EPalWazaID::LineGeyser": {
+  "en": "Splash",
+  "zh": "瀑流擊"
+ },
+ "EPalWazaID::LineThunder": {
+  "en": "Lightning Streak",
+  "zh": "雷擊"
+ },
+ "EPalWazaID::LockonLaser": {
+  "en": "Lock-on Laser",
+  "zh": "鎖定雷射"
+ },
+ "EPalWazaID::MudShot": {
+  "en": "Bog Blast",
+  "zh": "泥漿投擲"
+ },
+ "EPalWazaID::PoisonFog": {
+  "en": "Poison Fog",
+  "zh": "毒霧"
+ },
+ "EPalWazaID::PoisonShot": {
+  "en": "Poison Blast",
+  "zh": "劇毒射擊"
+ },
+ "EPalWazaID::PoseidonOrca_PartnerSkill": {
+  "en": "PoseidonOrca_PartnerSkill",
+  "zh": "PoseidonOrca_PartnerSkill"
+ },
+ "EPalWazaID::PoseidonOrca_PartnerSkill_SpearBullet": {
+  "en": "PoseidonOrca_PartnerSkill_SpearBullet",
+  "zh": "PoseidonOrca_PartnerSkill_SpearBullet"
+ },
+ "EPalWazaID::PowerBall": {
+  "en": "Power Bomb",
+  "zh": "元氣彈"
+ },
+ "EPalWazaID::PowerShot": {
+  "en": "Power Shot",
+  "zh": "能量射擊"
+ },
+ "EPalWazaID::PredatorBeam": {
+  "en": "Predator Blast",
+  "zh": "捕食者光束"
+ },
+ "EPalWazaID::PredatorLockon": {
+  "en": "Predator Mark",
+  "zh": "捕食者鎖定雷射"
+ },
+ "EPalWazaID::PredatorWave": {
+  "en": "Predator Surge",
+  "zh": "捕食者激波"
+ },
+ "EPalWazaID::Psychokinesis": {
+  "en": "Psycho Gravity",
+  "zh": "念動引力"
+ },
+ "EPalWazaID::RadiantBarrage": {
+  "en": "Radiant Barrage",
+  "zh": "光輝霰射"
+ },
+ "EPalWazaID::RaidCutter": {
+  "en": "Raid Cutter",
+  "zh": "連環風刃"
+ },
+ "EPalWazaID::Railbolt": {
+  "en": "Thunder Rail",
+  "zh": "並聯雷光"
+ },
+ "EPalWazaID::RangeThunder": {
+  "en": "All Range Thunder",
+  "zh": "雷動八方"
+ },
+ "EPalWazaID::ReflectiveShuriken": {
+  "en": "Reflect Leaf",
+  "zh": "連鎖葉刃"
+ },
+ "EPalWazaID::RipTide": {
+  "en": "Aqua Surge",
+  "zh": "漩渦新星"
+ },
+ "EPalWazaID::RockBeat": {
+  "en": "Stone Beat",
+  "zh": "震巖"
+ },
+ "EPalWazaID::RockLance": {
+  "en": "Rock Lance",
+  "zh": "岩石銳矛"
+ },
+ "EPalWazaID::RootAttack": {
+  "en": "Spine Vine",
+  "zh": "纏繞地刺"
+ },
+ "EPalWazaID::RootLance": {
+  "en": "Circle Vine",
+  "zh": "纏根牢獄"
+ },
+ "EPalWazaID::SandTornado": {
+  "en": "Sand Tornado",
+  "zh": "沙塵旋風"
+ },
+ "EPalWazaID::SandTwister": {
+  "en": "Sand Twister",
+  "zh": "沙塵暴"
+ },
+ "EPalWazaID::Scratch": {
+  "en": "Scratch",
+  "zh": "Human_Rolling"
+ },
+ "EPalWazaID::SeaGush": {
+  "en": "Geyser Gush",
+  "zh": "潮湧迸發"
+ },
+ "EPalWazaID::SeedMachinegun": {
+  "en": "Seed Machine Gun",
+  "zh": "種子機關槍"
+ },
+ "EPalWazaID::SeedMine": {
+  "en": "Seed Mine",
+  "zh": "種子地雷"
+ },
+ "EPalWazaID::SelfDestruct": {
+  "en": "Implode",
+  "zh": "自爆"
+ },
+ "EPalWazaID::SelfDestruct_Bee": {
+  "en": "Bee Quiet",
+  "zh": "蜂！蜂！蜂！"
+ },
+ "EPalWazaID::SelfExplosion": {
+  "en": "Megaton Implode",
+  "zh": "超自爆"
+ },
+ "EPalWazaID::ShadowBall": {
+  "en": "Nightmare Ball",
+  "zh": "惡夢球"
+ },
+ "EPalWazaID::ShokeiLaser": {
+  "en": "Lethal Laser",
+  "zh": "處刑雷射"
+ },
+ "EPalWazaID::SnowStorm": {
+  "en": "SnowStorm",
+  "zh": "Human_Rolling"
+ },
+ "EPalWazaID::SolarBeam": {
+  "en": "Solar Blast",
+  "zh": "太陽光束"
+ },
+ "EPalWazaID::SpecialCutter": {
+  "en": "Multicutter",
+  "zh": "三重風刃"
+ },
+ "EPalWazaID::SpreadPulse": {
+  "en": "Spark Blast",
+  "zh": "電火花"
+ },
+ "EPalWazaID::StarMine": {
+  "en": "Star Mine",
+  "zh": "詭雷繁星"
+ },
+ "EPalWazaID::StoneShotgun": {
+  "en": "Stone Blast",
+  "zh": "碎石霰彈"
+ },
+ "EPalWazaID::ThreeCommet": {
+  "en": "Comet Barrage",
+  "zh": "三重隕星"
+ },
+ "EPalWazaID::ThreeThunder": {
+  "en": "Tri-Lightning",
+  "zh": "三重雷擊"
+ },
+ "EPalWazaID::Throw": {
+  "en": "Throw",
+  "zh": "Human_Rolling"
+ },
+ "EPalWazaID::ThrowRock": {
+  "en": "Stone Cannon",
+  "zh": "投石"
+ },
+ "EPalWazaID::ThunderBall": {
+  "en": "Electric Ball",
+  "zh": "閃電球"
+ },
+ "EPalWazaID::ThunderFunnel": {
+  "en": "Plasma Funnel",
+  "zh": "等離子浮游砲"
+ },
+ "EPalWazaID::ThunderRain": {
+  "en": "Thunder Rain",
+  "zh": "廣域雷擊"
+ },
+ "EPalWazaID::ThunderSpear": {
+  "en": "Thunder Spear",
+  "zh": "雷矛"
+ },
+ "EPalWazaID::ThunderStorm": {
+  "en": "Thunderstorm",
+  "zh": "雷霆颶風"
+ },
+ "EPalWazaID::Thunderbolt": {
+  "en": "Lightning Bolt",
+  "zh": "閃電伏特"
+ },
+ "EPalWazaID::TidalWave": {
+  "en": "TidalWave",
+  "zh": "Human_Rolling"
+ },
+ "EPalWazaID::Tremor": {
+  "en": "Rockburst",
+  "zh": "巖爆"
+ },
+ "EPalWazaID::TriSpark": {
+  "en": "TriSpark",
+  "zh": "三相火花"
+ },
+ "EPalWazaID::Unique_Alpaca_Tackle": {
+  "en": "Fluffy Tackle",
+  "zh": "絨毛衝撞"
+ },
+ "EPalWazaID::Unique_AmaterasuWolf_Dark_DarkCharge": {
+  "en": "Daring Shadowstorm",
+  "zh": "火陰山雷"
+ },
+ "EPalWazaID::Unique_AmaterasuWolf_FireCharge": {
+  "en": "Daring Flames",
+  "zh": "風林火山"
+ },
+ "EPalWazaID::Unique_Anubis_GroundPunch": {
+  "en": "Ground Smash",
+  "zh": "粉碎大地"
+ },
+ "EPalWazaID::Unique_Anubis_LowRoundKick": {
+  "en": "Spinning Roundhouse",
+  "zh": "迴旋踢"
+ },
+ "EPalWazaID::Unique_Anubis_Tackle": {
+  "en": "Forceful Charge",
+  "zh": "巨力衝鋒"
+ },
+ "EPalWazaID::Unique_Baphomet_SwallowKite": {
+  "en": "Hellfire Claw",
+  "zh": "獄火爪"
+ },
+ "EPalWazaID::Unique_BirdDragon_FireBreath": {
+  "en": "Flame Breath",
+  "zh": "熾焰掠空"
+ },
+ "EPalWazaID::Unique_BirdDragon_Ice_IceBreath": {
+  "en": "Tempest Blizzard",
+  "zh": "寒霜掠空"
+ },
+ "EPalWazaID::Unique_BlackCentaur_TwoSpearRushes": {
+  "en": "Twin Spears",
+  "zh": "雙槍一閃"
+ },
+ "EPalWazaID::Unique_BlackGriffon_TackleLaser": {
+  "en": "Divine Disaster",
+  "zh": "神聖災禍"
+ },
+ "EPalWazaID::Unique_BlackGriffon_TackleLaser2": {
+  "en": "Divine Disaster II",
+  "zh": "神聖災禍Ⅱ"
+ },
+ "EPalWazaID::Unique_BlackMetalDragon_FirePunch": {
+  "en": "Firefist Breathstorm",
+  "zh": "魔龍焚炎"
+ },
+ "EPalWazaID::Unique_BluePlatypus_Toboggan": {
+  "en": "Surfing Slam",
+  "zh": "乘風破浪"
+ },
+ "EPalWazaID::Unique_BluePlatypus_Toboggan_Fire": {
+  "en": "Fire Tackle",
+  "zh": "熱浪滾滾"
+ },
+ "EPalWazaID::Unique_BlueThunderHorse_FlashDash": {
+  "en": "Bolt Blink",
+  "zh": "風馳電掣"
+ },
+ "EPalWazaID::Unique_Boar_Tackle": {
+  "en": "Reckless Charge",
+  "zh": "豬突猛進"
+ },
+ "EPalWazaID::Unique_CaptainPenguin_Black_BodySlide_Electric": {
+  "en": "Thunderslide",
+  "zh": "王者閃擊"
+ },
+ "EPalWazaID::Unique_CaptainPenguin_BodySlide": {
+  "en": "Emperor Slide",
+  "zh": "王者滑擊"
+ },
+ "EPalWazaID::Unique_ChickenPal_ChickenPeck": {
+  "en": "Chicken Rush",
+  "zh": "皮皮衝雞"
+ },
+ "EPalWazaID::Unique_DarkAlien_JumpScractch": {
+  "en": "Evil Slash",
+  "zh": "惡之爪"
+ },
+ "EPalWazaID::Unique_DarkCrow_TelePoke": {
+  "en": "Phantom Peck",
+  "zh": "幻影突襲"
+ },
+ "EPalWazaID::Unique_DarkMechaDragon_BeamSlash": {
+  "en": "Beam Slash",
+  "zh": "光連斬"
+ },
+ "EPalWazaID::Unique_DarkMechaDragon_ConvergentBeam": {
+  "en": "Astral Ray",
+  "zh": "星幽炮"
+ },
+ "EPalWazaID::Unique_DarkMechaDragon_FunnelLaser": {
+  "en": "Omega Laser",
+  "zh": "歐米伽雷射"
+ },
+ "EPalWazaID::Unique_DarkMechaDragon_SetFunnel": {
+  "en": "Satellite Bit",
+  "zh": "喚星"
+ },
+ "EPalWazaID::Unique_DarkMechaDragon_WarpComet": {
+  "en": "Cosmic Meteor",
+  "zh": "蒼穹落星"
+ },
+ "EPalWazaID::Unique_DarkScorpion_Pierce": {
+  "en": "Jumping Stinger",
+  "zh": "跳躍重刺"
+ },
+ "EPalWazaID::Unique_Deer_PushupHorn": {
+  "en": "Antler Uppercut",
+  "zh": "尖角頂擊"
+ },
+ "EPalWazaID::Unique_DrillGame_ShellAttack": {
+  "en": "Shell Spin",
+  "zh": "甲殼迴旋"
+ },
+ "EPalWazaID::Unique_Eagle_GlidingNail": {
+  "en": "Gale Claw",
+  "zh": "滑空爪"
+ },
+ "EPalWazaID::Unique_ElecPanda_ElecScratch": {
+  "en": "Lightning Claw",
+  "zh": "霹靂連爪"
+ },
+ "EPalWazaID::Unique_ElecPanda_GatlingAttack": {
+  "en": "Heavy Thunder Tank",
+  "zh": "雷擊的重型戰車"
+ },
+ "EPalWazaID::Unique_FairyDragon_FairyTornado": {
+  "en": "Mystic Whirlwind",
+  "zh": "神秘旋風"
+ },
+ "EPalWazaID::Unique_FeatherOstrich_Tossin": {
+  "en": "Earth Dash",
+  "zh": "地之衝鋒"
+ },
+ "EPalWazaID::Unique_FengyunDeeper_CloudTempest": {
+  "en": "Cloud Tempest",
+  "zh": "陰雲之嵐"
+ },
+ "EPalWazaID::Unique_FengyunDeeper_Electric_ThunderTempest": {
+  "en": "Thunder Tempest",
+  "zh": "雷雲之嵐"
+ },
+ "EPalWazaID::Unique_FireKirin_Dark_DarkTossin": {
+  "en": "Dark Charge",
+  "zh": "暗焰衝撞"
+ },
+ "EPalWazaID::Unique_FireKirin_Tackle": {
+  "en": "Ignis Charge",
+  "zh": "烈焰衝撞"
+ },
+ "EPalWazaID::Unique_FlameBuffalo_FlameHorn": {
+  "en": "Blazing Horn",
+  "zh": "熾熱角擊"
+ },
+ "EPalWazaID::Unique_FlowerDinosaur_Whip": {
+  "en": "Botanical Smash",
+  "zh": "花龍擺尾"
+ },
+ "EPalWazaID::Unique_Garm_Bite": {
+  "en": "Fierce Fang",
+  "zh": "狂野獠牙"
+ },
+ "EPalWazaID::Unique_GhostAnglerfish_Fire_SweepBait_Fire": {
+  "en": "Scorching Lantern Sweep",
+  "zh": "熾燈橫掃"
+ },
+ "EPalWazaID::Unique_GhostAnglerfish_SweepBait": {
+  "en": "Lantern Sweep",
+  "zh": "提燈橫掃"
+ },
+ "EPalWazaID::Unique_GhostBeast_Tossin": {
+  "en": "Spirit Dash",
+  "zh": "心靈衝刺"
+ },
+ "EPalWazaID::Unique_GoldenHorse_StoneDash": {
+  "en": "Crash Dash",
+  "zh": "碎巖衝鋒"
+ },
+ "EPalWazaID::Unique_Gorilla_GroundPunch": {
+  "en": "Ground Pound",
+  "zh": "猩猩連打"
+ },
+ "EPalWazaID::Unique_GrassPanda_Electric_ElectricPunch": {
+  "en": "Blast Punch",
+  "zh": "爆裂拳擊"
+ },
+ "EPalWazaID::Unique_GrassPanda_MusclePunch": {
+  "en": "Crushing Punch",
+  "zh": "筋肉重拳"
+ },
+ "EPalWazaID::Unique_GrassRabbitMan_GrassRoundKick": {
+  "en": "Spinning Roundhouse",
+  "zh": "迴旋猛踢"
+ },
+ "EPalWazaID::Unique_Grassmammoth_Earthquake": {
+  "en": "Earth Impact",
+  "zh": "地震"
+ },
+ "EPalWazaID::Unique_GrimGirl_BrutalMachete": {
+  "en": "Grudge Barrage",
+  "zh": "怨念連擊"
+ },
+ "EPalWazaID::Unique_HawkBird_Storm": {
+  "en": "Tornado Attack",
+  "zh": "龍捲風"
+ },
+ "EPalWazaID::Unique_HerculesBeetle_BeetleTackle": {
+  "en": "Giga Horn",
+  "zh": "終極角擊"
+ },
+ "EPalWazaID::Unique_Horus_FlareBird": {
+  "en": "Phoenix Flare",
+  "zh": "鳳凰翔波"
+ },
+ "EPalWazaID::Unique_Horus_PerfectStorm": {
+  "en": "Raging Flame Wave",
+  "zh": "炎凰烈波"
+ },
+ "EPalWazaID::Unique_Horus_Water_AquaStorm": {
+  "en": "Phoenix Tide",
+  "zh": "鳳凰浪濤"
+ },
+ "EPalWazaID::Unique_IceCrocodile_SpitAttack": {
+  "en": "Chaotic Spray",
+  "zh": "妙玉連珠"
+ },
+ "EPalWazaID::Unique_IceDeer_IceHorn": {
+  "en": "Freezing Charge",
+  "zh": "霜角猛攻"
+ },
+ "EPalWazaID::Unique_IceHorse_IceBladeAttack": {
+  "en": "Crystal Wing",
+  "zh": "冰晶之翼"
+ },
+ "EPalWazaID::Unique_IceNarwhal_JumpingHorn": {
+  "en": "High Breach",
+  "zh": "冰鯨躍"
+ },
+ "EPalWazaID::Unique_JetDragon_JumpBeam": {
+  "en": "Beam Comet",
+  "zh": "光束彗星"
+ },
+ "EPalWazaID::Unique_KingAlpaca_BodyPress": {
+  "en": "Kingly Slam",
+  "zh": "泰山壓頂"
+ },
+ "EPalWazaID::Unique_KingBahamut_AirCrash": {
+  "en": "Magna Crush",
+  "zh": "龍隕震擊"
+ },
+ "EPalWazaID::Unique_KingBahamut_ArmSmash": {
+  "en": "Brawn Impact",
+  "zh": "焚天爆炎"
+ },
+ "EPalWazaID::Unique_Kirin_LightningTackle": {
+  "en": "Lightning Gale",
+  "zh": "疾風雷擊"
+ },
+ "EPalWazaID::Unique_LeafMomonga_SomerSault": {
+  "en": "Konoha Flip",
+  "zh": "葉返"
+ },
+ "EPalWazaID::Unique_LegendDeer_RadiantPurge_Otomo": {
+  "en": "Purifying Light",
+  "zh": "光輝淨化"
+ },
+ "EPalWazaID::Unique_LegendDeer_RadiantWingRush": {
+  "en": "Divine Wing",
+  "zh": "流光翼彩"
+ },
+ "EPalWazaID::Unique_LegendDeer_WarpPillarBurst": {
+  "en": "Sacred Rain",
+  "zh": "光之雨"
+ },
+ "EPalWazaID::Unique_LilyQueen_LilyHealing": {
+  "en": "Bountiful Protection",
+  "zh": "豐饒加護"
+ },
+ "EPalWazaID::Unique_LilyQueen_WindBarrier": {
+  "en": "Wind Barrier",
+  "zh": "風之結界"
+ },
+ "EPalWazaID::Unique_Manticore_InfernoStrike": {
+  "en": "Volcanic Fang",
+  "zh": "火山獠牙"
+ },
+ "EPalWazaID::Unique_MoonQueen_IceMoonBlade": {
+  "en": "Seigetsu Flash",
+  "zh": "青月閃"
+ },
+ "EPalWazaID::Unique_MoonQueen_MoonBeam": {
+  "en": "Moonlight Beam",
+  "zh": "皎月射線"
+ },
+ "EPalWazaID::Unique_MoonQueen_MoonBlade": {
+  "en": "Seigetsu Blade",
+  "zh": "青月刃"
+ },
+ "EPalWazaID::Unique_MysteryMask_LifeSteal": {
+  "en": "Soul Drain",
+  "zh": "竊魂"
+ },
+ "EPalWazaID::Unique_NaughtyCat_CatPress": {
+  "en": "Cat Press",
+  "zh": "喵咪撲擊"
+ },
+ "EPalWazaID::Unique_NightBlueHorse_DeathStep": {
+  "en": "Lethal Step",
+  "zh": "致命舞步"
+ },
+ "EPalWazaID::Unique_NightLady_FlameNightmare": {
+  "en": "Flame Waltz",
+  "zh": "烈焰華爾茲"
+ },
+ "EPalWazaID::Unique_NightLady_WarpBeam": {
+  "en": "Nightmare Bloom",
+  "zh": "噩夢綻放"
+ },
+ "EPalWazaID::Unique_NightLady_WarpBeam_Straight": {
+  "en": "Nightmare Ray",
+  "zh": "噩夢射線"
+ },
+ "EPalWazaID::Unique_OctopursGirl_InkJet": {
+  "en": "Smoke Jet",
+  "zh": "墨沫頭槌"
+ },
+ "EPalWazaID::Unique_PinkCat_CatPunch": {
+  "en": "Punch Flurry",
+  "zh": "喵喵拳"
+ },
+ "EPalWazaID::Unique_Plesiosaur_LongBreath": {
+  "en": "Deep Breath",
+  "zh": "花粉吐息"
+ },
+ "EPalWazaID::Unique_PoseidonOrca_TorrentLaser": {
+  "en": "Thalassonic Laser",
+  "zh": "風暴潮"
+ },
+ "EPalWazaID::Unique_PurpleSpider_SpiderRaid": {
+  "en": "Webstrike Impact",
+  "zh": "蜘蛛猛襲"
+ },
+ "EPalWazaID::Unique_QueenBee_SpinLance": {
+  "en": "Spinning Staff",
+  "zh": "迴旋杖擊"
+ },
+ "EPalWazaID::Unique_RedArmorBird_TriplePeck": {
+  "en": "Rush Beak",
+  "zh": "燧火連擊"
+ },
+ "EPalWazaID::Unique_RobinHood_BowSnipe": {
+  "en": "Focus Shot",
+  "zh": "精準狙擊"
+ },
+ "EPalWazaID::Unique_Ronin_Iai": {
+  "en": "Iaigiri",
+  "zh": "居合斬"
+ },
+ "EPalWazaID::Unique_SaintCentaur_OneSpearRushes": {
+  "en": "Spear Thrust",
+  "zh": "閃槍衝鋒"
+ },
+ "EPalWazaID::Unique_SakuraSaurus_SideTackle": {
+  "en": "Muscle Slam",
+  "zh": "鐵山靠"
+ },
+ "EPalWazaID::Unique_ScorpionMan_Uppercut": {
+  "en": "Upper Smash",
+  "zh": "升蟲拳"
+ },
+ "EPalWazaID::Unique_SheepBall_Roll": {
+  "en": "Roly Poly",
+  "zh": "滾滾毛球"
+ },
+ "EPalWazaID::Unique_SifuDog_Counter": {
+  "en": "Wholehearted Stance",
+  "zh": "氣合返"
+ },
+ "EPalWazaID::Unique_SnowTigerBeastman_SnowImpact": {
+  "en": "Glacial Impact",
+  "zh": "冰川碎擊"
+ },
+ "EPalWazaID::Unique_SnowTigerBeastman_TrampleSlash": {
+  "en": "Frost Talon",
+  "zh": "烈凍爪"
+ },
+ "EPalWazaID::Unique_SoldierBee_NeedleLance": {
+  "en": "Needle Spear",
+  "zh": "針刺長矛"
+ },
+ "EPalWazaID::Unique_StuffedShark_HiddenWeapon": {
+  "en": "Trigger Happy",
+  "zh": "午時已到"
+ },
+ "EPalWazaID::Unique_TentacleTurtle_HydroSpin": {
+  "en": "Hydro Spin",
+  "zh": "漩渦迴旋"
+ },
+ "EPalWazaID::Unique_ThunderBird_ThunderStorm": {
+  "en": "Lightning Dive",
+  "zh": "閃電俯衝"
+ },
+ "EPalWazaID::Unique_ThunderDog_InazumaShorai": {
+  "en": "Beckon Lightning",
+  "zh": "召雷"
+ },
+ "EPalWazaID::Unique_ThunderDragonMan_NumerousSwordAttack": {
+  "en": "Polykeraunos",
+  "zh": "雷神之怒"
+ },
+ "EPalWazaID::Unique_ThunderDragonMan_ThunderSwordAttack": {
+  "en": "Kerauno",
+  "zh": "雷神之槍"
+ },
+ "EPalWazaID::Unique_TropicalOstrich_DashKick": {
+  "en": "Dash Kick",
+  "zh": "衝鋒踢"
+ },
+ "EPalWazaID::Unique_Umihebi_Fire_FireWindingTackle": {
+  "en": "Magma Serpent",
+  "zh": "騰龍奔炎"
+ },
+ "EPalWazaID::Unique_Umihebi_WindingTackle": {
+  "en": "Slither Slam",
+  "zh": "斷海覆潮"
+ },
+ "EPalWazaID::Unique_VolcanicMonster_Ice_IceAttack": {
+  "en": "Frost Burst",
+  "zh": "霜凍爆裂"
+ },
+ "EPalWazaID::Unique_VolcanicMonster_MagmaAttack": {
+  "en": "Volcanic Burst",
+  "zh": "火山爆發"
+ },
+ "EPalWazaID::Unique_WeaselDragon_FlyingTackle": {
+  "en": "Rocket Slam",
+  "zh": "火箭衝撞"
+ },
+ "EPalWazaID::Unique_Werewolf_Ice_SnowScratch": {
+  "en": "Snow Claw",
+  "zh": "吹雪爪擊"
+ },
+ "EPalWazaID::Unique_Werewolf_Scratch": {
+  "en": "Jumping Claw",
+  "zh": "飛躍爪擊"
+ },
+ "EPalWazaID::Unique_WhiteDeer_HolyPillar": {
+  "en": "Holy Nova",
+  "zh": "神聖新星"
+ },
+ "EPalWazaID::Unique_WhiteShieldDragon_ShieldTackle": {
+  "en": "Aegis Charge",
+  "zh": "聖盾衝鋒"
+ },
+ "EPalWazaID::Unique_WhiteTiger_Ground_IronScratch": {
+  "en": "Stone Claw",
+  "zh": "碎巖爪"
+ },
+ "EPalWazaID::Unique_WhiteTiger_IceScratch": {
+  "en": "Blizzard Claw",
+  "zh": "暴雪爪"
+ },
+ "EPalWazaID::Unique_WingGolem_RoundCutter": {
+  "en": "Ground Cutter",
+  "zh": "迴旋巖鋸"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_PhantasmalBolt": {
+  "en": "Unique_YakushimaBoss001_Green_PhantasmalBolt",
+  "zh": "Unique_YakushimaBoss001_Green_PhantasmalBolt"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_PhantasmalDeathray": {
+  "en": "Unique_YakushimaBoss001_Green_PhantasmalDeathray",
+  "zh": "Unique_YakushimaBoss001_Green_PhantasmalDeathray"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_PhantasmalEye": {
+  "en": "Unique_YakushimaBoss001_Green_PhantasmalEye",
+  "zh": "Unique_YakushimaBoss001_Green_PhantasmalEye"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_PhantasmalSphere": {
+  "en": "Unique_YakushimaBoss001_Green_PhantasmalSphere",
+  "zh": "Unique_YakushimaBoss001_Green_PhantasmalSphere"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Small_DemonEyeCharge": {
+  "en": "Ocular Rush",
+  "zh": "眼球突擊"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_PhantasmalBolt": {
+  "en": "Unique_YakushimaBoss002_PhantasmalBolt",
+  "zh": "Unique_YakushimaBoss002_PhantasmalBolt"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_PhantasmalDeathray": {
+  "en": "Unique_YakushimaBoss002_PhantasmalDeathray",
+  "zh": "Unique_YakushimaBoss002_PhantasmalDeathray"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_PhantasmalEye": {
+  "en": "Unique_YakushimaBoss002_PhantasmalEye",
+  "zh": "Unique_YakushimaBoss002_PhantasmalEye"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_PhantasmalSphere": {
+  "en": "Unique_YakushimaBoss002_PhantasmalSphere",
+  "zh": "Unique_YakushimaBoss002_PhantasmalSphere"
+ },
+ "EPalWazaID::Unique_YakushimaMonster001_SlimePress_Dark": {
+  "en": "Slime Press (Dark)",
+  "zh": "史萊姆重壓（暗）"
+ },
+ "EPalWazaID::Unique_YakushimaMonster001_SlimePress_Fire": {
+  "en": "Slime Press (Fire)",
+  "zh": "史萊姆重壓（火）"
+ },
+ "EPalWazaID::Unique_YakushimaMonster001_SlimePress_Leaf": {
+  "en": "Slime Press (Grass)",
+  "zh": "史萊姆重壓（草）"
+ },
+ "EPalWazaID::Unique_YakushimaMonster001_SlimePress_Normal": {
+  "en": "Slime Press (Neutral)",
+  "zh": "史萊姆重壓（無）"
+ },
+ "EPalWazaID::Unique_YakushimaMonster001_SlimePress_Rainbow": {
+  "en": "Slime Press (Rainbow)",
+  "zh": "史萊姆重壓（彩虹）"
+ },
+ "EPalWazaID::Unique_YakushimaMonster001_SlimePress_Water": {
+  "en": "Slime Press (Water)",
+  "zh": "史萊姆重壓（水）"
+ },
+ "EPalWazaID::Unique_YakushimaMonster002_SwordCharge": {
+  "en": "Sword Charge",
+  "zh": "劍舞衝鋒"
+ },
+ "EPalWazaID::Unique_YakushimaMonster003_BatCharge": {
+  "en": "Winged Assault",
+  "zh": "蝙蝠襲擊"
+ },
+ "EPalWazaID::Unique_Yakushima_EyeTossin": {
+  "en": "Lock-On Lunge",
+  "zh": "凝視突擊"
+ },
+ "EPalWazaID::Unique_Yakushima_MouthTossin": {
+  "en": "Frenzied Charge",
+  "zh": "高速突擊"
+ },
+ "EPalWazaID::Unique_Yakushima_SummonServant": {
+  "en": "Servant Call",
+  "zh": "召喚僕從"
+ },
+ "EPalWazaID::Unique_Yeti_Grass_GrassBall": {
+  "en": "Lawn Bowling",
+  "zh": "滾草球"
+ },
+ "EPalWazaID::Unique_Yeti_SnowBall": {
+  "en": "Snow Bowling",
+  "zh": "滾雪球"
+ },
+ "EPalWazaID::WallSplash": {
+  "en": "Curtain Splash",
+  "zh": "間隙潮"
+ },
+ "EPalWazaID::WaterBall": {
+  "en": "Aqua Burst",
+  "zh": "爆裂水球"
+ },
+ "EPalWazaID::WaterBalloon": {
+  "en": "WaterBalloon",
+  "zh": "WaterBalloon"
+ },
+ "EPalWazaID::WaterGun": {
+  "en": "Aqua Gun",
+  "zh": "水槍"
+ },
+ "EPalWazaID::WaterWave": {
+  "en": "WaterWave",
+  "zh": "Human_Rolling"
+ },
+ "EPalWazaID::Weapon_Use": {
+  "en": "Use Weapon",
+  "zh": "使用武器"
+ },
+ "EPalWazaID::WindCutter": {
+  "en": "Wind Cutter",
+  "zh": "風刃"
+ },
+ "EPalWazaID::WindEdge": {
+  "en": "Wind Edge",
+  "zh": "烈風切"
+ },
+ "EPalWazaID::WorkAttack": {
+  "en": "WorkAttack",
+  "zh": "WorkAttack"
+ },
+ "EPalWazaID::Unique_KingWhale_AquaBlade": {
+  "en": "Aqua Blade",
+  "zh": "波濤萬仞"
+ },
+ "EPalWazaID::Unique_KingWhale_AquaTornado": {
+  "en": "Aqua Tornado",
+  "zh": "風暴召喚"
+ },
+ "EPalWazaID::Unique_BlueSkyDragon_SweepBreath": {
+  "en": "Azure Dracoflare",
+  "zh": "蒼龍炎"
+ },
+ "EPalWazaID::Unique_MonochromeQueen_BalletJump": {
+  "en": "Black Quilled Ballet",
+  "zh": "黑天鵝之舞"
+ },
+ "EPalWazaID::Unique_GhostDragon_PhosphorousBeam": {
+  "en": "Blazing Beam",
+  "zh": "火花射線"
+ },
+ "EPalWazaID::Unique_KingWhale_HomingBubble": {
+  "en": "Bubble Rain",
+  "zh": "泡沫之雨"
+ },
+ "EPalWazaID::Unique_GrassMinotaur_BullRush_Lower": {
+  "en": "Bull Rush",
+  "zh": "蠻牛奔襲"
+ },
+ "EPalWazaID::Unique_BlueSkyDragon_DrainStorm": {
+  "en": "Celestial Vortex",
+  "zh": "天變之渦"
+ },
+ "EPalWazaID::CreepingBubble": {
+  "en": "Creeping Bubbles",
+  "zh": "泡沫聚湧"
+ },
+ "EPalWazaID::Unique_CubeTurtle_CubePress": {
+  "en": "Cube Press",
+  "zh": "巨石壓頂"
+ },
+ "EPalWazaID::Unique_WhiteDeer_Dark_DarkPillar": {
+  "en": "Dark Nova",
+  "zh": "混沌新星"
+ },
+ "EPalWazaID::Unique_GrassGolem_Dark_DarkArmCannon": {
+  "en": "Dark Root",
+  "zh": "枯鬚大砲"
+ },
+ "EPalWazaID::Unique_IceHorse_Dark_DarkBladeAttack": {
+  "en": "Dark Wing",
+  "zh": "幽夜之翼"
+ },
+ "EPalWazaID::Unique_Garm_BiteV2": {
+  "en": "Double Fang",
+  "zh": "狂野雙牙"
+ },
+ "EPalWazaID::Unique_GuardianDog_BiteV2": {
+  "en": "Double Fang",
+  "zh": "狂野雙牙"
+ },
+ "EPalWazaID::Unique_AmaterasuWolf_Dark_BiteV2": {
+  "en": "Double Fang (Dark)",
+  "zh": "暗影雙牙"
+ },
+ "EPalWazaID::Unique_BlackPuppy_BiteV2": {
+  "en": "Double Fang (Dark)",
+  "zh": "暗影雙牙"
+ },
+ "EPalWazaID::Unique_ThunderDog_BiteV2": {
+  "en": "Double Fang (Electric)",
+  "zh": "狂雷雙牙"
+ },
+ "EPalWazaID::Unique_ElecPomeranian_BiteV2": {
+  "en": "Double Fang (Electric)",
+  "zh": "狂雷雙牙"
+ },
+ "EPalWazaID::Unique_AmaterasuWolf_BiteV2": {
+  "en": "Double Fang (Fire)",
+  "zh": "狂炎雙牙"
+ },
+ "EPalWazaID::Unique_GoldenHorse_BiteV2": {
+  "en": "Double Fang (Ground)",
+  "zh": "碎岩雙牙"
+ },
+ "EPalWazaID::Unique_SamuraiDog_BiteV2": {
+  "en": "Double Fang (Ground)",
+  "zh": "碎岩雙牙"
+ },
+ "EPalWazaID::Unique_ThunderDog_Ice_BiteV2": {
+  "en": "Double Fang (Ice)",
+  "zh": "寒冰雙牙"
+ },
+ "EPalWazaID::Unique_GuardianDog_Bite": {
+  "en": "Fierce Fang",
+  "zh": "狂野之牙"
+ },
+ "EPalWazaID::Unique_AmaterasuWolf_Dark_Bite": {
+  "en": "Fierce Fang (Dark)",
+  "zh": "暗影之牙"
+ },
+ "EPalWazaID::Unique_BlackPuppy_Bite": {
+  "en": "Fierce Fang (Dark)",
+  "zh": "暗影之牙"
+ },
+ "EPalWazaID::Unique_ThunderDog_Bite": {
+  "en": "Fierce Fang (Electric)",
+  "zh": "狂雷之牙"
+ },
+ "EPalWazaID::Unique_ElecPomeranian_Bite": {
+  "en": "Fierce Fang (Electric)",
+  "zh": "狂雷之牙"
+ },
+ "EPalWazaID::Unique_AmaterasuWolf_Bite": {
+  "en": "Fierce Fang (Fire)",
+  "zh": "狂炎之牙"
+ },
+ "EPalWazaID::Unique_GoldenHorse_Bite": {
+  "en": "Fierce Fang (Ground)",
+  "zh": "碎岩之牙"
+ },
+ "EPalWazaID::Unique_SamuraiDog_Bite": {
+  "en": "Fierce Fang (Ground)",
+  "zh": "碎岩之牙"
+ },
+ "EPalWazaID::Unique_ThunderDog_Ice_Bite": {
+  "en": "Fierce Fang (Ice)",
+  "zh": "寒冰之牙"
+ },
+ "EPalWazaID::Unique_WingGolem_Fire_FlameCutter": {
+  "en": "Flame Cutter",
+  "zh": "迴旋炎鋸"
+ },
+ "EPalWazaID::Unique_BlueThunderHorse_Tossin": {
+  "en": "Flash Charge",
+  "zh": "閃雷衝鋒"
+ },
+ "EPalWazaID::Unique_RedFlowerBird_JumpKick": {
+  "en": "Flower Stomp",
+  "zh": "落花踏"
+ },
+ "EPalWazaID::Unique_ThunderDog_Ice_KoriShorai": {
+  "en": "Frostcall",
+  "zh": "召雪"
+ },
+ "EPalWazaID::Unique_KingAlpaca_Ice_IcePress": {
+  "en": "Frozen Press",
+  "zh": "冰山壓頂"
+ },
+ "EPalWazaID::Unique_CuteMole_DiggingAttack": {
+  "en": "Fuddler Tunneler",
+  "zh": "掘地潛行"
+ },
+ "EPalWazaID::Unique_Mothman_GiantSpore": {
+  "en": "Giant Spore",
+  "zh": "巨大孢子"
+ },
+ "EPalWazaID::Unique_ThunderBird_Ice_SnowStrom": {
+  "en": "Glacial Plunge",
+  "zh": "冰錐俯衝"
+ },
+ "EPalWazaID::Unique_KingWhale_Breaching": {
+  "en": "Grand Breach",
+  "zh": "巨鯨躍"
+ },
+ "EPalWazaID::GrassGolem_Dark_PartnerSkill": {
+  "en": "GrassGolem_Dark_PartnerSkill",
+  "zh": "GrassGolem_Dark_PartnerSkill"
+ },
+ "EPalWazaID::GrassGolem_PartnerSkill": {
+  "en": "GrassGolem_PartnerSkill",
+  "zh": "GrassGolem_PartnerSkill"
+ },
+ "EPalWazaID::Unique_CubeTurtle_Neutral_HolyPress": {
+  "en": "Holy Press",
+  "zh": "聖石壓頂"
+ },
+ "EPalWazaID::Unique_RockBeast_RockHorn": {
+  "en": "Horn Burst",
+  "zh": "岩角爆"
+ },
+ "EPalWazaID::Unique_BlueSkyDragon_Tossin": {
+  "en": "Hydra Charge",
+  "zh": "水龍突進"
+ },
+ "EPalWazaID::Unique_Ronin_Iai_PartnerSkill": {
+  "en": "Iaigiri",
+  "zh": "居合斬"
+ },
+ "EPalWazaID::Unique_RockBeast_Ice_IceHorn": {
+  "en": "Ice Burst",
+  "zh": "冰角爆"
+ },
+ "EPalWazaID::Unique_Kirin_Ice_IceTackle": {
+  "en": "Ice Gale Strike",
+  "zh": "疾風冰擊"
+ },
+ "EPalWazaID::Unique_VolcanoDragon_Ice_IceLaser": {
+  "en": "Ice Laser",
+  "zh": "急凍吐息"
+ },
+ "EPalWazaID::Unique_VolcanoDragon_Ice_IcicleSpit": {
+  "en": "Ice Spit",
+  "zh": "寒冰噴濺"
+ },
+ "EPalWazaID::Unique_LanternButler_LanternFlame": {
+  "en": "Lantern Flame",
+  "zh": "提燈妖火"
+ },
+ "EPalWazaID::Unique_FlowerDinosaur_Electric_ThunderWhip": {
+  "en": "Lightning Smash",
+  "zh": "雷龍擺尾"
+ },
+ "EPalWazaID::Unique_LotusDragon_LotusBloom": {
+  "en": "Lotus Bloom",
+  "zh": "怒放蓮華"
+ },
+ "EPalWazaID::Unique_KingWhale_Maelstrom": {
+  "en": "Maelstrom",
+  "zh": "漩渦風暴"
+ },
+ "EPalWazaID::Unique_VolcanoDragon_VolcanicLaser": {
+  "en": "Magma Laser",
+  "zh": "岩漿吐息"
+ },
+ "EPalWazaID::Unique_VolcanoDragon_MagmaSpit": {
+  "en": "Magma Spit",
+  "zh": "熔岩噴濺"
+ },
+ "EPalWazaID::Unique_DomeArmorDragon_ExplosiveMissile": {
+  "en": "Missile Burst",
+  "zh": "轟天之翼"
+ },
+ "EPalWazaID::Unique_Deer_Ground_DirtyHorn": {
+  "en": "Mud Horn",
+  "zh": "泥角頂擊"
+ },
+ "EPalWazaID::Unique_MummyPal_MummyAttack": {
+  "en": "Mummy Rush",
+  "zh": "突襲木乃伊"
+ },
+ "EPalWazaID::Unique_Baphomet_Dark_DarkKite": {
+  "en": "Nightmare Claw",
+  "zh": "惡夢爪"
+ },
+ "EPalWazaID::Unique_SamuraiDog_DashSlash": {
+  "en": "Persistent Slash",
+  "zh": "汪汪連斬"
+ },
+ "EPalWazaID::Unique_FlowerPrince_PoisonGasTackle": {
+  "en": "Poison Promenade",
+  "zh": "毒霧花滑"
+ },
+ "EPalWazaID::Unique_SnakeGirl_SnakeShot": {
+  "en": "Poison Scatter",
+  "zh": "毒液漫射"
+ },
+ "EPalWazaID::Unique_GrassMinotaur_BullRush": {
+  "en": "Raging Bull Rush",
+  "zh": "狂牛奔襲"
+ },
+ "EPalWazaID::Unique_GrassMinotaur_Ice_BullRush": {
+  "en": "Raging Snow Rush",
+  "zh": "狂牛冰襲"
+ },
+ "EPalWazaID::Unique_PandaGirl_RapidKick": {
+  "en": "Rapid Kick",
+  "zh": "連續迴旋踢"
+ },
+ "EPalWazaID::Unique_GrassGolem_RocketPunch": {
+  "en": "Rocket Arm",
+  "zh": "火箭飛拳"
+ },
+ "EPalWazaID::Unique_Sekhmet_RollingScratch": {
+  "en": "Rolling Scratch",
+  "zh": "空翻爪襲"
+ },
+ "EPalWazaID::Unique_GrassGolem_ArmCannon": {
+  "en": "Root Cannon",
+  "zh": "根鬚大砲"
+ },
+ "EPalWazaID::Unique_NightBlueHorse_Neutral_AirStep": {
+  "en": "Royal Step",
+  "zh": "皇家舞步"
+ },
+ "EPalWazaID::Unique_Gorilla_Ground_EarthPunch": {
+  "en": "Rumble Combo",
+  "zh": "猩猩撼地擊"
+ },
+ "EPalWazaID::Unique_ElecSnail_ShellCharge": {
+  "en": "Shell Charge",
+  "zh": "渦殼充電"
+ },
+ "EPalWazaID::Unique_NightBlueHorse_Neutral_Tossin": {
+  "en": "Silver Steed",
+  "zh": "銀影疾馳"
+ },
+ "EPalWazaID::Unique_GrassMinotaur_Ice_BullRush_Lower": {
+  "en": "Snow Rush",
+  "zh": "蠻牛冰襲"
+ },
+ "EPalWazaID::Unique_Sekhmet_SomersaultScratch": {
+  "en": "Somersault Scratch",
+  "zh": "空爪返"
+ },
+ "EPalWazaID::Unique_NightBlueHorse_Tossin": {
+  "en": "Spectral Steed",
+  "zh": "幽影疾馳"
+ },
+ "EPalWazaID::Unique_SakuraSaurus_Water_SplashTackle": {
+  "en": "Splash Tackle",
+  "zh": "凌波鐵山靠"
+ },
+ "EPalWazaID::Unique_Mothman_SporeScatter": {
+  "en": "Spore Burst",
+  "zh": "孢子爆發"
+ },
+ "EPalWazaID::Unique_SumoDog_SumoStomp": {
+  "en": "Sumo Stomp",
+  "zh": "四股踏"
+ },
+ "EPalWazaID::Unique_GhostDragon_TailSlash": {
+  "en": "Tail Slash",
+  "zh": "曳尾斬"
+ },
+ "EPalWazaID::Unique_ScorpionMan_Erectric_UpperThunder": {
+  "en": "Thunder Uppercut",
+  "zh": "升雷拳"
+ },
+ "EPalWazaID::Unique_KingWhale_WaveTackle": {
+  "en": "Tidal Charge",
+  "zh": "潮湧襲浪"
+ },
+ "EPalWazaID::Unique_FlowerPrince_PoisonGasDance": {
+  "en": "Toxic Dance",
+  "zh": "毒霧之舞"
+ },
+ "EPalWazaID::Unique_ClownRabbit_TrickShow": {
+  "en": "Trickster Show",
+  "zh": "好戲上演"
+ },
+ "EPalWazaID::Unique_BlueSkyDragon_GYM_Act": {
+  "en": "Unique_BlueSkyDragon_GYM_Act",
+  "zh": "Unique_BlueSkyDragon_GYM_Act"
+ },
+ "EPalWazaID::Unique_KingWhale_SuperTidalBore": {
+  "en": "Unique_KingWhale_SuperTidalBore",
+  "zh": "Unique_KingWhale_SuperTidalBore"
+ },
+ "EPalWazaID::Unique_KingWhale_TidalBore": {
+  "en": "Unique_KingWhale_TidalBore",
+  "zh": "Unique_KingWhale_TidalBore"
+ },
+ "EPalWazaID::Unique_LegendDeer_BarrierRelease_Grass": {
+  "en": "Unique_LegendDeer_BarrierRelease_Grass",
+  "zh": "Unique_LegendDeer_BarrierRelease_Grass"
+ },
+ "EPalWazaID::Unique_LegendDeer_BarrierRelease_Normal": {
+  "en": "Unique_LegendDeer_BarrierRelease_Normal",
+  "zh": "Unique_LegendDeer_BarrierRelease_Normal"
+ },
+ "EPalWazaID::Unique_LegendDeer_BarrierRelease_Water": {
+  "en": "Unique_LegendDeer_BarrierRelease_Water",
+  "zh": "Unique_LegendDeer_BarrierRelease_Water"
+ },
+ "EPalWazaID::Unique_LegendDeer_RadiantPurge": {
+  "en": "Unique_LegendDeer_RadiantPurge",
+  "zh": "Unique_LegendDeer_RadiantPurge"
+ },
+ "EPalWazaID::Unique_LilyQueen_GYM_Act": {
+  "en": "Unique_LilyQueen_GYM_Act",
+  "zh": "Unique_LilyQueen_GYM_Act"
+ },
+ "EPalWazaID::Unique_LilyQueen_LilyHealing_Boss": {
+  "en": "Unique_LilyQueen_LilyHealing_Boss",
+  "zh": "Unique_LilyQueen_LilyHealing_Boss"
+ },
+ "EPalWazaID::Unique_MoonQueen_GYM_Act": {
+  "en": "Unique_MoonQueen_GYM_Act",
+  "zh": "Unique_MoonQueen_GYM_Act"
+ },
+ "EPalWazaID::Unique_MoonQueen_GYM_Hard_Act": {
+  "en": "Unique_MoonQueen_GYM_Hard_Act",
+  "zh": "Unique_MoonQueen_GYM_Hard_Act"
+ },
+ "EPalWazaID::Unique_ThunderDragonMan_GYM_Act": {
+  "en": "Unique_ThunderDragonMan_GYM_Act",
+  "zh": "Unique_ThunderDragonMan_GYM_Act"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_BigBang": {
+  "en": "Unique_WorldTreeDragon_BigBang",
+  "zh": "Unique_WorldTreeDragon_BigBang"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_HaloBeam": {
+  "en": "Unique_WorldTreeDragon_HaloBeam",
+  "zh": "Unique_WorldTreeDragon_HaloBeam"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_HaloCutter": {
+  "en": "Unique_WorldTreeDragon_HaloCutter",
+  "zh": "Unique_WorldTreeDragon_HaloCutter"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_LaserGliding": {
+  "en": "Unique_WorldTreeDragon_LaserGliding",
+  "zh": "Unique_WorldTreeDragon_LaserGliding"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_PaldiumCannon": {
+  "en": "Unique_WorldTreeDragon_PaldiumCannon",
+  "zh": "Unique_WorldTreeDragon_PaldiumCannon"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_PaldiumExplosion": {
+  "en": "Unique_WorldTreeDragon_PaldiumExplosion",
+  "zh": "Unique_WorldTreeDragon_PaldiumExplosion"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_PaldiumRain": {
+  "en": "Unique_WorldTreeDragon_PaldiumRain",
+  "zh": "Unique_WorldTreeDragon_PaldiumRain"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_PaldiumShot": {
+  "en": "Unique_WorldTreeDragon_PaldiumShot",
+  "zh": "Unique_WorldTreeDragon_PaldiumShot"
+ },
+ "EPalWazaID::Unique_WorldTreeDragon_Supernova": {
+  "en": "Unique_WorldTreeDragon_Supernova",
+  "zh": "Unique_WorldTreeDragon_Supernova"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_2_PhantasmalBolt": {
+  "en": "Unique_YakushimaBoss001_Green_2_PhantasmalBolt",
+  "zh": "Unique_YakushimaBoss001_Green_2_PhantasmalBolt"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_2_PhantasmalDeathray": {
+  "en": "Unique_YakushimaBoss001_Green_2_PhantasmalDeathray",
+  "zh": "Unique_YakushimaBoss001_Green_2_PhantasmalDeathray"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_2_PhantasmalEye": {
+  "en": "Unique_YakushimaBoss001_Green_2_PhantasmalEye",
+  "zh": "Unique_YakushimaBoss001_Green_2_PhantasmalEye"
+ },
+ "EPalWazaID::Unique_YakushimaBoss001_Green_2_PhantasmalSphere": {
+  "en": "Unique_YakushimaBoss001_Green_2_PhantasmalSphere",
+  "zh": "Unique_YakushimaBoss001_Green_2_PhantasmalSphere"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_2_PhantasmalBolt": {
+  "en": "Unique_YakushimaBoss002_2_PhantasmalBolt",
+  "zh": "Unique_YakushimaBoss002_2_PhantasmalBolt"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_2_PhantasmalDeathray": {
+  "en": "Unique_YakushimaBoss002_2_PhantasmalDeathray",
+  "zh": "Unique_YakushimaBoss002_2_PhantasmalDeathray"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_2_PhantasmalEye": {
+  "en": "Unique_YakushimaBoss002_2_PhantasmalEye",
+  "zh": "Unique_YakushimaBoss002_2_PhantasmalEye"
+ },
+ "EPalWazaID::Unique_YakushimaBoss002_2_PhantasmalSphere": {
+  "en": "Unique_YakushimaBoss002_2_PhantasmalSphere",
+  "zh": "Unique_YakushimaBoss002_2_PhantasmalSphere"
+ },
+ "EPalWazaID::WindBurst": {
+  "en": "Wind Burst",
+  "zh": "翠耀罡風"
+ }
+}

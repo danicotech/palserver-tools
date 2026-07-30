@@ -1,0 +1,14 @@
+{
+  "name": "rwd-audit",
+  "private": true,
+  "type": "module",
+  "description": "面板 RWD 自我驗測流程:多裝置寬度巡檢每個分頁,偵測橫向溢出/超寬/被裁切/過小文字/觸控目標,並全頁截圖。",
+  "scripts": {
+    "postinstall": "playwright-core install chromium",
+    "audit": "node run.mjs",
+    "audit:build": "node run.mjs --build"
+  },
+  "dependencies": {
+    "playwright-core": "^1.48.0"
+  }
+}

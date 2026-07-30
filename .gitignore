@@ -1,0 +1,29 @@
+# ==== 私人資料/大檔 —— 絕對不要進版控 ====
+# 遊戲本體 + 存檔 + 備份(數 GB;含玩家個資)
+backend/palworld-data/
+# 排程器落地資料(上線統計等)
+backend/data/
+# 機密環境變數(密碼、token)
+.env
+# 本機私有 compose 疊加(對外通道等,不公開)
+docker-compose.override.yml
+*.7z
+
+# ==== 本機設定(從 config.example.json 複製起手)====
+backend/config.json
+
+# ==== 建置產物 / 相依 ====
+node_modules/
+frontend/packages/*/dist/
+__pycache__/
+*.pyc
+
+# ==== 編輯器/系統 ====
+.DS_Store
+Thumbs.db
+
+# 內部開發筆記
+.claude/
+
+# 本機 Windows 工具二進位(部署走 Docker,不需要)
+backend/pal.exe

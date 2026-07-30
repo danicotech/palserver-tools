@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-Hant" translate="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google" content="notranslate" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <title>帕魯玩家查詢工具網</title>
+  </head>
+  <body>
+    <div id="root" class="notranslate"></div>
+    <script>
+      // 防禦性 DOM patch：瀏覽器翻譯外掛（如沉浸式翻譯 / Google 翻譯）會替換文字節點，
+      // 導致 React 更新時對「已被外掛移動的節點」呼叫 removeChild/insertBefore 而拋
+      // NotFoundError，使整個畫面崩成白屏。這裡讓這兩個操作在節點已不在原位時安全略過。
+      if (typeof Node === "function" && Node.prototype) {
+        var _removeChild = Node.prototype.removeChild;
+        Node.prototype.removeChild = function (child) {
+          if (child.parentNode !== this) return child;
+          return _removeChild.apply(this, arguments);
+        };
+        var _insertBefore = Node.prototype.insertBefore;
+        Node.prototype.insertBefore = function (newNode, referenceNode) {
+          if (referenceNode && referenceNode.parentNode !== this) return newNode;
+          return _insertBefore.apply(this, arguments);
+        };
+      }
+    </script>
+    <script type="module" src="/src/panel/main.tsx"></script>
+  </body>
+</html>

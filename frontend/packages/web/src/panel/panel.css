@@ -1,0 +1,212 @@
+/* 面板專用覆寫：全站改黑體（Gothic sans）、整體字級放大。 */
+:root {
+  /* 覆寫設計系統的 --font-sans，讓所有元件都吃黑體 */
+  --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei",
+    "Heiti TC", "Yuanti TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* 整體字級放大：Tailwind 以 rem 計算，調 html 字級即可整體放大 */
+html {
+  font-size: 17.5px;
+}
+
+/* 強制所有面板文字使用黑體（避免被 styles.css 的 html:lang 規則蓋掉） */
+#root,
+#root button,
+#root input,
+#root select,
+#root h1,
+#root h2 {
+  font-family: var(--font-sans);
+}
+
+/* Tailwind v4 的 preflight 不再給 button 預設 cursor:pointer，補回來 */
+#root button:not(:disabled),
+#root select,
+#root label,
+#root [role="button"],
+#root a {
+  cursor: pointer;
+}
+
+#root button:disabled {
+  cursor: not-allowed;
+}
+
+/* 進場動畫：長條由左往右生長（配合 IntersectionObserver 的 data-seen 觸發） */
+@keyframes barGrow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.bar-fill {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+[data-seen="true"] .bar-fill {
+  animation: barGrow 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* 卡片/圖表淡入上移 */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+[data-seen="true"].reveal-fade {
+  animation: fadeUp 0.5s ease-out both;
+}
+
+/* 圖表載入骨架（shimmer 掃光）+ 轉圈 spinner */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.1) 25%,
+    rgba(148, 163, 184, 0.26) 37%,
+    rgba(148, 163, 184, 0.1) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  border: 3px solid rgba(148, 163, 184, 0.35);
+  border-top-color: #7c6cf0;
+  border-radius: 9999px;
+  animation: spin 0.8s linear infinite;
+}
+
+/* 載入文字特效：每個字依序上下波動(wave),尾巴三點一個個浮現,整體循環。 */
+@keyframes lw-wave {
+  0%,
+  55%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  27% {
+    transform: translateY(-0.42em);
+    opacity: 1;
+    color: var(--color-pal);
+  }
+}
+@keyframes lw-dot {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(0.15em) scale(0.7);
+  }
+  25%,
+  60% {
+    opacity: 1;
+    transform: translateY(-0.12em) scale(1);
+  }
+}
+/* 圖表自訂 HTML tooltip(名單型):不受 canvas 邊界裁切;人多時以多欄排列避免太長被截。 */
+.lwt {
+  position: fixed;
+  z-index: 70;
+  pointer-events: none;
+  max-width: min(460px, 88vw);
+  max-height: 62vh;
+  overflow: hidden;
+  background: rgba(20, 18, 30, 0.95);
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 11px;
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.1s ease;
+}
+.lwt-t {
+  margin-bottom: 4px;
+  font-weight: 800;
+}
+.lwt-body {
+  column-width: 150px;
+  column-gap: 16px;
+}
+.lwt-l {
+  break-inside: avoid;
+  white-space: nowrap;
+}
+
+/* 手機分頁抽屜:由左滑入。 */
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.drawer-in {
+  animation: drawer-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loading-wave {
+  display: inline-flex;
+  align-items: flex-end;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.loading-wave__ch {
+  display: inline-block;
+  white-space: pre;
+  animation: lw-wave 1.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.loading-wave__dots {
+  display: inline-flex;
+  margin-left: 0.15em;
+}
+.loading-wave__dots span {
+  display: inline-block;
+  color: var(--color-pal);
+  animation: lw-dot 1.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* 尊重使用者「減少動態效果」偏好：關掉進場/生長動畫,僅保留 spinner 提示載入。 */
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill,
+  [data-seen="true"] .bar-fill,
+  [data-seen="true"].reveal-fade {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .skeleton {
+    animation: none !important;
+  }
+  .loading-wave__ch,
+  .loading-wave__dots span {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .drawer-in {
+    animation: none !important;
+  }
+}

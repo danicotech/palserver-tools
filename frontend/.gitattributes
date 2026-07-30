@@ -1,0 +1,5 @@
+# PowerShell scripts are committed as UTF-8 *with BOM* and checked out with
+# CRLF: without the BOM, Windows PowerShell 5.1 decodes them as the ANSI
+# codepage and mangles non-ASCII text (breaking string parsing).
+*.ps1 text eol=crlf
+*.sh text eol=lf

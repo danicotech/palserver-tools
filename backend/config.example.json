@@ -1,0 +1,151 @@
+{
+  "timezone": "Asia/Taipei",
+  "docker": {
+    "socket": "/var/run/docker.sock",
+    "containerName": "palworld",
+    "stopTimeoutSeconds": 30
+  },
+  "rcon": {
+    "host": "palworld",
+    "port": 25575,
+    "password": "CHANGE_ME_SAME_AS_ADMIN_PASSWORD"
+  },
+  "rest": {
+    "_comment": "Palworld 官方 REST API（port 8212）。enabled 省略視為 true；host/password 省略時沿用 rcon 設定。",
+    "enabled": true,
+    "port": 8212
+  },
+  "palsave": {
+    "_comment": "存檔解析 sidecar（tools/palsave）。提供 /api/pals 玩家帕魯資料查詢。url 省略預設 compose 內網位址。",
+    "enabled": true,
+    "url": "http://palsave:8213"
+  },
+  "runtime": {
+    "killGraceSeconds": 30,
+    "healthCheckSeconds": 30,
+    "manualStopCountdown": 15
+  },
+  "hooks": {
+    "_comment": "onOpen/onClose/onManualStop 為可自由編排的步驟陣列。type 可用：startContainer, stopContainer, broadcast, wait, countdown, save, doexit, shutdown, rcon, info, showplayers。廣播與倒數改走官方 REST，訊息可直接用空白（不必再用底線）。countdown 建議用 announce 陣列 + tickFromSeconds 宣告式設定，操作員只需編輯此檔。",
+    "onOpen": [
+      {
+        "type": "startContainer"
+      },
+      {
+        "type": "wait",
+        "seconds": 30
+      },
+      {
+        "type": "broadcast",
+        "message": "Server_is_now_OPEN_have_fun"
+      }
+    ],
+    "onClose": [
+      {
+        "type": "countdown",
+        "_comment": "宣告式倒數：at=剩餘秒數。操作員只要改這個陣列即可調整廣播頻率與內容。",
+        "announce": [
+          {
+            "at": 3600,
+            "message": "伺服器將於 60 分鐘後關閉"
+          },
+          {
+            "at": 1800,
+            "message": "伺服器將於 30 分鐘後關閉"
+          },
+          {
+            "at": 600,
+            "message": "伺服器將於 10 分鐘後關閉"
+          },
+          {
+            "at": 300,
+            "message": "伺服器將於 5 分鐘後關閉"
+          },
+          {
+            "at": 60,
+            "message": "伺服器將於 1 分鐘後關閉 請做好下線前準備"
+          }
+        ],
+        "tickFromSeconds": 15,
+        "tickPrefix": "伺服器將於",
+        "tickEndMessage": "伺服器關閉 我們下次見！"
+      },
+      {
+        "type": "save"
+      },
+      {
+        "type": "doexit"
+      },
+      {
+        "type": "wait",
+        "seconds": 10
+      },
+      {
+        "type": "stopContainer"
+      }
+    ],
+    "onManualStop": [
+      {
+        "type": "countdown",
+        "fromSeconds": 15,
+        "prefix": "Server_closing_in"
+      },
+      {
+        "type": "save"
+      },
+      {
+        "type": "doexit"
+      },
+      {
+        "type": "wait",
+        "seconds": 10
+      },
+      {
+        "type": "stopContainer"
+      }
+    ]
+  },
+  "schedule": {
+    "windows": [
+      {
+        "label": "morning",
+        "days": [
+          "Mon",
+          "Tue",
+          "Wed",
+          "Thu",
+          "Fri"
+        ],
+        "open": "10:00",
+        "close": "15:00"
+      },
+      {
+        "label": "evening",
+        "days": [
+          "Mon",
+          "Tue",
+          "Wed",
+          "Thu",
+          "Fri"
+        ],
+        "open": "20:00",
+        "close": "03:00"
+      },
+      {
+        "label": "weekend",
+        "days": [
+          "Sat",
+          "Sun"
+        ],
+        "open": "10:00",
+        "close": "03:00"
+      }
+    ]
+  },
+  "api": {
+    "_comment": "token 請改成長隨機字串；listen 0.0.0.0 對外，port 需在防火牆/compose 開放",
+    "enabled": true,
+    "listen": "0.0.0.0:9000",
+    "token": "CHANGE_THIS_TOKEN_TO_A_LONG_RANDOM_STRING"
+  }
+}

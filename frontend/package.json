@@ -1,0 +1,16 @@
+{
+  "name": "palworld-panel-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Palworld panel frontend (Vite+React SPA) — talks to palscheduler Go API.",
+  "packageManager": "pnpm@11.10.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:shared": "pnpm --filter @palserver/shared build",
+    "dev": "pnpm build:shared && pnpm --filter @palserver/web dev",
+    "build": "pnpm build:shared && pnpm --filter @palserver/web build",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

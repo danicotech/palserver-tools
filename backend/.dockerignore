@@ -1,0 +1,14 @@
+# Palworld 伺服器資料（數 GB，絕不可進 build context）
+palworld-data/
+
+# 編譯產物與日誌
+palscheduler.exe
+pal.exe
+palscheduler
+*.log
+
+# 其他
+.git
+README.md
+run.out.log
+run.err.log
