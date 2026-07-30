@@ -8,16 +8,16 @@
  *    (傑諾多蘭、貝菈露潔、波魯傑克斯…)不在名單內,與社群「無法突變出來」的結論一致。
  *  - 窗口公式:對 paldb 兩張完整突變表(墨羅娜 340 組 + 阿努比斯 802 組,共 1,142 筆)
  *    做最小平方擬合得到 —— 窗口「寬度」只由較強的親代決定,「位置」由較弱的親代帶動:
- *      L = 0.105·min + 0.4·max   H = 0.205·min + 0.4·max   (見 mutationWindow)
- *    自交時退化為 [0.5r, 0.6r]。全體 1,142 筆:71% 誤差 <1 個百分點、87% <3 個百分點。
+ *      L = 0.1·min + 0.4·max   H = 0.2·min + 0.4·max   (見 mutationWindow)
+ *    自交時退化為 [0.5r, 0.6r]。
  *  - 單一結果機率:區間內每個 CombiRank 整數值對映到「最接近的可突變帕魯」,
  *    某帕魯的機率 = 它涵蓋的值數 / 區間總值數(條件於「這顆蛋是突變蛋」)。
  *  - 觸發率:官方 1.0 更新說明 —— 蘑菇蛋糕 1%、蔬菜蛋糕 2%(一次兩顆蛋)、豪華蔬菜蛋糕 3%。
  *  - 產蛋間隔:巴哈碼表實測 —— 配種牧場 5 分/顆(滿星梁葉龍或寶寶保母 3 分 20 秒),
  *    古代文明配種牧場 11 秒/顆(有加成 7 秒);梁葉龍與寶寶保母不可疊加,取高者。
  *
- * 全量回歸:對 paldb 全部 143 個可突變目標共 495,068 筆組合驗證 —— 中位誤差 0.03pp、
- * 98.8% 落在 5 個百分點內。遊戲未公開內部表,故顯示時一律標示為「估算」。
+ * 全量回歸:對 paldb 全部 143 個可突變目標共 495,068 筆組合驗證 —— 93.5% 與 paldb 完全相同、
+ * 99.2% 誤差 <1 個百分點、100% <3 個百分點。遊戲未公開內部表,故顯示時仍標示為「估算」。
  */
 
 export interface MutationPal {
@@ -88,13 +88,13 @@ export function buildMutationIndex(data: MutationData): MutationIndex {
 }
 
 /**
- * 突變候選的 CombiRank 區間。係數由 paldb 的 1,142 筆實測組合(墨羅娜 + 阿努比斯 兩張完整表)
- * 以最小平方擬合而得:窗口寬度只由「較強的親代」(min rank)決定,位置由「較弱的親代」帶動。
- *   L = 0.105·min + 0.4·max   (開區間下界,取 floor 後 +1)
- *   H = 0.205·min + 0.4·max
+ * 突變候選的 CombiRank 區間。係數由 paldb 的 495,068 筆實測組合擬合:
+ * 窗口寬度只由「較強的親代」(min rank)決定,位置由「較弱的親代」帶動。
+ *   L = 0.1·min + 0.4·max   (開區間下界,取 floor 後 +1)
+ *   H = 0.2·min + 0.4·max   (取 floor)
  * 自交時退化為 [0.5r, 0.6r],正好對上 paldb 的自交百分比。
  */
-export const WINDOW_COEF = { lMin: 0.105, lMax: 0.4, hMin: 0.205, hMax: 0.4 } as const;
+export const WINDOW_COEF = { lMin: 0.1, lMax: 0.4, hMin: 0.2, hMax: 0.4 } as const;
 
 export function mutationWindow(rankA: number, rankB: number): { lo: number; hi: number } {
   const min = Math.min(rankA, rankB);
@@ -114,7 +114,9 @@ export interface MutationOutcome {
 
 /**
  * 區間內每個整數 CombiRank 對映到最接近的可突變帕魯,統計佔比。
- * 平手時取 rank 較小者(較高階),與 palcalc 的 BreedingPowerPriority 慣例一致。
+ * 平手(值剛好落在兩隻中間)時歸「rank 較大者」= 較弱的那隻 —— 這條規則是用 paldb 反推的:
+ * 反過來歸較強者會把 絹笠蛾+波魯傑克斯→墨羅娜 算成 75%(實測 83.3%)、金棘獸自交算成 14.9%
+ * (實測 17%);歸較弱者則兩者與其他已知值全部吻合,全量 495,068 筆有 93.5% 完全一致。
  */
 export function mutationOutcomes(index: MutationIndex, rankA: number, rankB: number): MutationOutcome[] {
   const { lo, hi } = mutationWindow(rankA, rankB);
@@ -129,7 +131,7 @@ export function mutationOutcomes(index: MutationIndex, rankA: number, rankB: num
     let bestDist = Infinity;
     for (const p of index.eligible) {
       const d = Math.abs(p.rank - v);
-      if (d < bestDist || (d === bestDist && best !== null && p.rank < best.rank)) {
+      if (d < bestDist || (d === bestDist && best !== null && p.rank > best.rank)) {
         best = p;
         bestDist = d;
       }
