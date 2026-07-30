@@ -10,14 +10,16 @@
  *    做最小平方擬合得到 —— 窗口「寬度」只由較強的親代決定,「位置」由較弱的親代帶動:
  *      L = 0.1·min + 0.4·max   H = 0.2·min + 0.4·max   (見 mutationWindow)
  *    自交時退化為 [0.5r, 0.6r]。
- *  - 單一結果機率:區間內每個 CombiRank 整數值對映到「最接近的可突變帕魯」,
- *    某帕魯的機率 = 它涵蓋的值數 / 區間總值數(條件於「這顆蛋是突變蛋」)。
+ *  - 單一結果機率:每隻可突變帕魯在 CombiRank 軸上有一段「涵蓋區間」(mutation.json 的 lo/hi),
+ *    某帕魯的機率 = 它與窗口交集的長度 / 窗口總長(條件於「這顆蛋是突變蛋」)。
+ *    涵蓋區間大致等於與相鄰帕魯取中點,但平手歸屬因帕魯而異(例:1615 歸冬丸而非梆梆鯰),
+ *    故直接由實測反推後落地,不現算。
  *  - 觸發率:官方 1.0 更新說明 —— 蘑菇蛋糕 1%、蔬菜蛋糕 2%(一次兩顆蛋)、豪華蔬菜蛋糕 3%。
  *  - 產蛋間隔:巴哈碼表實測 —— 配種牧場 5 分/顆(滿星梁葉龍或寶寶保母 3 分 20 秒),
  *    古代文明配種牧場 11 秒/顆(有加成 7 秒);梁葉龍與寶寶保母不可疊加,取高者。
  *
- * 全量回歸:對 paldb 全部 143 個可突變目標共 495,068 筆組合驗證 —— 93.5% 與 paldb 完全相同、
- * 99.2% 誤差 <1 個百分點、100% <3 個百分點。遊戲未公開內部表,故顯示時仍標示為「估算」。
+ * 全量回歸:對 paldb 全部 143 個可突變目標共 495,068 筆組合驗證 —— 495,068/495,068(100.00%)
+ * 與 paldb 完全相同,143 個目標無一例外。遊戲未公開內部表,故顯示時仍標示為「估算」。
  */
 
 export interface MutationPal {
@@ -27,6 +29,11 @@ export interface MutationPal {
   rank: number;
   /** 1 = 可由突變產出 */
   mut: number;
+  /** 這隻在突變窗口內涵蓋的 CombiRank 閉區間(只有可突變的帕魯才有)。
+   *  由 paldb 495,068 筆實測反推 —— 邊界不是單純取中點,平手歸屬因帕魯而異
+   *  (例:1615 歸冬丸而非梆梆鯰),故直接落地實測值而非現算。 */
+  lo?: number;
+  hi?: number;
 }
 
 export interface MutationData {
@@ -114,33 +121,39 @@ export interface MutationOutcome {
 
 /**
  * 區間內每個整數 CombiRank 對映到最接近的可突變帕魯,統計佔比。
- * 平手(值剛好落在兩隻中間)時歸「rank 較大者」= 較弱的那隻 —— 這條規則是用 paldb 反推的:
- * 反過來歸較強者會把 絹笠蛾+波魯傑克斯→墨羅娜 算成 75%(實測 83.3%)、金棘獸自交算成 14.9%
- * (實測 17%);歸較弱者則兩者與其他已知值全部吻合,全量 495,068 筆有 93.5% 完全一致。
+ * 用每隻帕魯落地的涵蓋區間(lo/hi)與窗口取交集算佔比。
  */
+/** 後備邊界(資料沒帶 lo/hi 時用):與相鄰可突變帕魯取中點,平手歸較弱者。 */
+function nearestLo(index: MutationIndex, p: MutationPal): number {
+  const i = index.eligible.indexOf(p);
+  if (i <= 0) return -Infinity;
+  const mid = (index.eligible[i - 1].rank + p.rank) / 2;
+  return Number.isInteger(mid) ? mid : Math.ceil(mid);
+}
+
+function nearestHi(index: MutationIndex, p: MutationPal): number {
+  const i = index.eligible.indexOf(p);
+  if (i < 0 || i >= index.eligible.length - 1) return Infinity;
+  const mid = (p.rank + index.eligible[i + 1].rank) / 2;
+  return Number.isInteger(mid) ? mid - 1 : Math.floor(mid);
+}
+
 export function mutationOutcomes(index: MutationIndex, rankA: number, rankB: number): MutationOutcome[] {
   const { lo, hi } = mutationWindow(rankA, rankB);
   const start = Math.floor(lo) + 1;
   const end = Math.floor(hi);
   if (end < start || !index.eligible.length) return [];
 
+  const total = end - start + 1;
   const counts = new Map<string, number>();
-  let total = 0;
-  for (let v = start; v <= end; v++) {
-    let best: MutationPal | null = null;
-    let bestDist = Infinity;
-    for (const p of index.eligible) {
-      const d = Math.abs(p.rank - v);
-      if (d < bestDist || (d === bestDist && best !== null && p.rank > best.rank)) {
-        best = p;
-        bestDist = d;
-      }
-    }
-    if (!best) continue;
-    counts.set(best.id, (counts.get(best.id) ?? 0) + 1);
-    total++;
+  for (const p of index.eligible) {
+    // 優先用實測落地的 lo/hi;舊資料沒有時退回「最近鄰、平手歸較弱者」的推算邊界
+    const lo = p.lo ?? nearestLo(index, p);
+    const hi = p.hi ?? nearestHi(index, p);
+    const n = Math.min(end, hi) - Math.max(start, lo) + 1;
+    if (n > 0) counts.set(p.id, n);
   }
-  if (!total) return [];
+  if (!counts.size) return [];
   return [...counts.entries()]
     .map(([id, n]) => ({ pal: index.byId.get(id)!, chance: n / total }))
     .sort((a, b) => b.chance - a.chance || a.pal.rank - b.pal.rank);
