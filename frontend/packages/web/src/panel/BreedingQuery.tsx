@@ -808,14 +808,14 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false); // paldex 名稱載好才渲染,避免先閃 id 再換名
 
-  const [mode, setMode] = useState<Mode>("pair");
+  const [mode, setMode] = useState<Mode>("chain"); // 預設 = 第一張模式卡「🪜 最短路徑」
   // 配種計算:多組父母(第一組固定存在,只能清空;其餘可刪)
   const [pairs, setPairs] = useState<{ a: string; b: string }[]>([{ a: "", b: "" }]);
   const [pairIdx, setPairIdx] = useState(0);
   const [revTarget, setRevTarget] = useState("");
   const [chainFrom, setChainFrom] = useState("");
   const [chainTo, setChainTo] = useState("");
-  const [activeSlot, setActiveSlot] = useState<SlotKey | null>("a");
+  const [activeSlot, setActiveSlot] = useState<SlotKey | null>("from"); // 預設路徑檢視,先選起點
   // 網格
   const [q, setQ] = useState("");
   const [sortBy, setSortBy] = useState<"deck" | "name" | "rarity">("deck");
@@ -824,7 +824,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const [revTab, setRevTab] = useState<"asChild" | "asParent">("asChild");
   const [revQ, setRevQ] = useState("");
   // 帕魯配種樹:子檢視(樹狀/最短路徑)+ 玩家視角
-  const [treeSub, setTreeSub] = useState<"tree" | "path">("tree");
+  const [treeSub, setTreeSub] = useState<"tree" | "path">("path");
   /** 樹狀配種的目標(與最短路徑的 chainTo 分離,兩邊互不影響)。 */
   const [treeTarget, setTreeTarget] = useState("");
   const [persp, setPersp] = useState<"off" | "all" | string>("all");
