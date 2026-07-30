@@ -12,7 +12,9 @@
  *    自交時退化為 [0.5r, 0.6r]。全體 1,142 筆:71% 誤差 <1 個百分點、87% <3 個百分點。
  *  - 單一結果機率:區間內每個 CombiRank 整數值對映到「最接近的可突變帕魯」,
  *    某帕魯的機率 = 它涵蓋的值數 / 區間總值數(條件於「這顆蛋是突變蛋」)。
- *  - 觸發率:社群實測 一般 3%、豪華蔬菜蛋糕 7%。
+ *  - 觸發率:官方 1.0 更新說明 —— 蘑菇蛋糕 1%、蔬菜蛋糕 2%(一次兩顆蛋)、豪華蔬菜蛋糕 3%。
+ *  - 產蛋間隔:巴哈碼表實測 —— 配種牧場 5 分/顆(滿星梁葉龍或寶寶保母 3 分 20 秒),
+ *    古代文明配種牧場 11 秒/顆(有加成 7 秒);梁葉龍與寶寶保母不可疊加,取高者。
  *
  * 全量回歸:對 paldb 全部 143 個可突變目標共 495,068 筆組合驗證 —— 中位誤差 0.03pp、
  * 98.8% 落在 5 個百分點內。遊戲未公開內部表,故顯示時一律標示為「估算」。
@@ -39,9 +41,45 @@ export interface MutationIndex {
   eligible: MutationPal[];
 }
 
-/** 突變觸發率:一般蛋糕 vs 豪華蔬菜蛋糕(社群實測值)。 */
-export const MUTATION_RATE = { normal: 0.03, deluxe: 0.07 } as const;
-export type CakeKind = keyof typeof MUTATION_RATE;
+/**
+ * 蛋糕與突變率(官方 1.0 更新說明)。蔬菜蛋糕一次產兩顆蛋,官方標示「視同 2%」,
+ * 故 rate 記 2% 且 eggsPerCycle = 2(算期望時間時兩者不重複計算)。
+ */
+export const CAKES = {
+  mushroom: { rate: 0.01, eggsPerCycle: 1, label: "蘑菇蛋糕", note: "潛力值較易上升" },
+  vegetable: { rate: 0.02, eggsPerCycle: 2, label: "蔬菜蛋糕", note: "一次產兩顆蛋" },
+  deluxe: { rate: 0.03, eggsPerCycle: 1, label: "豪華蔬菜蛋糕", note: "最易突變,潛力值也易上升" },
+} as const;
+export type CakeKind = keyof typeof CAKES;
+/** 舊介面相容:只取觸發率。 */
+export const MUTATION_RATE: Record<CakeKind, number> = {
+  mushroom: CAKES.mushroom.rate,
+  vegetable: CAKES.vegetable.rate,
+  deluxe: CAKES.deluxe.rate,
+};
+
+/**
+ * 產蛋間隔(秒)—— 巴哈碼表實測值,用來把「期望顆數」換算成實際時間。
+ * 寶寶保母與梁葉龍效果不可疊加(取高者),故只分「有無梁葉龍(滿星)/保母」兩檔。
+ */
+export const FARMS = {
+  normal: { label: "配種牧場", base: 300, boosted: 200 },
+  ancient: { label: "古代文明配種牧場", base: 11, boosted: 7 },
+} as const;
+export type FarmKind = keyof typeof FARMS;
+
+/** 突變帕魯的固定加成(官方更新說明)。 */
+export const MUTATION_PERKS = [
+  "潛力值 90–100",
+  "首領帕魯",
+  "2 星濃縮",
+  "2–4 個彩虹被動技能",
+  "高等級技能",
+  "工作適應性 +2",
+] as const;
+
+/** 突變專屬的彩虹被動技能(也可用耗材植入體在手術台取得)。 */
+export const MUTATION_PASSIVES = ["不死之身", "特殊體質", "寶寶保母", "重裝甲", "凌空微步"] as const;
 
 export function buildMutationIndex(data: MutationData): MutationIndex {
   const byId = new Map(data.pals.map((p) => [p.id, p]));
@@ -138,7 +176,7 @@ export function findMutationPairs(
   index: MutationIndex,
   targetId: string,
   pool: Set<string> | null,
-  cake: CakeKind = "normal",
+  cake: CakeKind = "deluxe",
   limit = 60,
 ): MutationPair[] {
   const target = index.byId.get(targetId);
@@ -182,4 +220,25 @@ export function eggsForConfidence(perEgg: number, confidence = 0.9): number {
   if (perEgg <= 0) return Infinity;
   if (perEgg >= 1) return 1;
   return Math.ceil(Math.log(1 - confidence) / Math.log(1 - perEgg));
+}
+
+/**
+ * 期望顆數 → 實際耗時(秒)。蔬菜蛋糕一輪產兩顆,故所需輪數 = 顆數 / eggsPerCycle。
+ * @param boosted 據點內有滿星梁葉龍或寶寶保母(兩者不可疊加,取高者)
+ */
+export function eggsToSeconds(eggs: number, cake: CakeKind, farm: FarmKind, boosted: boolean): number {
+  if (!Number.isFinite(eggs)) return Infinity;
+  const per = boosted ? FARMS[farm].boosted : FARMS[farm].base;
+  return (eggs / CAKES[cake].eggsPerCycle) * per;
+}
+
+/** 秒數 → 「3 天 4 小時」這類易讀字串。 */
+export function humanDuration(sec: number): string {
+  if (!Number.isFinite(sec)) return "—";
+  if (sec < 60) return `${Math.round(sec)} 秒`;
+  const m = sec / 60;
+  if (m < 60) return `${Math.round(m)} 分`;
+  const h = m / 60;
+  if (h < 24) return `${h.toFixed(1)} 小時`;
+  return `${(h / 24).toFixed(1)} 天`;
 }
