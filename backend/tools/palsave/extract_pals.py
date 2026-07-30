@@ -51,24 +51,32 @@ def _tolerant_decode_bytes(parent_reader, char_bytes):
 _character.decode_bytes = _tolerant_decode_bytes
 
 
+_STOP_AT = "CharacterSaveParameterMap"
+
+
 def _tolerant_properties_until_end(self, path=""):
     """遇到本工具未支援的型別（如新版的 SetProperty）時，保留已解析的屬性並停止此層，
     而非整個解析失敗。CharacterSaveParameterMap 位於 worldSaveData 最前段，故能完整取得。"""
     properties = {}
     while True:
-        name = self.fstring()
-        if name == "None":
+        # 早停旗標掛在 reader 實例上:worldSaveData 層 break 後,stream 剛好停在
+        # 下一個屬性開頭,頂層 loop 會把剩餘內容全部接手續讀 —— 必須一併喊停。
+        if getattr(self, "_pal_early_stop", False):
             break
-        type_name = self.fstring()
-        size = self.u64()
+        # 整輪包進 try:fstring/u64 也要容錯(EOF/垃圾資料不可在 try 外炸掉)。
         try:
+            name = self.fstring()
+            if name == "None":
+                break
+            type_name = self.fstring()
+            size = self.u64()
             properties[name] = self.property(type_name, size, f"{path}.{name}")
         except Exception:
             break
-        # 本工具只需要 CharacterSaveParameterMap（玩家與帕魯皆在此）。一旦取得就停止解析
-        # worldSaveData 的後續屬性，避免新版存檔尾段區段（如 LevelObjectRecoverPartySaveData）
-        # 造成的位元組流錯位，同時大幅加速（讀數 KB 即停，不必跑完上百 MB）。
-        if path == ".worldSaveData" and name == "CharacterSaveParameterMap":
+        # 讀到 _STOP_AT 指定屬性即停:預設 CharacterSaveParameterMap(主資料,秒級);
+        # extract_guilds() 會暫時改為 GroupSaveDataMap(檔案尾段,低頻快取)。
+        if path == ".worldSaveData" and name == _STOP_AT:
+            self._pal_early_stop = True
             break
     return properties
 
@@ -194,7 +202,7 @@ def load_maps(here):
     }
 
 
-def load_gvas(path):
+def load_gvas(path, full=False):
     with open(path, "rb") as f:
         data = f.read()
     ulen = int.from_bytes(data[0:4], "little")
@@ -212,6 +220,8 @@ def load_gvas(path):
         sys.exit(f"未知存檔格式 magic={magic!r}")
     if raw[:4] != b"GVAS":
         sys.exit(f"解壓後不是 GVAS：{raw[:8]!r}")
+    # 只掛 character 的 custom decoder;Group/BaseCamp 的官方 decoder 跟不上 v1.0 格式
+    # 會整段解析失敗,改由 _decode_guild_raw/_decode_basecamp_raw 自行解 raw bytes。
     wanted = {k: v for k, v in PALWORLD_CUSTOM_PROPERTIES.items()
               if "CharacterSaveParameterMap" in k}
     return GvasFile.read(raw, PALWORLD_TYPE_HINTS, wanted, allow_nan=True)
@@ -270,6 +280,103 @@ def build_player(sp, uid):
     }
 
 
+_ZERO_UID = "00000000-0000-0000-0000-000000000000"
+
+
+def _guid_array(r, cap=100000):
+    n = r.u32()
+    if n > cap:
+        raise ValueError(f"array count 異常: {n}")
+    return [str(r.guid()) for _ in range(n)]
+
+
+def _decode_guild_raw(b):
+    """v1.0 Guild RawData 自製解析(官方 0.24.0 decoder 已跟不上新格式,實測逐欄位破解):
+    group_id、group_name、handle_ids(guid+instance 各 16B)、org_type、空陣列、
+    base_ids、空 u32、據點等級、map_points(與 base_ids 等長)、guild_name。
+    之後的 admin/成員段格式未明,不讀 —— 成員改從 handle_ids 取:
+    玩家角色的 guid 即玩家 UID,帕魯角色為全零。"""
+    r = _archive.FArchiveReader(bytes(b), PALWORLD_TYPE_HINTS, {}, allow_nan=True)
+    group_id = str(r.guid())
+    group_name = r.fstring()
+    n = r.u32()
+    if n > 500000:
+        raise ValueError(f"handle 數異常: {n}")
+    member_uids, seen = [], set()
+    for _ in range(n):
+        uid = str(r.guid())
+        r.guid()  # instance_id
+        if uid != _ZERO_UID and uid not in seen:
+            seen.add(uid)
+            member_uids.append(uid)
+    r.byte()               # org_type
+    _guid_array(r, 10000)  # 舊 base_ids 槽位(實測恆空)
+    base_ids = _guid_array(r, 10000)
+    r.u32()                # 未知(實測 0)
+    level = r.i32()
+    _guid_array(r, 10000)  # map_object_instance_ids_base_camp_points
+    guild_name = r.fstring()
+    return {
+        "id": group_id,
+        "name": guild_name or group_name or "",
+        "level": level,
+        "member_uids": member_uids,
+        "base_ids": base_ids,
+    }
+
+
+def _decode_basecamp_raw(b):
+    """v1.0 BaseCampSaveData RawData:官方欄位順序仍對得上,只是尾端多了新資料,
+    讀完需要的欄位即返回(不檢查 EOF)。"""
+    r = _archive.FArchiveReader(bytes(b), PALWORLD_TYPE_HINTS, {}, allow_nan=True)
+    bid = str(r.guid())
+    r.fstring()  # name
+    r.byte()     # state
+    tr = r.ftransform()
+    r.float()    # area_range
+    group_id = str(r.guid())
+    t = tr.get("translation") or {}
+    pos = {k: round(t[k]) for k in ("x", "y", "z") if isinstance(t.get(k), (int, float))}
+    return {"id": bid, "group_id": group_id, "pos": pos}
+
+
+def build_guilds(wsd):
+    """公會清單(含據點座標);任一 entry 解析失敗都跳過,不影響其他輸出。"""
+    base_by_id = {}
+    for e in g(wsd, "BaseCampSaveData", "value", default=[]) or []:
+        vals = g(e, "value", "RawData", "value", "values", default=None)
+        if vals is None:
+            continue
+        try:
+            d = _decode_basecamp_raw(vals)
+        except Exception:
+            continue
+        if len(d["pos"]) == 3:
+            base_by_id[d["id"]] = d
+    guilds = []
+    for e in g(wsd, "GroupSaveDataMap", "value", default=[]) or []:
+        gt = g(e, "value", "GroupType", "value", default=None)
+        if isinstance(gt, dict):
+            gt = gt.get("value")
+        if gt != "EPalGroupType::Guild":
+            continue
+        vals = g(e, "value", "RawData", "value", "values", default=None)
+        if vals is None:
+            continue
+        try:
+            d = _decode_guild_raw(vals)
+        except Exception:
+            continue
+        bases = [base_by_id[bid]["pos"] for bid in d["base_ids"] if bid in base_by_id]
+        if not bases:  # base_ids 對不上時,用據點的所屬公會 id 反查
+            bases = [bb["pos"] for bb in base_by_id.values() if bb["group_id"] == d["id"]]
+        guilds.append({
+            "id": d["id"], "name": d["name"], "level": d["level"],
+            "member_uids": d["member_uids"], "bases": bases,
+        })
+    return guilds
+
+
 def extract(gvas, maps):
     chars = gvas.properties["worldSaveData"]["value"]["CharacterSaveParameterMap"]["value"]
     players, pals_by_owner = {}, {}
@@ -299,6 +406,18 @@ def extract(gvas, maps):
         out["players"].append(p)
     out["players"].sort(key=lambda x: -x["pal_count"])
     return out
+
+
+def extract_guilds(path):
+    """慢路徑:完整解析到 GroupSaveDataMap,回傳公會清單(含據點座標)。
+    約 15 秒(視存檔大小),呼叫端請自行做低頻快取。"""
+    global _STOP_AT
+    _STOP_AT = "GroupSaveDataMap"
+    try:
+        gvas = load_gvas(path)
+    finally:
+        _STOP_AT = "CharacterSaveParameterMap"
+    return build_guilds(gvas.properties["worldSaveData"]["value"])
 
 
 def main():

@@ -18,20 +18,52 @@ Go 無法直接解析 GVAS 存檔，故用這個 Python 服務處理。
 """
 import os
 import json
+import time
 import threading
 import http.server
 import socketserver
 import urllib.parse
 
-from extract_pals import load_gvas, extract, load_maps  # 匯入時會套用相容性 monkeypatch
+from extract_pals import load_gvas, extract, load_maps, extract_guilds  # 匯入時會套用相容性 monkeypatch
 
 SAVE_ROOT = os.environ.get("SAVE_ROOT", "/palworld")
 PORT = int(os.environ.get("PORT", "8213"))
+GUILDS_TTL = int(os.environ.get("GUILDS_TTL", "120"))  # 公會/據點重解最短間隔(秒)
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAPS = load_maps(HERE)
 
 _cache = {"path": None, "mtime": None, "data": None}
 _lock = threading.Lock()
+
+# 公會/據點走慢路徑(要解析到存檔尾段的 GroupSaveDataMap,約 20 秒),
+# 獨立快取 + 背景更新:請求永遠拿目前快取,過期就丟背景執行緒重解,不阻塞 /pals。
+_guilds = {"mtime": None, "at": 0.0, "list": [], "running": False}
+_guilds_lock = threading.Lock()
+
+
+def _refresh_guilds(path, mtime):
+    try:
+        # 與 get_data() 互斥:extract_guilds 會暫時改動模組層 _STOP_AT,
+        # 不可與快路徑解析交錯執行。
+        with _lock:
+            gl = extract_guilds(path)
+        with _guilds_lock:
+            _guilds.update(mtime=mtime, at=time.time(), list=gl, running=False)
+        print(f"[palsave] guilds 更新:{len(gl)} 個公會", flush=True)
+    except Exception as e:
+        with _guilds_lock:
+            _guilds.update(at=time.time(), running=False)  # 失敗也記時間,避免連環重試
+        print(f"[palsave] guilds 解析失敗:{e}", flush=True)
+
+
+def get_guilds(path, mtime):
+    """回目前快取的公會清單;存檔變了且超過 TTL 就在背景重解(首次為空 list)。"""
+    with _guilds_lock:
+        stale = _guilds["mtime"] != mtime and time.time() - _guilds["at"] >= GUILDS_TTL
+        if stale and not _guilds["running"]:
+            _guilds["running"] = True
+            threading.Thread(target=_refresh_guilds, args=(path, mtime), daemon=True).start()
+        return _guilds["list"]
 
 
 def find_level_sav():
@@ -101,6 +133,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 data = get_data()
             except Exception as e:
                 return self._json(500, {"ok": False, "error": str(e)})
+            # 公會/據點:非同步慢路徑,失敗或未就緒時為空 list,不影響主資料
+            try:
+                guilds = get_guilds(_cache["path"], _cache["mtime"])
+                uid2name = {p["uid"]: p["name"] for p in data["players"]}
+                data = {**data, "guilds": [
+                    {**gd, "players": [{"uid": u, "name": uid2name.get(u, "")}
+                                       for u in gd["member_uids"]]}
+                    for gd in guilds
+                ]}
+            except Exception:
+                data = {**data, "guilds": []}
             qs = urllib.parse.parse_qs(parsed.query)
             uuid = (qs.get("uuid") or qs.get("q") or [""])[0]  # q 為相容舊參數
             if uuid:

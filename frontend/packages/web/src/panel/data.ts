@@ -1,6 +1,6 @@
 // 共用資料層：抓一次全服帕魯資料並快取，提供聚合/查詢工具。
 import { useEffect, useState } from "react";
-import type { Pal, Player, PalsResponse } from "./types";
+import type { Pal, Player, Guild, PalsResponse } from "./types";
 import { getAllPals } from "./api";
 import { loadPaldex, palInfo, isExcludedSpecies } from "./paldex";
 
@@ -29,6 +29,7 @@ export interface Dataset {
   allPals: OwnedPal[];
   species: SpeciesGroup[]; // 依全服總數排序（多→少）
   totalPals: number;
+  guilds: Guild[]; // 公會/據點(後端慢路徑快取,未就緒時為空)
 }
 
 /** 物種鍵：BOSS_/α 變體透過 name_en 回歸基礎種。 */
@@ -116,7 +117,7 @@ function buildDataset(resp: PalsResponse): Dataset {
   }
 
   const species = [...groups.values()].sort((a, b) => b.total - a.total);
-  return { players, allPals, species, totalPals: allPals.length };
+  return { players, allPals, species, totalPals: allPals.length, guilds: resp.guilds ?? [] };
 }
 
 // 模組層快取：多個分頁共用同一次抓取。

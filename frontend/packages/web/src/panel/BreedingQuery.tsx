@@ -4,7 +4,8 @@
 // 四種模式:配種計算(正查)、反查組合(作為子代/作為父母)、路徑金字塔、稀有配方。
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX, ReactNode } from "react";
-import type { BreedingData, BreedingGender } from "../breedingSolver";
+import { solveBreeding, type BreedingData, type BreedingGender, type BreedingNode, type BreedingSolution } from "../breedingSolver";
+import type { SaveBreedingPal } from "@palserver/shared";
 import {
   buildBreedingIndex,
   edgeOptions,
@@ -523,13 +524,121 @@ function PyramidTier({
 }
 
 // ---------------------------------------------------------------------------
+// 詞條/主動技能篩選:用自有帕魯排列組合解「把詞條帶到目標身上」的最佳路線
+// ---------------------------------------------------------------------------
+
+/** 解算步驟卡裡的一格帕魯(親代或子代),標示來源與已帶到的目標詞條。 */
+function SolvePalChip({ node, desired }: { node: BreedingNode; desired: string[] }) {
+  const info = palInfo(node.species);
+  const src = node.source;
+  const traits = src
+    ? src.passives.filter((p) => desired.includes(p))
+    : desired.filter((_, i) => (node.passiveMask & (1 << i)) !== 0);
+  return (
+    <div
+      className={`flex min-w-0 flex-1 items-center gap-2 rounded-xl p-2 ring-1 ${
+        node.requiredCapture ? "bg-sun/10 ring-sun/60" : "bg-card-soft ring-line"
+      }`}
+    >
+      {info.iconUrl && <img src={info.iconUrl} alt="" className="size-10 shrink-0 rounded-full bg-card ring-1 ring-line" />}
+      <div className="min-w-0">
+        <p className="truncate text-sm font-bold text-ink">
+          {src?.nickname || info.zh || node.species}
+          <span className="ml-1 text-xs font-normal text-ink-muted">
+            {node.gender === "m" ? "♂" : node.gender === "f" ? "♀" : "♂/♀"}
+          </span>
+        </p>
+        <p className="truncate text-[11px] text-ink-muted">
+          {node.requiredCapture
+            ? `⚠ ${t("需捕捉")}`
+            : src
+              ? t("{name} 的帕魯", { name: src.ownerName || "?" })
+              : t("第 {n} 代配種結果", { n: node.generation })}
+        </p>
+        {traits.length > 0 && (
+          <div className="mt-0.5 flex flex-wrap gap-1">
+            {traits.map((p) => (
+              <span key={p} className="max-w-full truncate rounded bg-pal/10 px-1 py-0.5 text-[10px] font-bold text-pal">
+                {p}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** 詞條解算結果:依依賴順序列出每一次配種(A ＋ B ➜ 子代)。 */
+function TraitSolutionView({ solution, desired }: { solution: BreedingSolution; desired: string[] }) {
+  const target = solution.target;
+  if (!target) {
+    return (
+      <Card className="text-center">
+        <p className="font-bold text-ink">{t("找不到能帶齊這些詞條的配種組合")}</p>
+        <p className="mt-1 text-sm text-ink-muted">
+          {t("試著減少詞條數量、擴大玩家視角範圍,或先取得帶有這些詞條/技能的帕魯。")}
+        </p>
+      </Card>
+    );
+  }
+  const steps: BreedingNode[] = [];
+  const seen = new Set<BreedingNode>();
+  const visit = (n: BreedingNode) => {
+    if (!n.parents || seen.has(n)) return;
+    seen.add(n);
+    visit(n.parents[0]);
+    visit(n.parents[1]);
+    steps.push(n);
+  };
+  visit(target);
+  return (
+    <Card>
+      <div className="mb-2 flex flex-wrap items-baseline gap-2">
+        <p className="font-bold text-ink">🧬 {t("帶詞條配種路線")}</p>
+        <span className="text-xs text-ink-muted">
+          {t("{generations} 代 · 共 {steps} 次配種", { generations: target.generation, steps: target.breedCount })}
+          {solution.requiredCaptures.length > 0
+            ? ` · ${t("需捕捉 {n} 隻", { n: solution.requiredCaptures.length })}`
+            : ""}
+        </span>
+      </div>
+      <div className="space-y-2">
+        {steps.map((s, i) => (
+          <div key={i} className="flex flex-col gap-1.5 rounded-cute bg-card p-2 ring-1 ring-line sm:flex-row sm:items-center">
+            <span className="shrink-0 self-start rounded-full bg-pal/12 px-2 py-0.5 text-xs font-bold text-pal sm:self-center">
+              #{i + 1}
+            </span>
+            <SolvePalChip node={s.parents![0]} desired={desired} />
+            <span className="shrink-0 text-center font-bold text-ink-muted">＋</span>
+            <SolvePalChip node={s.parents![1]} desired={desired} />
+            <span className="shrink-0 text-center font-bold text-ink-muted">➜</span>
+            <SolvePalChip node={s} desired={desired} />
+          </div>
+        ))}
+      </div>
+      {solution.requiredCaptures.length > 0 && (
+        <p className="mt-2 text-xs text-ink-muted">
+          ⚠ {t("需先捕捉:{list}", {
+            list: solution.requiredCaptures
+              .map((c) => `${palInfo(c.species).zh || c.species}${c.gender === "m" ? "♂" : c.gender === "f" ? "♀" : ""}`)
+              .join("、"),
+          })}
+        </p>
+      )}
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // 主元件
 // ---------------------------------------------------------------------------
 
-const MODES: { key: Mode; icon: string; title: string; sub: string }[] = [
+const MODES: { key: Mode; treeSub?: "tree" | "path"; icon: string; title: string; sub: string }[] = [
+  { key: "chain", treeSub: "path", icon: "🪜", title: "最短路徑", sub: "起點到目標的最短配種路線" },
   { key: "pair", icon: "🥚", title: "配種計算", sub: "選兩隻父母,立刻看子代" },
   { key: "reverse", icon: "🔄", title: "反查組合", sub: "目標的全部父母組合" },
-  { key: "chain", icon: "🌳", title: "帕魯配種樹", sub: "樹狀展開 / 最短路徑 / 玩家視角" },
+  { key: "chain", treeSub: "tree", icon: "🌳", title: "帕魯配種樹", sub: "樹狀展開 / 玩家視角" },
 ];
 
 type SlotKey = "a" | "b" | "target" | "from" | "to";
@@ -582,6 +691,10 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const [chosenPartners, setChosenPartners] = useState<Record<number, string>>({});
   /** B 夥伴選單的文字搜尋。 */
   const [partnerQ, setPartnerQ] = useState("");
+  /** 詞條/主動技能篩選(≤4):選了之後改用自有帕魯排列組合解「帶詞條」路線。 */
+  const [desired, setDesired] = useState<string[]>([]);
+  const [traitOpen, setTraitOpen] = useState(false);
+  const [traitQ, setTraitQ] = useState("");
   useEffect(() => {
     setRouteIdx(0);
     setOpenSteps(new Set());
@@ -625,6 +738,54 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     return ownedSet;
   }, [persp, index, ownedSet]);
 
+  /** 詞條解算的自有帕魯範圍:選定玩家 = 該玩家;其他視角 = 全服。 */
+  const inTraitPool = (uid: string) => persp === "all" || persp === "any" || persp === "off" || uid === persp;
+
+  /** 詞條/主動技能選項(附範圍內持有隻數,多→少)。 */
+  const traitOptions = useMemo(() => {
+    if (!dataset) return null;
+    const pc = new Map<string, number>();
+    const sc = new Map<string, number>();
+    for (const { pal, owner } of dataset.allPals) {
+      if (!inTraitPool(owner.uid)) continue;
+      for (const s of pal.passives) pc.set(s, (pc.get(s) ?? 0) + 1);
+      for (const s of pal.mastered_skills) sc.set(s, (sc.get(s) ?? 0) + 1);
+    }
+    const sorted = (m: Map<string, number>) => [...m.entries()].sort((a, b) => b[1] - a[1]);
+    return { passives: sorted(pc), skills: sorted(sc) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataset, persp]);
+
+  /** 詞條模式解算:自有帕魯(詞條+已學技能一起當可繼承詞條)排列組合 → 最佳路線。 */
+  const traitSolution = useMemo<BreedingSolution | null>(() => {
+    if (!data || !dataset || !chainTo || desired.length === 0) return null;
+    const owned: SaveBreedingPal[] = [];
+    let i = 0;
+    for (const { pal, owner } of dataset.allPals) {
+      if (!inTraitPool(owner.uid)) continue;
+      if (pal.gender !== "Male" && pal.gender !== "Female") continue;
+      owned.push({
+        instanceId: `${owner.uid}#${i++}`,
+        characterId: pal.species,
+        nickname: pal.nickname || undefined,
+        level: pal.level,
+        gender: pal.gender === "Male" ? "male" : "female",
+        rank: pal.rank ?? 0,
+        isLucky: pal.is_lucky,
+        isBoss: pal.is_alpha,
+        talentHp: pal.iv_hp,
+        talentShot: pal.iv_attack,
+        talentDefense: pal.iv_defense,
+        passives: [...pal.passives, ...pal.mastered_skills],
+        location: "palbox",
+        ownerUid: owner.uid,
+        ownerName: owner.name,
+      });
+    }
+    return solveBreeding(data, owned, chainTo, desired, 4);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, dataset, chainTo, desired, persp]);
+
   /** breeding.json 物種 id 保留原大小寫;插槽存原 id,顯示/查表都直接用。 */
   const species = useMemo(() => (index ? [...index.speciesSet] : []), [index]);
   const metaOf = (id: string) => metaMap[id];
@@ -656,32 +817,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     return map;
   }, [index, chainFrom]);
 
-  /** 起點插槽作用中 → 網格只顯示「真的能配到目標」的帕魯。 */
-  const startGridFilter = mode === "chain" && treeSub === "path" && activeSlot === "from" && Boolean(chainTo) && startOptions != null;
-
-  const gridRows = useMemo(() => {
-    const raw = q.trim();
-    const lower = raw.toLowerCase();
-    let rows = species;
-    if (startGridFilter && startOptions) rows = rows.filter((id) => startOptions.has(id));
-    if (elFilter) rows = rows.filter((id) => (metaMap[id]?.el ?? []).includes(elFilter));
-    if (raw) {
-      rows = rows.filter((id) => {
-        if (id.toLowerCase().includes(lower)) return true;
-        const m = metaMap[id];
-        if (m && String(m.deck) === raw) return true;
-        const info = palInfo(id);
-        return Boolean(info.zh?.includes(raw)) || Boolean(info.zh?.toLowerCase().includes(lower));
-      });
-    }
-    const cmp = (x: string, y: string) => {
-      if (sortBy === "name") return byName(x, y);
-      if (sortBy === "rarity") return (metaMap[y]?.r ?? 0) - (metaMap[x]?.r ?? 0) || byName(x, y);
-      return (metaMap[x]?.deck || 9999) - (metaMap[y]?.deck || 9999) || byName(x, y);
-    };
-    return [...rows].sort(cmp);
-  }, [species, q, elFilter, sortBy, metaMap, ready, startGridFilter, startOptions]);
-
   /** 目前模式下,哪些帕魯已被選入插槽(卡片高亮用)。 */
   const selectedIds = useMemo(() => {
     if (mode === "pair") {
@@ -711,6 +846,20 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
         setTreeTarget(id);
         setActiveSlot(null);
         return;
+      }
+      // 開著替換面板時,點網格 = 直接套用到該處(目標/起點/中間代)
+      if (openTier != null && chain) {
+        if (openTier === chain.distance) {
+          setChainTo(id);
+          return;
+        }
+        if (openTier === 0) {
+          setChainFrom(id);
+          setAutoStart(false);
+          return;
+        }
+        if (tierCandidates.some((c) => c.id === id)) applyTier(id);
+        return; // 非法候選(理論上被 swapFilter 擋掉)忽略
       }
       const slot = activeSlot === "to" ? "to" : "from";
       if (slot === "from") {
@@ -881,6 +1030,41 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const pagedAsChild = usePaged(revAsChild);
   const pagedAsParent = usePaged(revAsParent);
 
+  /** 最短路徑的「網格即候選」過濾:開著哪個替換面板,右側網格就只顯示該處的合法選項。 */
+  const swapFilter = useMemo<Set<string> | null>(() => {
+    if (mode !== "chain" || treeSub !== "path") return null;
+    if (openTier != null && chain) {
+      if (openTier === chain.distance) return targetOptions ? new Set(targetOptions.keys()) : null;
+      if (openTier === 0) return startOptions ? new Set(startOptions.keys()) : null;
+      return new Set(tierCandidates.map((c) => c.id));
+    }
+    if (activeSlot === "from" && chainTo && startOptions) return new Set(startOptions.keys());
+    return null;
+  }, [mode, treeSub, openTier, chain, targetOptions, startOptions, tierCandidates, activeSlot, chainTo]);
+
+  const gridRows = useMemo(() => {
+    const raw = q.trim();
+    const lower = raw.toLowerCase();
+    let rows = species;
+    if (swapFilter) rows = rows.filter((id) => swapFilter.has(id));
+    if (elFilter) rows = rows.filter((id) => (metaMap[id]?.el ?? []).includes(elFilter));
+    if (raw) {
+      rows = rows.filter((id) => {
+        if (id.toLowerCase().includes(lower)) return true;
+        const m = metaMap[id];
+        if (m && String(m.deck) === raw) return true;
+        const info = palInfo(id);
+        return Boolean(info.zh?.includes(raw)) || Boolean(info.zh?.toLowerCase().includes(lower));
+      });
+    }
+    const cmp = (x: string, y: string) => {
+      if (sortBy === "name") return byName(x, y);
+      if (sortBy === "rarity") return (metaMap[y]?.r ?? 0) - (metaMap[x]?.r ?? 0) || byName(x, y);
+      return (metaMap[x]?.deck || 9999) - (metaMap[y]?.deck || 9999) || byName(x, y);
+    };
+    return [...rows].sort(cmp);
+  }, [species, q, elFilter, sortBy, metaMap, ready, swapFilter]);
+
   if (error)
     return (
       <div className="rounded-cute bg-berry/15 px-4 py-3 text-berry ring-1 ring-berry/30">
@@ -900,23 +1084,27 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   return (
     <div className="space-y-3">
       {/* 模式切換:icon + 標題 + 副標(參考 palworld.gg 的功能卡) */}
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-        {MODES.map((m) => (
-          <button
-            key={m.key}
-            type="button"
-            onClick={() => switchMode(m.key)}
-            className={`flex min-h-14 items-center gap-2.5 rounded-cute px-3 py-2 text-left ring-1 transition ${
-              mode === m.key ? "bg-pal/12 ring-2 ring-pal" : "bg-card ring-line hover:ring-pal"
-            }`}
-          >
-            <span className="text-xl">{m.icon}</span>
-            <span className="min-w-0">
-              <span className={`block truncate text-sm font-bold ${mode === m.key ? "text-pal" : "text-ink"}`}>{t(m.title)}</span>
-              <span className="block truncate text-[11px] text-ink-muted">{t(m.sub)}</span>
-            </span>
-          </button>
-        ))}
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        {MODES.map((m) => {
+          // chain 有兩張卡(🪜/🌳),依 treeSub 區分選中狀態
+          const act = mode === m.key && (m.key !== "chain" || treeSub === m.treeSub);
+          return (
+            <button
+              key={m.key + (m.treeSub ?? "")}
+              type="button"
+              onClick={() => switchMode(m.key, m.treeSub)}
+              className={`flex min-h-14 items-center gap-2.5 rounded-cute px-3 py-2 text-left ring-1 transition ${
+                act ? "bg-pal/12 ring-2 ring-pal" : "bg-card ring-line hover:ring-pal"
+              }`}
+            >
+              <span className="text-xl">{m.icon}</span>
+              <span className="min-w-0">
+                <span className={`block truncate text-sm font-bold ${act ? "text-pal" : "text-ink"}`}>{t(m.title)}</span>
+                <span className="block truncate text-[11px] text-ink-muted">{t(m.sub)}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* 桌機:主內容在左、選帕魯網格固定在「右」側欄;手機:網格垂直排在內容後面 */}
@@ -1154,46 +1342,22 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       {/* ---------------- 帕魯配種樹 ---------------- */}
       {mode === "chain" && (
         <>
-          {/* 子檢視切換 + 玩家視角 */}
-          <Card>
-            <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex rounded-lg bg-card-soft p-1 ring-1 ring-line">
-                {(
-                  [
-                    ["path", `🪜 ${t("最短路徑")}`],
-                    ["tree", `🌳 ${t("樹狀配種")}`],
-                  ] as ["tree" | "path", string][]
-                ).map(([k, label]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => {
-                      setTreeSub(k);
-                      setActiveSlot(k === "tree" ? (treeTarget ? null : "to") : chainFrom ? (chainTo ? null : "to") : "from");
-                    }}
-                    className={`min-h-10 flex-1 rounded-md px-4 text-sm font-semibold whitespace-nowrap transition ${
-                      treeSub === k ? "bg-pal text-white" : "text-ink hover:bg-card"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+          {/* 玩家視角(🪜/🌳 已提升為上層模式卡) */}
+          {dataset && (
+            <Card>
+              <div className="flex flex-wrap items-center gap-2">
+                <PerspSelect players={dataset.players} value={persp} onChange={setPersp} />
+                {ownedSet && (
+                  <span className="rounded-full bg-grass/15 px-2.5 py-1 text-xs font-semibold text-grass ring-1 ring-grass/40">
+                    {t("已擁有 {n}/{total} 種", {
+                      n: species.filter((s) => ownedSet.has(s.toLowerCase())).length,
+                      total: species.length,
+                    })}
+                  </span>
+                )}
               </div>
-              {dataset && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <PerspSelect players={dataset.players} value={persp} onChange={setPersp} />
-                  {ownedSet && (
-                    <span className="rounded-full bg-grass/15 px-2.5 py-1 text-xs font-semibold text-grass ring-1 ring-grass/40">
-                      {t("已擁有 {n}/{total} 種", {
-                        n: species.filter((s) => ownedSet.has(s.toLowerCase())).length,
-                        total: species.length,
-                      })}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </Card>
+            </Card>
+          )}
 
           {/* ---- 樹狀配種:點帕魯清單直接長樹(目標與最短路徑分離) ---- */}
           {treeSub === "tree" &&
@@ -1293,7 +1457,112 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
           </Card>
           )}
 
-          {treeSub === "path" && chainFrom && chainTo && !chain && (
+          {/* 詞條/主動技能篩選:選了之後用自有帕魯排列組合解「帶詞條到目標」的路線 */}
+          {treeSub === "path" && dataset && traitOptions && chainTo && (
+            <Card>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTraitOpen((v) => !v)}
+                  className={`min-h-10 rounded-full px-4 text-sm font-semibold ring-1 transition ${
+                    desired.length > 0 || traitOpen
+                      ? "bg-pal text-white ring-pal"
+                      : "bg-card-soft text-ink ring-line hover:ring-pal"
+                  }`}
+                >
+                  🏷️ {t("詞條 / 主動技能篩選")}
+                  {desired.length > 0 ? ` (${desired.length}/4)` : ""} {traitOpen ? "▲" : "▼"}
+                </button>
+                {desired.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setDesired(desired.filter((x) => x !== p))}
+                    title={t("移除")}
+                    className="flex items-center gap-1 rounded-full bg-pal/12 px-3 py-1.5 text-sm font-semibold text-pal ring-1 ring-pal/40 hover:bg-pal hover:text-white"
+                  >
+                    {p} <span className="leading-none">✕</span>
+                  </button>
+                ))}
+                {desired.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setDesired([])}
+                    className="text-xs text-ink-muted underline hover:text-ink"
+                  >
+                    {t("全部清除")}
+                  </button>
+                )}
+              </div>
+              {traitOpen && (
+                <div className="mt-2.5 rounded-cute bg-card-soft p-2.5 ring-1 ring-line">
+                  <input
+                    value={traitQ}
+                    onChange={(e) => setTraitQ(e.target.value)}
+                    placeholder={t("搜尋詞條或技能…")}
+                    className="mb-2 w-full rounded-lg bg-card px-3 py-2 text-sm text-ink outline-none ring-1 ring-line focus:ring-2 focus:ring-pal"
+                  />
+                  <div className="max-h-60 space-y-2 overflow-y-auto">
+                    {(
+                      [
+                        [t("詞條"), traitOptions.passives],
+                        [t("主動技能"), traitOptions.skills],
+                      ] as [string, [string, number][]][]
+                    ).map(([label, list]) => {
+                      const shown = list.filter(([s]) => !traitQ || s.toLowerCase().includes(traitQ.toLowerCase()));
+                      if (!shown.length) return null;
+                      return (
+                        <div key={label}>
+                          <p className="mb-1 text-xs font-bold text-ink-muted">{label}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {shown.slice(0, 60).map(([s, n]) => {
+                              const on = desired.includes(s);
+                              const full = !on && desired.length >= 4;
+                              return (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  disabled={full}
+                                  onClick={() =>
+                                    setDesired(on ? desired.filter((x) => x !== s) : [...desired, s])
+                                  }
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition ${
+                                    on
+                                      ? "bg-pal text-white ring-pal"
+                                      : full
+                                        ? "cursor-not-allowed bg-card text-ink-muted/50 ring-line"
+                                        : "bg-card text-ink ring-line hover:ring-pal"
+                                  }`}
+                                >
+                                  {s} <span className={on ? "text-white/80" : "text-ink-muted"}>×{n}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-[11px] text-ink-muted">
+                    {t("最多選 4 個;會用{scope}的帕魯(含已學技能)排列組合,把選到的詞條全部帶到目標身上。", {
+                      scope:
+                        persp !== "all" && persp !== "any" && persp !== "off"
+                          ? dataset.players.find((p) => p.uid === persp)?.name ?? t("該玩家")
+                          : t("全服玩家"),
+                    })}
+                  </p>
+                </div>
+              )}
+            </Card>
+          )}
+          {treeSub === "path" && desired.length > 0 && chainTo && traitSolution && (
+            <TraitSolutionView solution={traitSolution} desired={desired} />
+          )}
+          {treeSub === "path" && desired.length > 0 && !chainTo && (
+            <Card className="text-center text-sm text-ink-muted">{t("先選一隻目標帕魯,再看帶詞條路線。")}</Card>
+          )}
+
+          {treeSub === "path" && !desired.length && chainFrom && chainTo && !chain && (
             <Card className="text-center">
               {isSelfOnlyChild(index, chainTo) ? (
                 <>
@@ -1310,13 +1579,13 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
               )}
             </Card>
           )}
-          {treeSub === "path" && chain && chain.distance === 0 && (
+          {treeSub === "path" && !desired.length && chain && chain.distance === 0 && (
             <Card className="text-center">
               <p className="font-bold text-ink">{t("起點就是目標帕魯")}</p>
               <p className="mt-1 text-sm text-ink-muted">{t("直接用兩隻 {name} 配種即可繁殖更多。", { name: nameOf(chainTo) })}</p>
             </Card>
           )}
-          {treeSub === "path" && chain && chain.distance > 0 && (
+          {treeSub === "path" && !desired.length && chain && chain.distance > 0 && (
             <div className="space-y-3">
               {/* 極簡控制列:只在套用過自訂替換時顯示還原 */}
               {custom && (
@@ -1611,7 +1880,18 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                     <ElementDot el={e} size="md" />
                   </button>
                 ))}
-              {activeSlot && (
+              {mode === "chain" && treeSub === "path" && openTier != null && chain ? (
+                <span className="ml-auto text-xs font-semibold text-sun">
+                  {t("點卡片替換「{slot}」", {
+                    slot:
+                      openTier === chain.distance
+                        ? t("目標")
+                        : openTier === 0
+                          ? t("起點")
+                          : t("第 {n} 代", { n: openTier }),
+                  })}
+                </span>
+              ) : activeSlot ? (
                 <span className="ml-auto text-xs font-semibold text-pal">
                   {t("點卡片填入「{slot}」", {
                     slot:
@@ -1624,7 +1904,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                             : t("目標帕魯"),
                   })}
                 </span>
-              )}
+              ) : null}
             </div>
           </div>
           <div className="grid max-h-[52dvh] grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-5 lg:max-h-[calc(100dvh-9rem)] lg:grid-cols-3">

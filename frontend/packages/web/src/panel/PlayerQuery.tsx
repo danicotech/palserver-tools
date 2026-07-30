@@ -6,6 +6,7 @@ import type { Dataset } from "./data";
 import { paldexId } from "./paldex";
 import { getOnlinePlayers } from "./api";
 import { PlayerCard } from "./PlayerCard";
+import { PlayerMap } from "./PlayerMap";
 import { t } from "../i18n";
 
 type SortKey = "pals" | "level" | "exp" | "dex";
@@ -77,6 +78,8 @@ export function PlayerQuery({
 
   return (
     <div>
+      {/* 小地圖:全玩家最後位置 + 公會據點;點頭像帶入搜尋跳到該玩家 */}
+      <PlayerMap data={data} onPlayerClick={(p) => setQ(p.name)} />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <input
           value={q}

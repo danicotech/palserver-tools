@@ -68,10 +68,28 @@ export interface Player {
   pals: Pal[];
 }
 
+/** 公會據點座標(存檔世界座標,畫地圖前需經 savToMap/savToWorldTreeMap)。 */
+export interface GuildBase {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/** 公會(palsave 慢路徑解析;快取未就緒時後端會回空陣列)。 */
+export interface Guild {
+  id: string;
+  name: string;
+  level: number;
+  member_uids: string[];
+  players: { uid: string; name: string }[];
+  bases: GuildBase[];
+}
+
 export interface PalsResponse {
   total_pals: number;
   orphan_pals: number;
   players: Player[];
+  guilds?: Guild[];
 }
 
 // `/api/pals/players` 的摘要（不含每隻帕魯）——與 Player 相同但 pals 省略。
