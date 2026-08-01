@@ -2460,5 +2460,7 @@
   "由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;滑過帕魯看誰有牠,點 A 換那一代的帕魯、點 B 換夥伴。": "Read bottom-up: each row breeds A + B into the row above. Hover a pal to see who owns it; click A to swap that generation, B to swap the partner.",
   "誰有帶詞條的這隻": "Who has one with these passives",
   "這一步不必補詞條": "no passive needed at this step",
-  "這一步要帶": "Must carry here"
+  "這一步要帶": "Must carry here",
+  "約 {n} 顆蛋": "~{n} eggs",
+  "每顆蛋 {p}%,平均要 {n} 顆": "{p}% per egg — about {n} eggs on average"
 }

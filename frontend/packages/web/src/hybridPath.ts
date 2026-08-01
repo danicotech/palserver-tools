@@ -309,7 +309,7 @@ export function stepOptions(
   const seen = new Set<string>();
   return out
     .filter((o) => {
-      const k = `${o.kind} ${o.partner}`;
+      const k = `${o.kind}\u0000${o.partner}`;
       if (seen.has(k)) return false;
       seen.add(k);
       return true;
@@ -322,6 +322,8 @@ export interface StartCandidate {
   depth: number;
   /** 全程每輪成功率(直系步驟算 1);純直系模式恆為 1 */
   overall: number;
+  /** 走完全程的期望蛋數 —— 比機率好比較,UI 拿這個當主要指標 */
+  expectedEggs: number;
   /** 路線中有幾步要靠突變 */
   mutationSteps: number;
 }
@@ -364,7 +366,7 @@ export function startCandidates(
   }
 
   const out = new Map<string, StartCandidate>();
-  let frontier = new Map<string, StartCandidate>([[target, { depth: 0, overall: 1, mutationSteps: 0 }]]);
+  let frontier = new Map<string, StartCandidate>([[target, { depth: 0, overall: 1, expectedEggs: 0, mutationSteps: 0 }]]);
   for (let depth = 1; depth <= maxDepth && frontier.size; depth++) {
     const next = new Map<string, StartCandidate>();
     for (const [node, info] of frontier) {
@@ -372,6 +374,7 @@ export function startCandidates(
         const cand: StartCandidate = {
           depth,
           overall: info.overall * e.perEgg,
+          expectedEggs: info.expectedEggs + (e.perEgg > 0 ? 1 / e.perEgg : Infinity),
           mutationSteps: info.mutationSteps + (e.kind === "mutation" ? 1 : 0),
         };
         const prev = out.get(e.src) ?? next.get(e.src);
@@ -636,7 +639,12 @@ export function buildTraitGraph(
 
   const starts = new Map<string, StartCandidate>();
   for (const [sp, k] of bestStart)
-    starts.set(sp, { depth: depthAt[k], overall: Math.exp(logPAt[k]), mutationSteps: mutsAt[k] });
+    starts.set(sp, {
+      depth: depthAt[k],
+      overall: Math.exp(logPAt[k]),
+      expectedEggs: costAt[k],
+      mutationSteps: mutsAt[k],
+    });
 
   return {
     starts,

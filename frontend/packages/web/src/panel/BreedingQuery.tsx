@@ -1370,9 +1370,15 @@ function HybridPathView({
                           {inf.zh || id}
                           <span className={on ? "text-white/85" : "text-ink-muted"}>{t("{n} 代", { n: info.depth })}</span>
                           {info.mutationSteps > 0 && (
-                            <span className={`flex items-center gap-0.5 ${on ? "text-white/85" : "text-berry"}`}>
+                            <span
+                              className={`flex items-center gap-0.5 ${on ? "text-white/85" : "text-berry"}`}
+                              title={t("每顆蛋 {p}%,平均要 {n} 顆", {
+                                p: (info.overall * 100).toFixed(2),
+                                n: Math.round(info.expectedEggs),
+                              })}
+                            >
                               <img src={MUTATION_ICON} alt="" className="size-3.5" />
-                              {(info.overall * 100).toFixed(2)}%
+                              {t("約 {n} 顆蛋", { n: Math.round(info.expectedEggs) })}
                             </span>
                           )}
                           {own && <span className={on ? "text-white/85" : "text-grass"}>✓</span>}
@@ -2039,7 +2045,9 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       // 純直系沿用既有的 startOptions(每物種一次 solveChain),轉成同一種形狀
       if (!startOptions) return null;
       const m = new Map<string, StartCandidate>();
-      for (const [id, v] of startOptions) m.set(id, { depth: v.dist, overall: 1, mutationSteps: 0 });
+      // 純直系:每一步必定生得出,期望蛋數就等於代數
+      for (const [id, v] of startOptions)
+        m.set(id, { depth: v.dist, overall: 1, expectedEggs: v.dist, mutationSteps: 0 });
       return withTraits(m);
     }
     if (!mutIndex || !mutReach) return null;
@@ -2886,7 +2894,15 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               {inf.zh || id}
                               <span className="text-ink-muted">{t("{n} 代", { n: info.depth })}</span>
                               {info.mutationSteps > 0 && (
-                                <span className="text-berry">{(info.overall * 100).toFixed(2)}%</span>
+                                <span
+                                  className="text-berry"
+                                  title={t("每顆蛋 {p}%,平均要 {n} 顆", {
+                                    p: (info.overall * 100).toFixed(2),
+                                    n: Math.round(info.expectedEggs),
+                                  })}
+                                >
+                                  {t("約 {n} 顆蛋", { n: Math.round(info.expectedEggs) })}
+                                </span>
                               )}
                               {own && <span className="text-grass">✓</span>}
                             </button>
