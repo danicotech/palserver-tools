@@ -10,4 +10,4 @@
 | 想手動立刻開/關服 | `POST /api/open` / `/api/close` / `/api/resume`(帶 `api.token`) |
 | 遊戲改版後帕魯缺資料 | 跑 `frontend/scripts/fetch-palcalc-breeding.mjs` 與 `fetch-pal-meta.mjs` 後重建 panel |
 | 想把網站公開到外網 | 自行架反向代理/隧道指向本機 80 埠 |
-| 沒有 Docker | 見 [[SteamCMD 原生模式]] |
+| 沒有 Docker | 見 [[SteamCMD 版]] |

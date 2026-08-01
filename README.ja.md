@@ -56,7 +56,7 @@ docker compose version
 > **Windows でよくある例**:`start.bat` が「Docker が見つからない」と言う場合は Docker Desktop が
 > 未起動(または起動中)です。トレイのクジラが止まってからもう一度実行してください。
 > 初回は WSL 2 の有効化と再起動を求められることがあります。
-> Docker を入れたくない場合は [ネイティブモード](docs/原生模式.md)(SteamCMD 直接実行、検索サイトなし)。
+> Docker を入れたくない場合は [SteamCMD 版](docs/SteamCMD版.md)(SteamCMD 直接実行、検索サイトなし)。
 
 ## 🕹️ 日常操作(ダブルクリックだけ)
 
@@ -151,16 +151,16 @@ node scripts/fetch-pal-meta.mjs           # 属性/図鑑番号/レア度
 pnpm build && cd .. && docker compose up -d --no-deps --build panel
 ```
 
-## 🧱 Docker なし?SteamCMD ネイティブモード
+## 🧱 Docker なし?SteamCMD 版を使う
 
 Docker を入れられない環境でも、[`windows/native/`](windows/native) のスクリプトでゲームサーバーを直接ホストできます:
 
-1. `native\windows\install.bat` をダブルクリック(SteamCMD とサーバー本体を自動ダウンロード)
+1. `windows\native\install.bat` をダブルクリック(SteamCMD とサーバー本体を自動ダウンロード)
 2. `windows\native\start.bat` で起動(Linux:`bash linux/native/install.sh` → `bash linux/start.sh`)
-3. 設定は `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini` を編集(ネイティブモードでは上書きされません)
+3. 設定は `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini` を編集(SteamCMD 版では上書きされません)
 
-ネイティブモードはゲームサーバーのインストール/起動/停止/更新をカバー。検索サイトとスケジューラーには引き続き Docker が必要です。
-**セーブは完全互換** — 後でフル構成に移行する場合はワールドフォルダを `backend/palworld-data/` に移すだけ(詳細は [docs/原生模式.md](docs/原生模式.md))。
+SteamCMD 版はゲームサーバーのインストール/起動/停止/更新をカバー。検索サイトとスケジューラーには引き続き Docker が必要です。
+**セーブは完全互換** — 後でフル構成に移行する場合はワールドフォルダを `backend/palworld-data/` に移すだけ(詳細は [docs/SteamCMD版.md](docs/SteamCMD版.md))。
 
 ### SteamCMD はどこからダウンロード?
 
@@ -177,6 +177,19 @@ Palworld 専用サーバーの App ID は **2394010**:
 ```bash
 steamcmd +force_install_dir <パス> +login anonymous +app_update 2394010 validate +quit
 ```
+
+### Docker 版 と SteamCMD 版 の違い
+
+| | 🐳 **Docker 版**(推奨) | 🧱 **SteamCMD 版** |
+|---|---|---|
+| ゲームサーバー | ✅ | ✅ |
+| プレイヤー検索サイト | ✅ | ❌ |
+| 自動スケジュール / 終了アナウンス | ✅ | ❌ |
+| 必要なもの | Docker Desktop | SteamCMD のみ(スクリプトが自動取得) |
+| 設定の場所 | プロジェクト直下の `.env` | `PalWorldSettings.ini` |
+| セーブの場所 | `backend/palworld-data/` | `windows\native\server\` |
+
+**セーブ形式は同一**なので、いつでも相互に移行できます([docs/SteamCMD版.md](docs/SteamCMD版.md))。
 
 ## 🌐 サイトでできること
 

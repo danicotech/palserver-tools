@@ -128,16 +128,42 @@ export interface RestPlayer {
   playerId?: string;
   level?: number;
   ping?: number;
+  /** 即時世界座標——與存檔同一個座標系，可直接餵給 savToMap */
+  location_x?: number;
+  location_y?: number;
 }
 
-/** 取得目前在線玩家（官方 REST）。回傳玩家名稱陣列（小寫）供比對；失敗回空陣列。 */
-export async function getOnlinePlayers(): Promise<string[]> {
+/** 官方 REST 的在線玩家原始列（含即時座標）；未連線／未開放代理時回空陣列。 */
+export async function getRestPlayers(): Promise<RestPlayer[]> {
   const r = await tryGet<{ players?: RestPlayer[] } | RestPlayer[] | { ok?: boolean; players?: RestPlayer[] }>(
     "/api/rest/players",
   );
   if (!r) return [];
-  const arr: RestPlayer[] = Array.isArray(r) ? r : ((r as { players?: RestPlayer[] }).players ?? []);
-  return arr.map((p) => (p.name ?? "").trim().toLowerCase()).filter(Boolean);
+  return Array.isArray(r) ? r : ((r as { players?: RestPlayer[] }).players ?? []);
+}
+
+export interface LivePosition {
+  x: number;
+  y: number;
+  level?: number;
+  ping?: number;
+}
+
+/** 玩家名（小寫）→ 即時座標。存檔裡的位置是「最後傳送點」且只在存檔寫入時更新，
+ *  所以在線玩家一律以這份即時座標為準。 */
+export function livePositionsOf(players: RestPlayer[]): Map<string, LivePosition> {
+  const m = new Map<string, LivePosition>();
+  for (const p of players) {
+    const name = (p.name ?? "").trim().toLowerCase();
+    if (!name || typeof p.location_x !== "number" || typeof p.location_y !== "number") continue;
+    m.set(name, { x: p.location_x, y: p.location_y, level: p.level, ping: p.ping });
+  }
+  return m;
+}
+
+/** 取得目前在線玩家（官方 REST）。回傳玩家名稱陣列（小寫）供比對；失敗回空陣列。 */
+export async function getOnlinePlayers(): Promise<string[]> {
+  return (await getRestPlayers()).map((p) => (p.name ?? "").trim().toLowerCase()).filter(Boolean);
 }
 
 export function getStatus(): Promise<ServerStatus | null> {

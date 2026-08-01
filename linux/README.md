@@ -50,7 +50,7 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<世界GUID>/Level.sav
 | 其他 Docker 映像 | 該容器掛載目錄下的 `Pal/Saved/SaveGames/0/<世界GUID>` |
 | Windows 專用伺服器 | `PalServer\Pal\Saved\SaveGames\0\<世界GUID>` |
 | **本機共玩存檔(4 人邀請碼)** | Windows 上的 `%LOCALAPPDATA%\Pal\Saved\SaveGames\<SteamID>\<世界GUID>` |
-| 本專案的原生模式 | `linux/native/server/Pal/Saved/SaveGames/0/<世界GUID>` |
+| 本專案的 SteamCMD 版 | `linux/native/server/Pal/Saved/SaveGames/0/<世界GUID>` |
 
 > 資料夾裡要有 `Level.sav` 與 `Players/` 才是對的那一個;玩過的世界通常幾十 MB 起跳
 > (`du -sh <世界GUID>` 看一下最快),只有幾百 KB 的多半是沒玩過的空世界。
@@ -105,10 +105,10 @@ bash linux/start.sh
 完整說明(含存檔結構圖與檢查清單)→
 [Wiki:存檔搬家](https://github.com/daniel840711/palserver-tools/wiki/%E5%AD%98%E6%AA%94%E6%90%AC%E5%AE%B6)
 
-## 沒有 Docker?
+## 沒有 Docker?用 SteamCMD 版
 
-`native/` 資料夾是不需要 Docker 的原生模式(用 SteamCMD 直接跑伺服器),
-詳見 [docs/原生模式.md](../docs/原生模式.md)。
+`linux/native/` 裡是 **SteamCMD 版** —— 不需要 Docker,用 SteamCMD 直接把伺服器裝在本機,
+但**只有遊戲伺服器**,沒有查詢網站與自動排程。詳見 [docs/SteamCMD版.md](../docs/SteamCMD版.md)。
 
 ## 常見狀況
 

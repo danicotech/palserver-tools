@@ -18,11 +18,14 @@ type WhoFilter = "all" | "online" | "offline";
 export function PlayerMap({
   data,
   online,
+  live,
   onPlayerClick,
 }: {
   data: Dataset;
   /** 目前在線的玩家名稱(小寫);用於在線/離線篩選 */
   online: Set<string>;
+  /** 在線玩家的即時座標(官方 REST GET /v1/api/players);沒有就退回存檔位置 */
+  live?: Map<string, { x: number; y: number }>;
   /** 點玩家頭像 → 跳到該玩家(帶入搜尋)。 */
   onPlayerClick?: (p: Player) => void;
 }): JSX.Element | null {
@@ -193,7 +196,11 @@ export function PlayerMap({
 
     const SIZE = 40;
     for (const p of shownPlayers) {
-      const pos = project(p.location.x, p.location.y);
+      // 存檔的 location 是「最後傳送點」,只有存檔寫入時才更新;
+      // 在線玩家改用官方 REST 的即時座標(同一個世界座標系,可直接投影)。
+      const now = live?.get((p.name || "").trim().toLowerCase());
+      const src = now ?? p.location;
+      const pos = project(src.x, src.y);
       if (!pos) continue;
       // 頭像與玩家列表/總覽用同一份規則,幾邊才會長一樣
       const iconUrl = avatarOf(p);
@@ -219,7 +226,9 @@ export function PlayerMap({
         `<div style="font-weight:800">${escapeHtml(p.name || "—")}${on ? ` · ${t("在線")}` : ""}</div>` +
           (guild ? `<div style="color:${ring}">${escapeHtml(guild.name || t("無名公會"))}</div>` : "") +
           `<div>Lv.${p.level} · ${t("{n} 隻帕魯", { n: p.pal_count })}</div>` +
-          `<div>${t("座標")} ${coord(pos)}</div>`,
+          `<div>${t("座標")} ${coord(pos)} <span style="opacity:.75">${
+            now ? t("(即時)") : t("(存檔最後位置)")
+          }</span></div>`,
         () => onPlayerClickRef.current?.(p),
       );
     }
@@ -231,7 +240,7 @@ export function PlayerMap({
         reg.delete(key);
       }
     }
-  }, [shownPlayers, shownGuilds, showBases, guildByUid, world, online, avatarOf]);
+  }, [shownPlayers, shownGuilds, showBases, guildByUid, world, online, avatarOf, live]);
 
   if (!located.length && !data.guilds.length) return null;
 

@@ -1,6 +1,6 @@
-# 🧱 SteamCMD 原生模式(不用 Docker)
+# 🧱 SteamCMD 版(只跑遊戲伺服器,不用 Docker)
 
-沒有 Docker 的電腦也能開遊戲伺服器 —— 用 `native/` 資料夾的腳本。
+沒有(或不想裝)Docker 的電腦也能開遊戲伺服器 —— 用 `windows\native\` / `linux/native/` 的腳本。
 
 > 範圍:遊戲伺服器的 安裝/啟動/停止/更新。查詢網站與自動排程仍需 Docker;
 > 兩邊**存檔完全互通**(見 [[存檔搬家]]),之後可無痛升級整套。
@@ -24,7 +24,7 @@ bash install.sh && bash start.sh     # 停止 bash stop.sh;更新 bash update.sh
 ## 路徑
 
 - 伺服器本體:`windows/native/server/`
-- 設定檔:`windows/native/server/Pal/Saved/Config/WindowsServer(或 LinuxServer)/PalWorldSettings.ini` —— 首次啟動自動建立,**原生模式直接編輯它**,改完重開
+- 設定檔:`windows/native/server/Pal/Saved/Config/WindowsServer(或 LinuxServer)/PalWorldSettings.ini` —— 首次啟動自動建立,**SteamCMD 版直接編輯它**,改完重開
 - 存檔:`windows/native/server/Pal/Saved/SaveGames/0/<GUID>/`
 
 ## 常見問題

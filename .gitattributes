@@ -1,0 +1,13 @@
+# Windows 批次檔/PowerShell 一定要 CRLF ——
+# cmd.exe 解析多行 if(...) 區塊時,遇到 LF-only 會把區塊拆爛,
+# 症狀是「'cmd.zip' 不是內部或外部命令」、多出名為 ( 的資料夾、
+# 甚至跑到別的磁碟建資料夾。這條規則保證 clone/checkout 出來就是 CRLF。
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# shell 腳本反過來:一定要 LF,否則 bash 會報 $'\r': command not found
+*.sh text eol=lf
+
+# 其餘文字檔交給 git 自動處理
+* text=auto

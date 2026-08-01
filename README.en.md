@@ -54,7 +54,7 @@ docker compose version
 
 > **Common on Windows**: if `start.bat` says Docker isn't found, Docker Desktop is not running (or still
 > starting) — wait until the tray whale stops animating and run it again. A first install may ask you to
-> enable WSL 2 and reboot. If you'd rather not install Docker, see [native mode](docs/原生模式.md)
+> enable WSL 2 and reboot. If you'd rather not install Docker, see [SteamCMD edition](docs/SteamCMD版.md)
 > (SteamCMD only, no web panel).
 
 ## 🕹️ Day-to-day operation (just double-click)
@@ -150,16 +150,17 @@ node scripts/fetch-pal-meta.mjs           # elements / paldex no. / rarity
 pnpm build && cd .. && docker compose up -d --no-deps --build panel
 ```
 
-## 🧱 No Docker? SteamCMD native mode
+## 🧱 No Docker? Use the SteamCMD edition
 
-Machines that can't run Docker can still host the game server with the scripts in [`windows/native/`](windows/native):
+Machines that can't (or don't want to) run Docker can still host the game server with the scripts in
+[`windows/native/`](windows/native). This is called the **SteamCMD edition** (formerly "native mode"):
 
-1. Double-click `native\windows\install.bat` (auto-downloads SteamCMD + the server)
+1. Double-click `windows\native\install.bat` (auto-downloads SteamCMD + the server)
 2. Double-click `windows\native\start.bat` (Linux: `bash linux/native/install.sh` then `bash linux/start.sh`)
-3. Edit settings in `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini` (never overwritten in native mode)
+3. Edit settings in `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini` (never overwritten in the SteamCMD edition)
 
-Native mode covers install/start/stop/update of the game server; the lookup website and the scheduler still require Docker.
-**Saves are fully interchangeable** - to upgrade later, move your world folder into `backend/palworld-data/` (see [docs/原生模式.md](docs/原生模式.md)).
+The SteamCMD edition only covers install/start/stop/update of the game server; the lookup website and the scheduler still require the Docker edition.
+**Saves are fully interchangeable** - to upgrade later, move your world folder into `backend/palworld-data/` (see [docs/SteamCMD版.md](docs/SteamCMD版.md)).
 
 ### Where to download SteamCMD
 
@@ -177,6 +178,19 @@ The Palworld dedicated server App ID is **2394010**:
 ```bash
 steamcmd +force_install_dir <path> +login anonymous +app_update 2394010 validate +quit
 ```
+
+### Docker edition vs SteamCMD edition
+
+| | 🐳 **Docker edition** (recommended) | 🧱 **SteamCMD edition** |
+|---|---|---|
+| Game server | ✅ | ✅ |
+| Player lookup website | ✅ | ❌ |
+| Auto schedule / shutdown broadcasts | ✅ | ❌ |
+| Requires | Docker Desktop | SteamCMD only (scripts fetch it) |
+| Where settings live | `.env` in the project root | `PalWorldSettings.ini` |
+| Save location | `backend/palworld-data/` | `windows\native\server\` |
+
+**Save formats are identical** — you can move between them any time (see [docs/SteamCMD版.md](docs/SteamCMD版.md)).
 
 ## 🌐 What the site gives you
 

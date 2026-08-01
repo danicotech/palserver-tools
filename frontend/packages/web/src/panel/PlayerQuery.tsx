@@ -4,7 +4,7 @@ import type { JSX } from "react";
 import type { Pal, Player } from "./types";
 import type { Dataset } from "./data";
 import { paldexId } from "./paldex";
-import { getOnlinePlayers } from "./api";
+import { getRestPlayers, livePositionsOf, type LivePosition } from "./api";
 import { PlayerCard } from "./PlayerCard";
 import { PlayerMap } from "./PlayerMap";
 import { t } from "../i18n";
@@ -34,14 +34,20 @@ export function PlayerQuery({
   const [onlineFirst, setOnlineFirst] = useState(true);
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [online, setOnline] = useState<Set<string>>(new Set());
+  /** 在線玩家的即時座標(官方 REST);存檔裡的位置只是最後傳送點 */
+  const [live, setLive] = useState<Map<string, LivePosition>>(new Map());
 
   useEffect(() => {
     let alive = true;
-    getOnlinePlayers().then((names) => alive && setOnline(new Set(names)));
+    getRestPlayers().then((rows) => {
+      if (!alive) return;
+      setOnline(new Set(rows.map((r) => (r.name ?? "").trim().toLowerCase()).filter(Boolean)));
+      setLive(livePositionsOf(rows));
+    });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [data]);
 
   const dexByPlayer = useMemo(() => {
     const m = new Map<string, Set<string>>();
@@ -118,7 +124,7 @@ export function PlayerQuery({
         )}
       </div>
       {/* 地圖放在搜尋/篩選之後;點頭像帶入搜尋跳到該玩家 */}
-      <PlayerMap data={data} online={online} onPlayerClick={(p) => setQ(p.name)} />
+      <PlayerMap data={data} online={online} live={live} onPlayerClick={(p) => setQ(p.name)} />
       <div className="mt-4 space-y-6">
         {matched.map((p) => (
           <PlayerCard

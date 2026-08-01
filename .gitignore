@@ -32,7 +32,10 @@ backend/pal.exe
 palserver.exe
 palserver
 
-# native 模式的伺服器本體與 SteamCMD(數 GB,使用者自行安裝)
-native/server/
-native/windows/steamcmd/
-native/linux/steamcmd/
+# SteamCMD 版的伺服器本體與 SteamCMD(數 GB,由 install 腳本自行下載)
+# 路徑是 windows/native 與 linux/native —— 舊版寫成 native/windows 是相反的,
+# 導致跑過 install.bat 後 steamcmd 整包被 git 追蹤。
+windows/native/server/
+windows/native/steamcmd/
+linux/native/server/
+linux/native/steamcmd/

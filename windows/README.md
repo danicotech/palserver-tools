@@ -47,7 +47,7 @@ backend\palworld-data\Pal\Saved\SaveGames\0\<世界GUID>\Level.sav
 | 其他 Windows 專用伺服器 | `PalServer\Pal\Saved\SaveGames\0\<世界GUID>` |
 | 其他 Linux / Docker 伺服器 | 掛載目錄底下的同一層 |
 | **本機共玩存檔(4 人邀請碼)** | `%LOCALAPPDATA%\Pal\Saved\SaveGames\<SteamID>\<世界GUID>` |
-| 本專案的原生模式 | `windows\native\server\Pal\Saved\SaveGames\0\<世界GUID>` |
+| 本專案的 SteamCMD 版 | `windows\native\server\Pal\Saved\SaveGames\0\<世界GUID>` |
 
 > 在檔案總管網址列直接貼 `%LOCALAPPDATA%\Pal\Saved\SaveGames` 就會跳到共玩存檔。
 > 資料夾裡要有 `Level.sav` 與 `Players\` 才是對的那一個;玩過的世界通常幾十 MB 起跳,
@@ -98,10 +98,10 @@ windows\start.bat
 完整說明(含存檔結構圖與檢查清單)→
 [Wiki:存檔搬家](https://github.com/daniel840711/palserver-tools/wiki/%E5%AD%98%E6%AA%94%E6%90%AC%E5%AE%B6)
 
-## 沒有 Docker?
+## 沒有 Docker?用 SteamCMD 版
 
-`native\` 資料夾是不需要 Docker 的原生模式(用 SteamCMD 直接跑伺服器),
-詳見 [docs/原生模式.md](../docs/原生模式.md)。
+`windows\native\` 裡是 **SteamCMD 版** —— 不需要 Docker,用 SteamCMD 直接把伺服器裝在本機,
+但**只有遊戲伺服器**,沒有查詢網站與自動排程。詳見 [docs/SteamCMD版.md](../docs/SteamCMD版.md)。
 
 ## 常見狀況
 

@@ -54,7 +54,7 @@ docker compose version
 
 > **Windows 常见情况**:`start.bat` 说「找不到 Docker」= Docker Desktop 没开或还在启动中,
 > 等任务栏鲸鱼图标不再转动再重跑一次。首次安装可能会要求开启 WSL 2 并重启。
-> 不想装 Docker 的话,可以改用 [原生模式](docs/原生模式.md)(SteamCMD 直接跑,没有查询网站)。
+> 不想装 Docker 的话,可以改用 [SteamCMD 版](docs/SteamCMD版.md)(SteamCMD 直接跑,没有查询网站)。
 
 ## 🕹️ 日常操作(双击即可)
 
@@ -149,16 +149,16 @@ node scripts/fetch-pal-meta.mjs           # 属性/图鉴编号/稀有度
 pnpm build && cd .. && docker compose up -d --no-deps --build panel
 ```
 
-## 🧱 没有 Docker?SteamCMD 原生模式
+## 🧱 没有 Docker?改用 SteamCMD 版
 
 不能装 Docker 的电脑,也能用 [`windows/native/`](windows/native) 文件夹的脚本直接开游戏服务器:
 
-1. 双击 `native\windows\install.bat`(自动下载 SteamCMD + 服务器本体)
+1. 双击 `windows\native\install.bat`(自动下载 SteamCMD + 服务器本体)
 2. 双击 `windows\native\start.bat` 启动(Linux:`bash linux/native/install.sh` → `bash linux/start.sh`)
-3. 设置改 `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini`(原生模式不会被覆写)
+3. 设置改 `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini`(SteamCMD 版不会被覆写)
 
-原生模式涵盖游戏服务器的安装/启动/停止/更新;查询网站与自动排程仍需 Docker。
-**两边存档完全互通**,之后想升级整套,把世界文件夹搬到 `backend/palworld-data/` 即可(详见 [docs/原生模式.md](docs/原生模式.md))。
+SteamCMD 版涵盖游戏服务器的安装/启动/停止/更新;查询网站与自动排程仍需 Docker。
+**两边存档完全互通**,之后想升级整套,把世界文件夹搬到 `backend/palworld-data/` 即可(详见 [docs/SteamCMD版.md](docs/SteamCMD版.md))。
 
 ### SteamCMD 要去哪下载?
 
@@ -175,6 +175,19 @@ Palworld 专用服务器的 App ID 是 **2394010**,手动安装命令:
 ```bash
 steamcmd +force_install_dir <安装路径> +login anonymous +app_update 2394010 validate +quit
 ```
+
+### Docker 版 vs SteamCMD 版
+
+| | 🐳 **Docker 版**(推荐) | 🧱 **SteamCMD 版** |
+|---|---|---|
+| 游戏服务器 | ✅ | ✅ |
+| 玩家查询网站 | ✅ | ❌ |
+| 自动排程开关服 / 关服广播 | ✅ | ❌ |
+| 需要安装 | Docker Desktop | 只要 SteamCMD(脚本自动抓) |
+| 服务器设置改哪里 | 项目根目录 `.env` | `PalWorldSettings.ini` |
+| 存档位置 | `backend/palworld-data/` | `windows\native\server\` |
+
+**存档格式完全相同**,两边随时能互搬(见 [docs/SteamCMD版.md](docs/SteamCMD版.md))。
 
 ## 🌐 查询网站有什么
 
