@@ -37,7 +37,7 @@ echo     Docker 引擎已就緒。
 
 :setup
 echo [2/3] 檢查設定檔(第一次會自動產生密碼)...
-powershell -NoProfile -ExecutionPolicy Bypass -File "windows\setup.ps1"
+call "windows\setup.bat"
 if errorlevel 1 goto :setupfail
 
 echo [3/3] 啟動所有服務(第一次要下載映像,可能需要幾分鐘)...

@@ -13,7 +13,11 @@ rem 而且完全不動你現在的環境(只是讀取,不刪任何東西)。
 where git >nul 2>nul
 if errorlevel 1 goto :nogit
 
-for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmm"') do set "STAMP=%%i"
+rem 日期格式因地區而異,取數字部分即可(只是檔名)
+set "STAMP=%DATE:~-10%_%TIME:~0,5%"
+set "STAMP=%STAMP:/=%"
+set "STAMP=%STAMP::=%"
+set "STAMP=%STAMP: =0%"
 set "OUT=%USERPROFILE%\Desktop\palserver-tools-%STAMP%.zip"
 
 echo 正在打包(只含版控中的檔案,不含任何存檔/密碼)...

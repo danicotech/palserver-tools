@@ -64,7 +64,12 @@ popd
 if not exist "backend\palscheduler.exe" goto :gofail
 :hasbin
 
+rem 沒有設定檔就自己產生(不要叫使用者去手動跑指令)
+if exist "backend\config.json" goto :hascfg
+echo     第一次啟動,產生設定檔與隨機密碼...
+call "%CD%\windows\setup.bat"
 if not exist "backend\config.json" goto :noconfig
+:hascfg
 if not exist "backend\data" mkdir "backend\data"
 
 echo [5/5] 啟動存檔解析與排程器...
@@ -88,7 +93,7 @@ goto :health
 echo.
 echo 完成!(遊戲伺服器由排程器依時段表自動開關)
 rem 埠與密碼都在 PalWorldSettings.ini 裡,直接讀出來給使用者看,不用自己去翻
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0show-info.ps1" -ServerDir "%SERVER_DIR%" -PanelPort 9000
+call "%~dp0show-info.bat" "%SERVER_DIR%" 9000
 echo 要全部關掉:雙擊 windows\native\stop-all.bat
 start http://localhost:9000
 pause
@@ -147,7 +152,6 @@ pause
 exit /b 1
 
 :noconfig
-echo [X] 找不到 backend\config.json。先跑一次 windows\setup.ps1 產生設定:
-echo     powershell -ExecutionPolicy Bypass -File windows\setup.ps1
+echo [X] 產生 backend\config.json 失敗。手動執行 windows\setup.bat 後再試。
 pause
 exit /b 1

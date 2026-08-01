@@ -28,7 +28,9 @@ if exist "%NATIVE%\steamcmd\steamcmd.exe" goto :hassteamcmd
 if exist "%NATIVE%\steamcmd.zip" del /f /q "%NATIVE%\steamcmd.zip"
 curl -L --fail -o "%NATIVE%\steamcmd.zip" "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
 if errorlevel 1 goto :dlfail
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Force -LiteralPath '%NATIVE%\steamcmd.zip' -DestinationPath '%NATIVE%\steamcmd'"
+if not exist "%NATIVE%\steamcmd" mkdir "%NATIVE%\steamcmd"
+rem tar 是 Windows 10 1803 之後內建的,不需要 PowerShell
+tar -xf "%NATIVE%\steamcmd.zip" -C "%NATIVE%\steamcmd"
 if errorlevel 1 goto :unzipfail
 del /f /q "%NATIVE%\steamcmd.zip"
 if not exist "%NATIVE%\steamcmd\steamcmd.exe" goto :unzipfail
@@ -140,7 +142,7 @@ echo       完成
 rem ---------- 7. 設定檔 ----------
 echo [7/7] 設定檔(第一次會產生隨機密碼)...
 if exist "%ROOT%\backend\config.json" goto :hasconfig
-powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%\windows\setup.ps1"
+call "%ROOT%\windows\setup.bat"
 if errorlevel 1 goto :setupfail
 :hasconfig
 if not exist "%ROOT%\backend\data" mkdir "%ROOT%\backend\data"
@@ -232,6 +234,6 @@ exit /b 1
 
 :setupfail
 echo [X] 設定檔產生失敗。手動執行:
-echo       powershell -ExecutionPolicy Bypass -File windows\setup.ps1
+echo       windows\setup.bat
 pause
 exit /b 1

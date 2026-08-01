@@ -8,7 +8,7 @@
 | `restart.bat` | 重新啟動全部服務(改完設定用這個) |
 | `stop.bat` | 停止全部服務(存檔會保留) |
 | `status.bat` | 查看目前狀態與連線資訊 |
-| `setup.ps1` | 產生 `.env` 與 `backend/config.json`(由 `start.bat` 自動呼叫,通常不用自己執行) |
+| `setup.bat` | 產生 `.env` 與 `backend/config.json`(由 `start.bat` 自動呼叫,通常不用自己執行) |
 
 啟動後:
 
