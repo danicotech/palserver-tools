@@ -48,6 +48,10 @@ if [ ! -f "$PANEL_DIR/index.html" ]; then
     echo "      corepack enable && cd frontend && pnpm install && pnpm build"
     exit 1
   }
+  export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+  export COREPACK_ENABLE_STRICT=0
+  # 關鍵:pnpm 會照 packageManager 自我切換版本,下載不到就整個失敗
+  export npm_config_manage_package_manager_versions=false
   echo "    第一次要先建置網站(需要幾分鐘)..."
   (cd frontend && pnpm install --no-frozen-lockfile && pnpm build)
 fi

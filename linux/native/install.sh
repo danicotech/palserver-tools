@@ -85,7 +85,18 @@ echo "      完成"
 echo "[4/7] Node.js(建置查詢網站)..."
 command -v node >/dev/null || sysinstall nodejs nodejs nodejs
 command -v npm >/dev/null || sysinstall npm npm npm
-command -v pnpm >/dev/null || corepack enable 2>/dev/null || sudo npm i -g pnpm
+# corepack 會照 package.json 的 packageManager 抓指定版本的 pnpm;抓不到就退回全域安裝。
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+export COREPACK_ENABLE_STRICT=0
+# 關鍵:pnpm 會照 packageManager 自我切換版本,下載不到就整個失敗
+export npm_config_manage_package_manager_versions=false
+corepack enable 2>/dev/null || true
+(cd frontend && corepack prepare --activate >/dev/null 2>&1) || true
+pnpm --version >/dev/null 2>&1 || {
+  echo "      corepack 取不到指定版本的 pnpm,改用 npm 全域安裝..."
+  sudo npm i -g pnpm || npm i -g pnpm
+}
+pnpm --version >/dev/null 2>&1 || { echo "[X] 裝不起 pnpm,請手動 npm i -g pnpm 後重跑"; exit 1; }
 echo "      完成"
 
 echo "[5/7] Go(編譯排程器)..."

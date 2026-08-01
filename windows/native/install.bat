@@ -90,7 +90,25 @@ echo [4/7] Node.js(建置查詢網站)...
 call :ensure node "OpenJS.NodeJS.LTS" "%ProgramFiles%\nodejs"
 where node >nul 2>nul
 if errorlevel 1 goto :needrerun
+rem corepack 會照 package.json 的 packageManager 去抓指定版本的 pnpm,
+rem 抓失敗就會出現「Failed to switch pnpm to vX」。關掉互動提示與嚴格檢查,
+rem 真的抓不到就退回全域安裝的 pnpm(版本不同也能建置)。
+set "COREPACK_ENABLE_DOWNLOAD_PROMPT=0"
+set "COREPACK_ENABLE_STRICT=0"
+rem 這一行才是關鍵:pnpm 會照 package.json 的 packageManager 自我切換版本,
+rem 下載不到就報「Failed to switch pnpm to vX」。關掉它,用現有的 pnpm 建置即可。
+set "npm_config_manage_package_manager_versions=false"
 call corepack enable >nul 2>nul
+pushd "%ROOT%\frontend"
+call corepack prepare --activate >nul 2>nul
+popd
+call pnpm --version >nul 2>nul
+if not errorlevel 1 goto :haspnpm
+echo       corepack 取不到指定版本的 pnpm,改用 npm 全域安裝...
+call npm install -g pnpm >nul 2>nul
+call pnpm --version >nul 2>nul
+if errorlevel 1 goto :pnpmfail
+:haspnpm
 echo       完成
 
 rem ---------- 5. Go(編譯排程器) ----------
@@ -198,8 +216,17 @@ echo       python -m pip install -r backend\tools\palsave\requirements.txt
 pause
 exit /b 1
 
+:pnpmfail
+echo [X] 裝不起 pnpm(建置查詢網站需要它)。手動執行後重跑本檔:
+echo       npm install -g pnpm
+pause
+exit /b 1
+
 :buildfail
-echo [X] 建置失敗,請截圖上方訊息求助。
+echo [X] 建置失敗。若訊息是「Failed to switch pnpm to vX」,執行下面兩行再重跑本檔:
+echo       npm install -g pnpm
+echo       set COREPACK_ENABLE_STRICT=0
+echo     其他錯誤請截圖上方訊息求助。
 pause
 exit /b 1
 

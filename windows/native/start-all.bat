@@ -41,6 +41,11 @@ if exist "%PANEL_DIR%\index.html" goto :hasdist
 where pnpm >nul 2>nul
 if errorlevel 1 goto :nodist
 echo     第一次要先建置網站(需要幾分鐘)...
+set "COREPACK_ENABLE_DOWNLOAD_PROMPT=0"
+set "COREPACK_ENABLE_STRICT=0"
+rem 這一行才是關鍵:pnpm 會照 package.json 的 packageManager 自我切換版本,
+rem 下載不到就報「Failed to switch pnpm to vX」。關掉它,用現有的 pnpm 建置即可。
+set "npm_config_manage_package_manager_versions=false"
 pushd frontend
 call pnpm install --no-frozen-lockfile
 call pnpm build
