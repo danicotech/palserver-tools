@@ -542,6 +542,7 @@ function OwnerPanel({
   need,
   desired,
   enabled,
+  scopeOwner,
   details,
   chosen,
   onChoose,
@@ -555,6 +556,8 @@ function OwnerPanel({
   desired: string[];
   /** 玩家視角有沒有開(關掉就不列持有者) */
   enabled: boolean;
+  /** 視角鎖定在某位玩家時的名字;全服視角為 undefined —— 只影響「沒有人有」的措辭 */
+  scopeOwner?: string;
   /** 同一物種、視角範圍內的全部個體 */
   details: OwnedPalRow[];
   /** 這一格目前指定的那一隻(有的話) */
@@ -589,10 +592,16 @@ function OwnerPanel({
           {enabled && (
             <span className="ml-1 text-ink-muted">
               {owners.length
-                ? t("{n} 人共 {total} 隻", { n: owners.length, total })
+                ? scopeOwner
+                  ? t("{total} 隻", { total })
+                  : t("{n} 人共 {total} 隻", { n: owners.length, total })
                 : needNames.length > 0
-                  ? t("沒有人有帶得動的這隻")
-                  : t("全服沒有人有")}
+                  ? scopeOwner
+                    ? t("{name} 沒有帶得動的這隻", { name: scopeOwner })
+                    : t("沒有人有帶得動的這隻")
+                  : scopeOwner
+                    ? t("{name} 沒有這隻", { name: scopeOwner })
+                    : t("全服沒有人有")}
             </span>
           )}
           {needNames.length > 0 && (
@@ -1329,6 +1338,7 @@ function HybridPathView({
   ownedPool,
   ownersOf,
   detailsOf,
+  scopeOwner,
 }: {
   path: HybridPath;
   metaOf: (id: string) => PalMeta | undefined;
@@ -1351,6 +1361,8 @@ function HybridPathView({
   ownersOf: (id: string) => { name: string; n: number }[] | null;
   /** 物種 → 個體明細(點持有者彈窗用) */
   detailsOf: (id: string) => OwnedPalRow[];
+  /** 玩家視角鎖定的玩家名(全服視角為 undefined) */
+  scopeOwner?: string;
 }) {
   const has = (id: string) => (ownedSet ? ownedSet.has(id.toLowerCase()) : undefined);
   /** 使用者為某一步挑的夥伴(換路線時重置)。 */
@@ -1432,13 +1444,14 @@ function HybridPathView({
         >
           {got.length}/{desired.length}
         </span>
+        {/* 已到手的綠標籤,還沒帶到的灰標籤 —— 原本的刪除線沒底色,看起來像散字很吵 */}
         {desired.map((x, i) => {
           const has = (mask & (1 << i)) !== 0;
           return (
             <span
               key={x}
               className={`shrink-0 rounded px-1 py-px font-semibold ${
-                has ? "bg-grass/12 text-grass" : "text-ink-muted/70 line-through"
+                has ? "bg-grass/12 text-grass" : "bg-ink-muted/10 text-ink-muted/60"
               }`}
               title={has ? t("這一代已經帶著") : t("還沒帶到,後面要補")}
             >
@@ -1719,6 +1732,7 @@ function HybridPathView({
                       need={open.need}
                       desired={desired}
                       enabled={ownersOf(open.id) !== null}
+                      scopeOwner={scopeOwner}
                       details={detailsOf(open.id)}
                       chosen={chosenPal[open.key]}
                       onChoose={
@@ -1993,6 +2007,12 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
 
   /** 純直系梯度上哪一格正在看持有者(key = `${代}:${a|b}`) */
   const [pathOwner, setPathOwner] = useState<string | null>(null);
+
+  /** 視角鎖定某位玩家時的名字(全服/全物種為 undefined)—— 用來讓「沒有人有」講對話。 */
+  const scopeOwnerName = useMemo(
+    () => (persp === "all" || persp === "any" || persp === "off" ? undefined : dataset?.players.find((p) => p.uid === persp)?.name),
+    [dataset, persp],
+  );
 
   /** 物種 → 這個視角下的個體(含主人)。持有者統計與明細都從這份推導,數字一定對得上。 */
   const palsBySpecies = useMemo<Map<string, OwnedPalRow[]> | null>(() => {
@@ -3261,6 +3281,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 ownedPool={ownedForTraits}
                 ownersOf={(id) => ownersBySpecies?.get(id.toLowerCase()) ?? (ownersBySpecies ? [] : null)}
                 detailsOf={(id) => palsBySpecies?.get(id.toLowerCase()) ?? []}
+                scopeOwner={scopeOwnerName}
               />
             ) : desired.length > 0 ? (
               <Card className="text-center">
@@ -3461,6 +3482,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                     need={0}
                                     desired={desired}
                                     enabled={palsBySpecies !== null}
+                                    scopeOwner={scopeOwnerName}
                                     details={palsBySpecies?.get(open.id.toLowerCase()) ?? []}
                                     style={rowStyle}
                                     onClose={() => setPathOwner(null)}
