@@ -613,3 +613,37 @@ body {
   opacity: 0.5;
   filter: grayscale(0.6);
 }
+
+/* 玩家/據點標記原地更新時平滑滑動(不是整批清空重畫,所以看起來像在地圖上走)。
+   Leaflet 平移/縮放時移動的是整個 pane,不會逐一改 marker transform,故不影響操作手感。 */
+.leaflet-marker-icon.pmap-avatar-wrap,
+.leaflet-marker-icon.pmap-base-wrap {
+  transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.leaflet-zoom-anim .leaflet-marker-icon.pmap-avatar-wrap,
+.leaflet-zoom-anim .leaflet-marker-icon.pmap-base-wrap {
+  transition: none; /* 縮放動畫期間不要再疊一層過渡,否則會飄 */
+}
+
+/* 首次載入的骨架屏:用與卡片相同的圓角與底色,只加一道掃光 */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-card-soft);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.18), transparent);
+  animation: skeleton-sweep 1.4s infinite;
+}
+@keyframes skeleton-sweep {
+  100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .leaflet-marker-icon.pmap-avatar-wrap,
+  .leaflet-marker-icon.pmap-base-wrap { transition: none; }
+  .skeleton::after { animation: none; }
+}

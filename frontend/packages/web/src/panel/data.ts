@@ -1,5 +1,5 @@
 // 共用資料層：抓一次全服帕魯資料並快取，提供聚合/查詢工具。
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Pal, Player, Guild, PalsResponse } from "./types";
 import { getAllPals } from "./api";
 import { loadPaldex, palInfo, isExcludedSpecies } from "./paldex";
@@ -134,7 +134,10 @@ export function loadDataset(force = false): Promise<Dataset> {
 
 export interface DatasetState {
   data: Dataset | null;
+  /** 首次載入(畫面上還沒有任何資料可顯示) */
   loading: boolean;
+  /** 背景更新中:舊資料仍在畫面上,只是正在抓新的 */
+  refreshing: boolean;
   error: string | null;
   reload: () => void;
 }
@@ -142,28 +145,41 @@ export interface DatasetState {
 /** React hook：載入全服資料集（共用快取）。 */
 export function useDataset(): DatasetState {
   const [data, setData] = useState<Dataset | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
+  // 用 ref 讀「目前有沒有資料」,才不會讓 effect 依賴 data 而重跑
+  const hasDataRef = useRef(false);
+  hasDataRef.current = data !== null;
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
-    setError(null);
+    setBusy(true);
+    // 背景更新時保留舊錯誤狀態不清除畫面;只有首次載入才重置
+    if (!hasDataRef.current) setError(null);
     loadDataset(nonce > 0)
       .then((d) => {
-        if (alive) setData(d);
+        if (!alive) return;
+        setData(d);
+        setError(null);
       })
       .catch((e) => {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
+        // 已經有資料就不要把畫面換成錯誤頁,維持舊資料即可
+        if (alive && !hasDataRef.current) setError(e instanceof Error ? e.message : String(e));
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setBusy(false);
       });
     return () => {
       alive = false;
     };
   }, [nonce]);
 
-  return { data, loading, error, reload: () => setNonce((n) => n + 1) };
+  return {
+    data,
+    loading: busy && data === null,
+    refreshing: busy && data !== null,
+    error,
+    reload: () => setNonce((n) => n + 1),
+  };
 }

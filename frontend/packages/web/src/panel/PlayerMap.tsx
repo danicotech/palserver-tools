@@ -36,6 +36,8 @@ export function PlayerMap({
   const mapRef = useRef<L.Map | null>(null);
   const boundsRef = useRef<L.LatLngBounds>(IMAGE_BOUNDS);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  /** key → marker,用於原地更新而不是清空重畫 */
+  const markerRegRef = useRef<Map<string, L.Marker>>(new Map());
   const onPlayerClickRef = useRef(onPlayerClick);
   onPlayerClickRef.current = onPlayerClick;
 
@@ -122,11 +124,39 @@ export function PlayerMap({
     };
   }, [world]);
 
-  // 標記:據點在下、玩家在上
+  // 換世界時整批重來:兩個世界的座標系不同,沿用舊 marker 會滑到錯的位置
+  useEffect(() => {
+    markersRef.current?.clearLayers();
+    markerRegRef.current.clear();
+  }, [world]);
+
+  // 標記:據點在下、玩家在上。
+  // 重點:更新時「不清空重畫」,而是沿用既有 marker 用 setLatLng 移動,
+  // 配合 CSS transition 就會看起來像玩家在地圖上走動,而不是整張圖閃一下。
   useEffect(() => {
     const group = markersRef.current;
     if (!group) return;
-    group.clearLayers();
+    const alive = new Set<string>();
+    const reg = markerRegRef.current;
+    /** 取得(或建立)某個 key 的 marker */
+    const upsert = (key: string, latlng: L.LatLngExpression, icon: L.DivIcon, tip: string, onClick?: () => void) => {
+      alive.add(key);
+      const existing = reg.get(key);
+      if (existing) {
+        existing.setLatLng(latlng);
+        existing.setIcon(icon);
+        existing.setTooltipContent(tip);
+        return existing;
+      }
+      const m = L.marker(latlng, { icon, riseOnHover: true }).bindTooltip(tip, {
+        direction: "top",
+        className: "pmap-detail",
+      });
+      if (onClick) m.on("click", onClick);
+      m.addTo(group);
+      reg.set(key, m);
+      return m;
+    };
     const project = (sx: number, sy: number): { x: number; y: number } | null => {
       if (isWorldTreeCoord(sx) !== (world === "tree")) return null;
       return world === "tree" ? savToWorldTreeMap(sx, sy) : savToMap(sx, sy);
@@ -147,14 +177,14 @@ export function PlayerMap({
             tooltipAnchor: [0, -16],
             html: `<span class="pmap-base" style="border-color:${color}"><img src="/game-data/landmark-icons/palbox.webp" alt="" /></span>`,
           });
-          L.marker([pos.y, pos.x], { icon })
-            .bindTooltip(
-              `<div style="font-weight:800">${escapeHtml(g.name || t("無名公會"))} · ${t("據點")} ${i + 1}/${g.bases.length}</div>` +
-                `<div>Lv.${g.level} · ${t("{n} 名成員", { n: g.member_uids.length })}</div>` +
-                `<div>${t("座標")} ${coord(pos)}</div>`,
-              { direction: "top", className: "pmap-detail" },
-            )
-            .addTo(group);
+          upsert(
+            `base:${g.id}:${i}`,
+            [pos.y, pos.x],
+            icon,
+            `<div style="font-weight:800">${escapeHtml(g.name || t("無名公會"))} · ${t("據點")} ${i + 1}/${g.bases.length}</div>` +
+              `<div>Lv.${g.level} · ${t("{n} 名成員", { n: g.member_uids.length })}</div>` +
+              `<div>${t("座標")} ${coord(pos)}</div>`,
+          );
         });
       }
     }
@@ -180,16 +210,24 @@ export function PlayerMap({
             : `<b style="font-size:16px">${escapeHtml(playerInitial(p))}</b>`) +
           `</span>`,
       });
-      const marker = L.marker([pos.y, pos.x], { icon, riseOnHover: true });
-      marker.bindTooltip(
+      upsert(
+        `player:${p.uid}`,
+        [pos.y, pos.x],
+        icon,
         `<div style="font-weight:800">${escapeHtml(p.name || "—")}${on ? ` · ${t("在線")}` : ""}</div>` +
           (guild ? `<div style="color:${ring}">${escapeHtml(guild.name || t("無名公會"))}</div>` : "") +
           `<div>Lv.${p.level} · ${t("{n} 隻帕魯", { n: p.pal_count })}</div>` +
           `<div>${t("座標")} ${coord(pos)}</div>`,
-        { direction: "top", className: "pmap-detail" },
+        () => onPlayerClickRef.current?.(p),
       );
-      marker.on("click", () => onPlayerClickRef.current?.(p));
-      marker.addTo(group);
+    }
+
+    // 這輪沒出現的(被篩掉、換世界、離開)才移除
+    for (const [key, m] of reg) {
+      if (!alive.has(key)) {
+        group.removeLayer(m);
+        reg.delete(key);
+      }
     }
   }, [shownPlayers, shownGuilds, showBases, guildByUid, world, online]);
 

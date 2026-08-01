@@ -7,6 +7,7 @@ import { useThemeMode, useSystemDark, isDarkNow, setThemeMode } from "./theme";
 import { PalDetailModal } from "./PalDetailModal";
 import { Dashboard } from "./Dashboard";
 import { RefreshControl } from "./RefreshControl";
+import { ContentSkeleton } from "./Skeleton";
 import { PlayerQuery } from "./PlayerQuery";
 import { SpeciesQuery } from "./SpeciesQuery";
 import { TraitQuery } from "./TraitQuery";
@@ -71,7 +72,7 @@ export function PanelApp(): JSX.Element {
     setSelectedPal(null);
     setTab("player");
   };
-  const { data, loading, error, reload } = useDataset();
+  const { data, loading, refreshing, error, reload } = useDataset();
 
   // 漢堡選單開啟時鎖背景捲動、ESC 關閉。
   useEffect(() => {
@@ -107,7 +108,7 @@ export function PanelApp(): JSX.Element {
           <div className="flex items-center gap-2">
             <HeaderAvatar players={data?.players ?? []} />
             <LangSelect />
-            <RefreshControl loading={loading} onReload={reload} />
+            <RefreshControl loading={loading || refreshing} onReload={reload} />
             <ThemeToggle />
           </div>
         </header>
@@ -183,7 +184,7 @@ export function PanelApp(): JSX.Element {
 
         {/* 內容(「配種表」查靜態配方資料,不依賴存檔資料集,載入中/失敗都照常顯示) */}
         {tab === "breeding" && <BreedingQuery dataset={data} />}
-        {tab !== "breeding" && loading && <Placeholder text={t("載入存檔資料中")} />}
+        {tab !== "breeding" && loading && <ContentSkeleton />}
         {tab !== "breeding" && error && (
           <div className="rounded-cute bg-berry/15 px-4 py-3 text-berry ring-1 ring-berry/30">
             {error}
@@ -192,7 +193,7 @@ export function PanelApp(): JSX.Element {
             </button>
           </div>
         )}
-        {!loading && !error && data && (
+        {!error && data && (
           <>
             {tab === "dashboard" && <Dashboard data={data} onPalClick={openPal} onOwnerPlayerClick={jumpToPlayer} />}
             {tab === "player" && (
@@ -235,13 +236,6 @@ export function PanelApp(): JSX.Element {
   );
 }
 
-function Placeholder({ text }: { text: string }): JSX.Element {
-  return (
-    <div className="rounded-cute bg-card px-6 py-16 text-center text-ink-muted shadow-cute ring-1 ring-line">
-      <LoadingWave text={text} />
-    </div>
-  );
-}
 
 /** 載入文字特效:逐字波浪起伏 + 尾巴三點一個個浮現,循環播放(尊重減少動態偏好)。 */
 function LoadingWave({ text }: { text: string }): JSX.Element {
