@@ -46,6 +46,7 @@ import {
   type HybridPath,
   type MutationReach,
   type PathMode,
+  type PathStrategy,
   type StartCandidate,
   type StepOption,
 } from "../hybridPath";
@@ -1435,6 +1436,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const [farm, setFarm] = useState<FarmKind>("normal");
   /** 據點內有滿星梁葉龍或寶寶保母(兩者不可疊加) */
   const [eggBoost, setEggBoost] = useState(false);
+  /** 挑路線的偏好:代數最少 vs 期望蛋數最少(成功率最高) */
+  const [strategy, setStrategy] = useState<PathStrategy>("short");
   const [mutOwnedOnly, setMutOwnedOnly] = useState(false);
   /** 開著哪個下拉:詞條 / 主動技能(兩個獨立下拉)。 */
   const [traitOpen, setTraitOpen] = useState<"passive" | "skill" | null>(null);
@@ -1690,8 +1693,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   /** 混合/純突變路徑:pure 模式沿用原本的 solveChain,不走這裡。 */
   const hybrid = useMemo<HybridPath | null>(() => {
     if (pathMode === "pure" || !index || !mutIndex || !mutReach || !chainFrom || !chainTo) return null;
-    return solveHybrid(index, mutIndex, mutReach, chainFrom, chainTo, pathMode, cake);
-  }, [pathMode, index, mutIndex, mutReach, chainFrom, chainTo, cake]);
+    return solveHybrid(index, mutIndex, mutReach, chainFrom, chainTo, pathMode, cake, 6, strategy);
+  }, [pathMode, index, mutIndex, mutReach, chainFrom, chainTo, cake, strategy]);
 
   /** 點卡片 → 填入作用中插槽,並自動前進到下一個空插槽。 */
   const pickPal = (id: string) => {
@@ -2302,6 +2305,27 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                       <input type="checkbox" checked={eggBoost} onChange={(e) => setEggBoost(e.target.checked)} />
                       {t("梁葉龍/寶寶保母")}
                     </label>
+                    {/* 挑路線的偏好:代數最少 vs 最高成功率(期望蛋數最少) */}
+                    <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
+                      {(
+                        [
+                          ["short", t("代數最少"), t("優先用最少代數到達目標")],
+                          ["odds", t("成功率最高"), t("改用期望蛋數最少的走法:多繞一代但走高機率的突變,實際常常更省")],
+                        ] as [PathStrategy, string, string][]
+                      ).map(([k, label, tip]) => (
+                        <button
+                          key={k}
+                          type="button"
+                          title={tip}
+                          onClick={() => setStrategy(k)}
+                          className={`min-h-9 rounded-md px-2.5 text-xs font-semibold whitespace-nowrap transition ${
+                            strategy === k ? "bg-pal text-white" : "text-ink hover:bg-card"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   </>
                 )}
               </div>
