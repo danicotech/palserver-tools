@@ -474,7 +474,7 @@ function PalCell({
       type={onClick ? "button" : undefined}
       onClick={onClick}
       title={title}
-      className={`flex min-w-0 flex-1 basis-0 items-center gap-2 rounded-xl px-1.5 py-1 text-left sm:gap-2.5 ${
+      className={`flex min-w-24 flex-1 basis-24 items-center gap-2 rounded-xl px-1.5 py-1 text-left sm:gap-2.5 ${
         onClick ? "cursor-pointer transition hover:bg-pal/10" : ""
       } ${active ? "ring-2 ring-sun" : ""}`}
     >
@@ -541,19 +541,11 @@ function PyramidTier({
   const badge = role === "target" ? `🎯 ${t("目標")}` : role === "start" ? `🏁 ${t("初代")}` : t("第 {n} 代", { n: gen });
   return (
     <div
-      className={`flex h-full w-full items-center gap-1.5 rounded-cute px-2.5 py-2 shadow-cute ring-1 sm:gap-2.5 sm:px-3.5 sm:py-2.5 ${
+      className={`flex h-full w-full flex-wrap items-center gap-1.5 rounded-cute px-2.5 py-2 shadow-cute ring-1 sm:gap-2.5 sm:px-3.5 sm:py-2.5 ${
         role === "target" ? "ring-2 ring-pal" : "ring-line"
       }`}
       style={{ background: `color-mix(in oklab, var(--color-pal) ${mix}%, var(--color-card))` }}
     >
-      {/* 世代徽章放列首:一眼看出這是第幾代的配種 */}
-      <span
-        className={`w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
-          role === "mid" ? "bg-card-soft text-ink-muted ring-line" : "bg-pal/15 text-pal ring-pal/40"
-        }`}
-      >
-        {badge}
-      </span>
       {/* A:該代帕魯(中間代可點擊替換);與 B 各佔一半 */}
       <PalCell
         id={id}
@@ -578,6 +570,14 @@ function PyramidTier({
           <PalCell id={resultId} meta={resultMeta} owned={resultOwned} compact />
         </>
       )}
+      {/* 世代徽章放整列最右 */}
+      <span
+        className={`ml-auto w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
+          role === "mid" ? "bg-card-soft text-ink-muted ring-line" : "bg-pal/15 text-pal ring-pal/40"
+        }`}
+      >
+        {badge}
+      </span>
 
     </div>
   );
@@ -1060,7 +1060,7 @@ function HybridPathView({
         return (
           <div key={i} className="mt-1.5">
             <div
-              className={`flex items-center gap-1.5 rounded-cute px-2.5 py-2 shadow-cute ring-1 sm:gap-2.5 sm:px-3.5 ${
+              className={`flex flex-wrap items-center gap-1.5 rounded-cute px-2.5 py-2 shadow-cute ring-1 sm:gap-2.5 sm:px-3.5 ${
                 isLast ? "ring-2 ring-pal" : "ring-line"
               }`}
               style={{
@@ -1068,13 +1068,6 @@ function HybridPathView({
                 background: `color-mix(in oklab, var(--color-pal) ${4 + Math.round(((gen + 1) / (d || 1)) * 12)}%, var(--color-card))`,
               }}
             >
-              <span
-                className={`w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
-                  s.kind === "mutation" ? "bg-berry/15 text-berry ring-berry/40" : "bg-pal/15 text-pal ring-pal/40"
-                }`}
-              >
-                {isLast ? `🎯 ${t("目標")}` : t("第 {n} 代", { n: gen + 1 })}
-              </span>
               {/* A(上一代留下來的) */}
               <PalCell id={s.from} meta={metaOf(s.from)} owned={has(s.from)} onClick={onPick && (() => onPick(s.from))} compact />
               <span className="shrink-0 text-lg font-bold text-ink-muted sm:text-xl">+</span>
@@ -1098,6 +1091,13 @@ function HybridPathView({
               {/* = C:這一列配出來的結果,讓人一眼看出下一代是誰 */}
               <span className="shrink-0 text-lg font-bold text-pal sm:text-xl">=</span>
               <PalCell id={s.child} meta={metaOf(s.child)} owned={has(s.child)} compact />
+              <span
+                className={`ml-auto w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
+                  s.kind === "mutation" ? "bg-berry/15 text-berry ring-berry/40" : "bg-pal/15 text-pal ring-pal/40"
+                }`}
+              >
+                {isLast ? `🎯 ${t("目標")}` : t("第 {n} 代", { n: gen + 1 })}
+              </span>
             </div>
             {openStep === stepIdx && opts.length > 0 && (
               <div className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-pal/50" style={rowWidth(gen)}>
@@ -2636,11 +2636,12 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               role={gen === d ? "target" : gen === 0 ? "start" : "mid"}
                               meta={metaOf(sp)}
                               owned={ownedSet ? ownedSet.has(sp.toLowerCase()) : undefined}
-                              /* 這一列 A+B 生出的是下一代的那隻(目標列本身就是結果,不再重複標) */
-                              resultId={gen < d ? route.species[gen + 1] : undefined}
-                              resultMeta={gen < d ? metaOf(route.species[gen + 1]) : undefined}
+                              /* 這一列 A+B 生出的是下一代的那隻。最後一次配種的結果就是頂端的目標,
+                                 已經在目標列標過,這裡不再重複顯示 = 目標。 */
+                              resultId={gen < d - 1 ? route.species[gen + 1] : undefined}
+                              resultMeta={gen < d - 1 ? metaOf(route.species[gen + 1]) : undefined}
                               resultOwned={
-                                gen < d && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
+                                gen < d - 1 && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
                               }
                               active={openTier === gen}
                               onClick={() => {
