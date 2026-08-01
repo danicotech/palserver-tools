@@ -18,8 +18,8 @@
 
 ## 🚀 3 ステップでサーバー開設(コマンド不要)
 
-1. **Docker をインストール**
-   - Windows:[Docker Desktop](https://www.docker.com/products/docker-desktop/) をインストールして起動
+1. **Docker をインストール**([Docker とは?](#-docker-について))
+   - Windows / macOS:[Docker Desktop](https://www.docker.com/products/docker-desktop/) をインストールし、**必ず起動**(タスクトレイにクジラのアイコンが出れば OK)
    - Linux:`curl -fsSL https://get.docker.com | sh`
 2. **本プロジェクトをダウンロード**:GitHub の緑の `Code` ボタン → `Download ZIP` → 展開(または `git clone`)
 3. **起動**
@@ -32,6 +32,31 @@
 |---|---|
 | 検索サイト | `http://localhost`(または `http://ホストIP`) |
 | ゲーム接続 | `ホストIP:8211`(UDP)+ 初回表示された参加パスワード |
+
+## 🐳 Docker について
+
+本プロジェクトの 4 つのサービス(ゲームサーバー・スケジューラー・セーブ解析・検索サイト)は
+すべて Docker コンテナで動きます。**Docker の知識は不要**です。インストールして起動しておけば、
+あとは `start.bat` / `start.sh` が全部やってくれます。
+
+| リンク | 用途 |
+|---|---|
+| [Docker 公式サイト](https://www.docker.com/) | プロジェクトのホーム |
+| [**Docker Desktop ダウンロード**](https://www.docker.com/products/docker-desktop/) | **Windows / macOS はこれ**。GUI 付き、入れて開くだけ |
+| [Docker Engine インストール手順](https://docs.docker.com/engine/install/) | Linux サーバー向け。または `curl -fsSL https://get.docker.com \| sh` |
+| [公式入門ガイド](https://docs.docker.com/get-started/) | 仕組みを知りたい人向け(読まなくても使えます) |
+
+インストール後、ターミナルで確認(両方バージョンが出れば成功):
+
+```bash
+docker --version
+docker compose version
+```
+
+> **Windows でよくある例**:`start.bat` が「Docker が見つからない」と言う場合は Docker Desktop が
+> 未起動(または起動中)です。トレイのクジラが止まってからもう一度実行してください。
+> 初回は WSL 2 の有効化と再起動を求められることがあります。
+> Docker を入れたくない場合は [ネイティブモード](docs/原生模式.md)(SteamCMD 直接実行、検索サイトなし)。
 
 ## 🕹️ 日常操作(ダブルクリックだけ)
 
@@ -136,6 +161,22 @@ Docker を入れられない環境でも、[`windows/native/`](windows/native) �
 
 ネイティブモードはゲームサーバーのインストール/起動/停止/更新をカバー。検索サイトとスケジューラーには引き続き Docker が必要です。
 **セーブは完全互換** — 後でフル構成に移行する場合はワールドフォルダを `backend/palworld-data/` に移すだけ(詳細は [docs/原生模式.md](docs/原生模式.md))。
+
+### SteamCMD はどこからダウンロード?
+
+**通常は不要です** —— 上記の `install.bat` / `install.sh` が自動取得します。手動で入れる場合:
+
+| リンク | 用途 |
+|---|---|
+| [SteamCMD 公式ドキュメント(Valve Wiki)](https://developer.valvesoftware.com/wiki/SteamCMD) | 全プラットフォームの導入手順 |
+| [**Windows 版ダウンロード(steamcmd.zip)**](https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip) | 任意のフォルダに展開して `steamcmd.exe` を実行 |
+| [Linux 版ダウンロード(steamcmd_linux.tar.gz)](https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz) | Debian/Ubuntu は `sudo apt install -y curl lib32gcc-s1` も必要 |
+
+Palworld 専用サーバーの App ID は **2394010**:
+
+```bash
+steamcmd +force_install_dir <パス> +login anonymous +app_update 2394010 validate +quit
+```
 
 ## 🌐 サイトでできること
 

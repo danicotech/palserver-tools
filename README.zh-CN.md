@@ -18,8 +18,8 @@
 
 ## 🚀 三步骤开服(不用会任何命令)
 
-1. **安装 Docker**
-   - Windows:安装并打开 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+1. **安装 Docker**([什么是 Docker?](#-关于-docker))
+   - Windows / macOS:下载并安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/),装完**要把它打开**(任务栏出现鲸鱼图标才算启动)
    - Linux:`curl -fsSL https://get.docker.com | sh`
 2. **下载本项目**:点 GitHub 绿色 `Code` 按钮 → `Download ZIP` → 解压(或 `git clone`)
 3. **启动**
@@ -32,6 +32,29 @@
 |---|---|
 | 玩家查询网站 | `http://localhost`(或 `http://主机IP`) |
 | 游戏连接 | `主机IP:8211`(UDP)+ 窗口显示的进服密码 |
+
+## 🐳 关于 Docker
+
+本项目的服务器、调度器、存档解析、查询网站四个服务都跑在 Docker 容器里。
+你**不需要**懂 Docker —— 只要装好、打开,剩下交给 `start.bat` / `start.sh`。
+
+| 链接 | 用途 |
+|---|---|
+| [Docker 官网](https://www.docker.com/) | 项目首页与说明 |
+| [**Docker Desktop 下载**](https://www.docker.com/products/docker-desktop/) | **Windows / macOS 用这个**,含图形界面,装完打开即可 |
+| [Docker Engine 安装文档](https://docs.docker.com/engine/install/) | Linux 服务器用;或直接 `curl -fsSL https://get.docker.com \| sh` |
+| [Docker 官方入门教程](https://docs.docker.com/get-started/) | 想了解它在做什么再看,不看也不影响使用 |
+
+装好后打开一个终端确认(两个命令都要有版本号才算成功):
+
+```bash
+docker --version
+docker compose version
+```
+
+> **Windows 常见情况**:`start.bat` 说「找不到 Docker」= Docker Desktop 没开或还在启动中,
+> 等任务栏鲸鱼图标不再转动再重跑一次。首次安装可能会要求开启 WSL 2 并重启。
+> 不想装 Docker 的话,可以改用 [原生模式](docs/原生模式.md)(SteamCMD 直接跑,没有查询网站)。
 
 ## 🕹️ 日常操作(双击即可)
 
@@ -136,6 +159,22 @@ pnpm build && cd .. && docker compose up -d --no-deps --build panel
 
 原生模式涵盖游戏服务器的安装/启动/停止/更新;查询网站与自动排程仍需 Docker。
 **两边存档完全互通**,之后想升级整套,把世界文件夹搬到 `backend/palworld-data/` 即可(详见 [docs/原生模式.md](docs/原生模式.md))。
+
+### SteamCMD 要去哪下载?
+
+**通常不用自己抓** —— 上面的 `install.bat` / `install.sh` 会自动下载。要手动装再看这里:
+
+| 链接 | 用途 |
+|---|---|
+| [SteamCMD 官方说明(Valve Wiki)](https://developer.valvesoftware.com/wiki/SteamCMD) | 官方文档,各平台安装方式都在这 |
+| [**Windows 版下载(steamcmd.zip)**](https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip) | 解压到任意文件夹,运行 `steamcmd.exe` |
+| [Linux 版下载(steamcmd_linux.tar.gz)](https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz) | Debian/Ubuntu 另需 `sudo apt install -y curl lib32gcc-s1` |
+
+Palworld 专用服务器的 App ID 是 **2394010**,手动安装命令:
+
+```bash
+steamcmd +force_install_dir <安装路径> +login anonymous +app_update 2394010 validate +quit
+```
 
 ## 🌐 查询网站有什么
 

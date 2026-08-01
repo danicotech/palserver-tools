@@ -18,8 +18,8 @@
 
 ## 🚀 Start a server in 3 steps (no commands required)
 
-1. **Install Docker**
-   - Windows: install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+1. **Install Docker** ([what is Docker?](#-about-docker))
+   - Windows / macOS: install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and **start it** (the whale icon must be in the tray)
    - Linux: `curl -fsSL https://get.docker.com | sh`
 2. **Download this project**: green `Code` button → `Download ZIP` → extract (or `git clone`)
 3. **Launch**
@@ -32,6 +32,30 @@ The first launch **generates all configuration and two random passwords automati
 |---|---|
 | Lookup website | `http://localhost` (or `http://your-host-ip`) |
 | Game connection | `your-host-ip:8211` (UDP) + the join password shown on first run |
+
+## 🐳 About Docker
+
+All four services (game server, scheduler, save parser, web panel) run in Docker containers.
+You **don't need to know Docker** — just install it, start it, and let `start.bat` / `start.sh` do the rest.
+
+| Link | What it's for |
+|---|---|
+| [Docker home](https://www.docker.com/) | Project homepage |
+| [**Docker Desktop download**](https://www.docker.com/products/docker-desktop/) | **Use this on Windows / macOS** — GUI included, just install and open |
+| [Docker Engine install docs](https://docs.docker.com/engine/install/) | For Linux servers, or simply `curl -fsSL https://get.docker.com \| sh` |
+| [Official getting-started guide](https://docs.docker.com/get-started/) | Optional background reading |
+
+After installing, verify in a terminal (both must print a version):
+
+```bash
+docker --version
+docker compose version
+```
+
+> **Common on Windows**: if `start.bat` says Docker isn't found, Docker Desktop is not running (or still
+> starting) — wait until the tray whale stops animating and run it again. A first install may ask you to
+> enable WSL 2 and reboot. If you'd rather not install Docker, see [native mode](docs/原生模式.md)
+> (SteamCMD only, no web panel).
 
 ## 🕹️ Day-to-day operation (just double-click)
 
@@ -136,6 +160,23 @@ Machines that can't run Docker can still host the game server with the scripts i
 
 Native mode covers install/start/stop/update of the game server; the lookup website and the scheduler still require Docker.
 **Saves are fully interchangeable** - to upgrade later, move your world folder into `backend/palworld-data/` (see [docs/原生模式.md](docs/原生模式.md)).
+
+### Where to download SteamCMD
+
+**You normally don't need to** — `install.bat` / `install.sh` above fetches it automatically.
+For a manual install:
+
+| Link | What it's for |
+|---|---|
+| [SteamCMD docs (Valve Wiki)](https://developer.valvesoftware.com/wiki/SteamCMD) | Official docs, all platforms |
+| [**Windows download (steamcmd.zip)**](https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip) | Extract anywhere, run `steamcmd.exe` |
+| [Linux download (steamcmd_linux.tar.gz)](https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz) | Debian/Ubuntu also needs `sudo apt install -y curl lib32gcc-s1` |
+
+The Palworld dedicated server App ID is **2394010**:
+
+```bash
+steamcmd +force_install_dir <path> +login anonymous +app_update 2394010 validate +quit
+```
 
 ## 🌐 What the site gives you
 
