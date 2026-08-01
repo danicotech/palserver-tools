@@ -85,6 +85,32 @@ def _tolerant_properties_until_end(self, path=""):
 _archive.FArchiveReader.properties_until_end = _tolerant_properties_until_end
 
 
+# palworld-save-tools 每遇到一個沒登錄的 struct 型別就 print 一行警告，
+# 大型存檔光是 DungeonSaveData 就能噴上千行、把主控台整個洗掉
+# （Docker 版看不到，SteamCMD 版是可見視窗，非常吵）。
+# 它的 fallback 行為本身是對的，所以這裡改成靜默計數，最後只回報一行摘要。
+_UNKNOWN_STRUCTS = {}
+
+
+def _quiet_get_type_or(self, path, default):
+    hint = self.type_hints.get(path)
+    if hint is not None:
+        return hint
+    _UNKNOWN_STRUCTS[path] = _UNKNOWN_STRUCTS.get(path, 0) + 1
+    return default
+
+
+_archive.FArchiveReader.get_type_or = _quiet_get_type_or
+
+
+def unknown_struct_summary():
+    """回傳「這次解析略過了哪些未登錄結構」的一行摘要；沒有就回 None。"""
+    if not _UNKNOWN_STRUCTS:
+        return None
+    total = sum(_UNKNOWN_STRUCTS.values())
+    return f"略過 {len(_UNKNOWN_STRUCTS)} 種未登錄的存檔結構(共 {total} 次，已用預設型別解析)"
+
+
 # ---------- 小工具 ----------
 def g(d, *ks, default=None):
     for k in ks:

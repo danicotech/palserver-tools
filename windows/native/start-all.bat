@@ -87,9 +87,8 @@ goto :health
 :healthy
 echo.
 echo 完成!(遊戲伺服器由排程器依時段表自動開關)
-echo   查詢網站:http://localhost:9000
-echo   遊戲連線:你的IP:8211
-echo.
+rem 埠與密碼都在 PalWorldSettings.ini 裡,直接讀出來給使用者看,不用自己去翻
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0show-info.ps1" -ServerDir "%SERVER_DIR%" -PanelPort 9000
 echo 要全部關掉:雙擊 windows\native\stop-all.bat
 start http://localhost:9000
 pause

@@ -24,7 +24,7 @@ import http.server
 import socketserver
 import urllib.parse
 
-from extract_pals import load_gvas, extract, load_maps, extract_guilds  # 匯入時會套用相容性 monkeypatch
+from extract_pals import unknown_struct_summary, load_gvas, extract, load_maps, extract_guilds  # 匯入時會套用相容性 monkeypatch
 
 SAVE_ROOT = os.environ.get("SAVE_ROOT", "/palworld")
 PORT = int(os.environ.get("PORT", "8213"))
@@ -102,9 +102,14 @@ def get_data():
     with _lock:
         if _cache["path"] == path and _cache["mtime"] == mtime:
             return _cache["data"]
+        t0 = time.time()
         data = extract(load_gvas(path), MAPS)
         data["source"] = os.path.relpath(path, SAVE_ROOT)
         _cache.update(path=path, mtime=mtime, data=data)
+        note = unknown_struct_summary()
+        print(f"[palsave] 解析完成:{len(data.get('players', []))} 位玩家、"
+              f"{data.get('total_pals', 0)} 隻帕魯,耗時 {time.time() - t0:.1f}s"
+              + (f"({note})" if note else ""), flush=True)
         return data
 
 
