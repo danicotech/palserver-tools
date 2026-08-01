@@ -534,77 +534,75 @@ export interface OwnedPalRow {
   owner: Player;
 }
 
-/** 「誰有這隻」面板:誰擁有、誰身上帶著這一步要用的詞條。
+/** 「誰有這隻」面板:誰擁有這隻,以及(有詞條需求時)誰帶得動這一步要的詞條。
  *  原本做成滑過就浮出來的浮層,但它會蓋住下面的梯度 —— 改成點「👥 誰有」
  *  才展開,而且是接在該列下方,把內容往下推而不是遮住。 */
 function OwnerPanel({
   id,
   need,
   desired,
-  owners,
-  pool,
+  enabled,
   details,
+  chosen,
+  onChoose,
   style,
   onClose,
 }: {
   id: string;
-  /** 這一步這隻必須帶進來的詞條 bitmask(0 = 不必帶) */
+  /** 這一步這隻必須帶進來的詞條 bitmask(0 = 不必帶,純瀏覽) */
   need: number;
   /** 目前選的詞條(空 = 沒開篩選) */
   desired: string[];
-  /** 物種持有者;null = 玩家視角關掉 */
-  owners: { name: string; n: number }[] | null;
-  /** 這個物種、在視角範圍內的自有個體 */
-  pool: SaveBreedingPal[];
-  /** 同一物種的完整個體明細(點持有者時彈出用) */
+  /** 玩家視角有沒有開(關掉就不列持有者) */
+  enabled: boolean;
+  /** 同一物種、視角範圍內的全部個體 */
   details: OwnedPalRow[];
+  /** 這一格目前指定的那一隻(有的話) */
+  chosen?: OwnedPalRow;
+  /** 選定某一隻 → 抽換這一格用的個體 */
+  onChoose?: (row: OwnedPalRow) => void;
   style?: CSSProperties;
   onClose: () => void;
 }): JSX.Element {
   useI18n();
-  /** 點了哪位持有者 → 彈出他那幾隻的詳細資料 */
+  /** 點了哪位持有者 → 彈出他那幾隻 */
   const [who, setWho] = useState<string | null>(null);
   const info = palInfo(id.toLowerCase());
-  const total = owners?.reduce((a, b) => a + b.n, 0) ?? 0;
-  const maskOf = (c: SaveBreedingPal) => {
-    let m = 0;
-    desired.forEach((d, i) => {
-      if (c.passives.includes(d)) m |= 1 << i;
-    });
-    return m;
-  };
-  // 帶著任一所選詞條的個體;能補齊這一步的排前面
-  const carriers = desired.length
-    ? pool
-        .map((c) => ({ c, m: maskOf(c) }))
-        .filter((x) => x.m !== 0)
-        .sort(
-          (x, y) =>
-            Number((need & ~y.m) === 0) - Number((need & ~x.m) === 0) ||
-            popcount(y.m) - popcount(x.m),
-        )
-    : [];
+  const needNames = desired.filter((_, i) => need & (1 << i));
+  const covers = (r: OwnedPalRow) =>
+    needNames.every((x) => r.pal.passives.includes(x) || r.pal.mastered_skills.includes(x));
+  /** 有詞條需求時,只列「真的帶得動」的個體 —— 列出配不上的人只會誤導。 */
+  const usable = needNames.length > 0 ? details.filter(covers) : details;
+  const byOwner = new Map<string, number>();
+  for (const r of usable) byOwner.set(r.owner.name, (byOwner.get(r.owner.name) ?? 0) + 1);
+  const owners = [...byOwner]
+    .map(([name, n]) => ({ name, n }))
+    .sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
+  const total = usable.length;
+
   return (
     <div className="mt-1 rounded-xl bg-card-soft/80 p-2 text-[11px] ring-1 ring-pal/40" style={style}>
-      <div className="mb-1 flex items-center gap-2">
-        {info.iconUrl && <img src={info.iconUrl} alt="" className="size-6 rounded-full bg-card ring-1 ring-line" />}
+      <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+        {info.iconUrl && <img src={info.iconUrl} alt="" className="size-6 shrink-0 rounded-full bg-card ring-1 ring-line" />}
         <span className="min-w-0 flex-1">
           <b className="text-ink">{info.zh || id}</b>
-          {owners && (
+          {enabled && (
             <span className="ml-1 text-ink-muted">
-              {owners.length ? t("{n} 人共 {total} 隻", { n: owners.length, total }) : t("全服沒有人有")}
+              {owners.length
+                ? t("{n} 人共 {total} 隻", { n: owners.length, total })
+                : needNames.length > 0
+                  ? t("沒有人有帶得動的這隻")
+                  : t("全服沒有人有")}
             </span>
           )}
-          {need > 0 && (
+          {needNames.length > 0 && (
             <span className="ml-1 text-ink-muted">
               · {t("這一步要帶")}{" "}
-              {desired
-                .filter((_, i) => need & (1 << i))
-                .map((x) => (
-                  <span key={x} className="ml-0.5 rounded bg-pal/12 px-1 py-0.5 font-bold text-pal">
-                    {x}
-                  </span>
-                ))}
+              {needNames.map((x) => (
+                <span key={x} className="ml-0.5 rounded bg-pal/12 px-1 py-0.5 font-bold text-pal">
+                  {x}
+                </span>
+              ))}
             </span>
           )}
         </span>
@@ -618,41 +616,18 @@ function OwnerPanel({
         </button>
       </div>
 
-      {carriers.length > 0 && (
-        <>
-          <p className="mb-1 font-bold text-ink-muted">🏷️ {t("誰有帶詞條的這隻")}</p>
-          <div className="mb-1.5 flex max-h-28 flex-wrap gap-1 overflow-y-auto">
-            {carriers.slice(0, 24).map(({ c, m }) => (
-              <span
-                key={c.instanceId}
-                className={`flex items-center gap-1 rounded bg-card px-1.5 py-0.5 ring-1 ${
-                  (need & ~m) === 0 ? "ring-grass/50" : "ring-line opacity-70"
-                }`}
-              >
-                <b className="text-ink">{c.ownerName || "?"}</b>
-                <span className="text-ink-muted">
-                  {c.nickname ? `「${c.nickname}」` : ""}
-                  {c.level ? `Lv${c.level}` : ""}
-                </span>
-                {desired
-                  .filter((_, i) => m & (1 << i))
-                  .map((x) => (
-                    <span key={x} className="rounded bg-grass/12 px-1 font-semibold text-grass">
-                      {x}
-                    </span>
-                  ))}
-              </span>
-            ))}
-            {carriers.length > 24 && (
-              <span className="text-ink-muted">{t("…還有 {n} 隻", { n: carriers.length - 24 })}</span>
-            )}
-          </div>
-        </>
+      {chosen && (
+        <p className="mb-1 text-ink-muted">
+          {t("目前用")} <b className="text-ink">{chosen.owner.name}</b>
+          {chosen.pal.nickname ? `「${chosen.pal.nickname}」` : ""} Lv{chosen.pal.level}
+        </p>
       )}
 
-      {owners && owners.length > 0 && (
+      {enabled && owners.length > 0 && (
         <>
-          <p className="mb-1 font-bold text-ink-muted">👥 {t("持有者")}</p>
+          <p className="mb-1 font-bold text-ink-muted">
+            {needNames.length > 0 ? `🏷️ ${t("誰有帶得動的這隻(點名字挑一隻)")}` : `👥 ${t("持有者")}`}
+          </p>
           <div className="flex max-h-28 flex-wrap gap-1 overflow-y-auto">
             {owners.map((o) => (
               <button
@@ -660,7 +635,9 @@ function OwnerPanel({
                 type="button"
                 onClick={() => setWho(o.name)}
                 title={t("查看 {name} 的這 {n} 隻", { name: o.name, n: o.n })}
-                className="rounded bg-card px-1.5 py-0.5 ring-1 ring-line transition hover:ring-pal"
+                className={`rounded bg-card px-1.5 py-0.5 ring-1 transition hover:ring-pal ${
+                  chosen?.owner.name === o.name ? "ring-grass" : "ring-line"
+                }`}
               >
                 <b className="text-ink">{o.name}</b>
                 <span className="text-ink-muted">×{o.n}</span>
@@ -673,9 +650,16 @@ function OwnerPanel({
       {who && (
         <OwnerPalsModal
           title={t("{name} 的 {pal}", { name: who, pal: info.zh || id })}
-          rows={details.filter((r) => r.owner.name === who)}
+          rows={usable.filter((r) => r.owner.name === who)}
           desired={desired}
           need={need}
+          onChoose={
+            onChoose &&
+            ((row) => {
+              onChoose(row);
+              setWho(null);
+            })
+          }
           onClose={() => setWho(null)}
         />
       )}
@@ -691,17 +675,21 @@ function OwnerPalsModal({
   rows,
   desired,
   need,
+  onChoose,
   onClose,
 }: {
   title: string;
   rows: OwnedPalRow[];
   desired: string[];
-  /** 這一步需要的詞條 bitmask(符合的排前面並標出來) */
+  /** 這一步需要的詞條 bitmask(>0 = 選取模式:點卡片就是挑這一隻) */
   need: number;
+  /** 選取模式下點卡片要做什麼;沒給就只開詳情 */
+  onChoose?: (row: OwnedPalRow) => void;
   onClose: () => void;
 }): JSX.Element {
   useI18n();
   const [detail, setDetail] = useState<OwnedPalRow | null>(null);
+  const [q, setQ] = useState("");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -722,6 +710,15 @@ function OwnerPalsModal({
       b.pal.iv_hp + b.pal.iv_attack + b.pal.iv_defense - (a.pal.iv_hp + a.pal.iv_attack + a.pal.iv_defense) ||
       b.pal.level - a.pal.level,
   );
+  const kw = q.trim().toLowerCase();
+  const shown = kw
+    ? sorted.filter(
+        (r) =>
+          (r.pal.nickname || "").toLowerCase().includes(kw) ||
+          r.pal.passives.some((x) => x.toLowerCase().includes(kw)) ||
+          r.pal.mastered_skills.some((x) => x.toLowerCase().includes(kw)),
+      )
+    : sorted;
   return (
     <>
       <div
@@ -730,14 +727,19 @@ function OwnerPalsModal({
         role="presentation"
       >
         <div
-          className="max-h-[85dvh] w-full max-w-xl overflow-y-auto rounded-cute bg-card p-4 shadow-cute ring-1 ring-line"
+          className="flex max-h-[85dvh] w-full max-w-3xl flex-col rounded-cute bg-card p-4 shadow-cute ring-1 ring-line"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
         >
-          <div className="mb-3 flex items-center gap-2">
+          {/* 標題列固定,清單自己捲 —— 幾十隻時才不會捲到找不到關閉鈕 */}
+          <div className="mb-2 flex shrink-0 items-center gap-2">
             <b className="min-w-0 flex-1 truncate text-ink">{title}</b>
-            <span className="shrink-0 text-xs text-ink-muted">{t("共 {n} 隻", { n: rows.length })}</span>
+            <span className="shrink-0 text-xs text-ink-muted">
+              {shown.length === rows.length
+                ? t("共 {n} 隻", { n: rows.length })
+                : t("{n} / {total} 隻", { n: shown.length, total: rows.length })}
+            </span>
             <button
               type="button"
               onClick={onClose}
@@ -748,25 +750,37 @@ function OwnerPalsModal({
             </button>
           </div>
           {needNames.length > 0 && (
-            <p className="mb-2 flex flex-wrap items-center gap-1 text-[11px] text-ink-muted">
+            <p className="mb-2 flex shrink-0 flex-wrap items-center gap-1 text-[11px] text-ink-muted">
               {t("這一步要帶")}
               {needNames.map((x) => (
                 <span key={x} className="rounded bg-pal/12 px-1.5 py-0.5 font-bold text-pal">
                   {x}
                 </span>
               ))}
-              · {t("符合的排在前面並加綠框")}
+              · {onChoose ? t("點卡片就用這一隻") : t("符合的排在前面並加綠框")}
             </p>
           )}
-          <div className="flex flex-col gap-2">
-            {sorted.map((r, i) => (
+          {rows.length > 8 && (
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t("篩暱稱或詞條…")}
+              className="mb-2 w-full shrink-0 rounded-lg bg-card-soft px-3 py-1.5 text-sm text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
+            />
+          )}
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+            {shown.map((r, i) => (
               <div
                 key={`${r.pal.nickname}-${r.pal.level}-${i}`}
                 className={covers(r.pal) ? "rounded-cute ring-2 ring-grass" : ""}
               >
-                <PalTile pal={r.pal} owner={r.owner.name} onClick={() => setDetail(r)} />
+                {/* 主人名不重複印 —— 標題已經寫了「某某的某某」 */}
+                <PalTile pal={r.pal} onClick={() => (onChoose ? onChoose(r) : setDetail(r))} />
               </div>
             ))}
+            {shown.length === 0 && (
+              <p className="col-span-full py-6 text-center text-sm text-ink-muted">{t("沒有符合的帕魯")}</p>
+            )}
           </div>
         </div>
       </div>
@@ -1349,6 +1363,7 @@ function HybridPathView({
     setPicked({});
     setOpenStep(null);
     setOpenStart(false);
+    setChosenPal({});
   }, [path]);
   const d = path.steps.length;
   const shrink = pyramidShrink(d);
@@ -1381,10 +1396,18 @@ function HybridPathView({
   const traitAware = desired.length > 0 && path.steps[0]?.fromNeed !== undefined;
   /** 哪一列的哪一格正在看持有者(key = `${列}:${a|b}`);一次只開一個 */
   const [openOwner, setOpenOwner] = useState<string | null>(null);
+  /** 玩家自己指定的那一隻(key 同上);沒指定就用解算器挑的 */
+  const [chosenPal, setChosenPal] = useState<Record<string, OwnedPalRow>>({});
   const poolOf = (id: string) => ownedPool.filter((c) => normalizeSpecies(c.characterId) === id.toLowerCase());
+  /** 這一格實際要用誰的那一隻:玩家指定過就用指定的,否則用自動挑的。 */
+  const carrierAt = (slot: string, species: string, mask: number): { ownerName: string } | undefined => {
+    const own = chosenPal[slot];
+    if (own) return { ownerName: own.owner.name };
+    return carrierFor(species, mask);
+  };
   /** 掛在帕魯格子底下的小字:要帶哪些詞條(誰的),或已經累積到幾個。
    *  資訊貼著它所描述的那一格,才不會被讀成在講整列或旁邊那隻。 */
-  const traitSub = (mask: number, pal?: SaveBreedingPal) =>
+  const traitSub = (mask: number, pal?: { ownerName: string }) =>
     mask > 0 ? (
       <>
         {pal && <span className="shrink-0 font-semibold text-ink-muted">{pal.ownerName || "?"}</span>}
@@ -1478,7 +1501,7 @@ function HybridPathView({
                 sub={
                   traitAware
                     ? stepIdx === 0
-                      ? traitSub(s.fromNeed ?? 0, carrierFor(s.from, s.fromNeed ?? 0))
+                      ? traitSub(s.fromNeed ?? 0, carrierAt(`${stepIdx}:a`, s.from, s.fromNeed ?? 0))
                       : countSub(s.fromNeed ?? 0)
                     : undefined
                 }
@@ -1503,7 +1526,7 @@ function HybridPathView({
                   id={s.partner}
                   meta={metaOf(s.partner)}
                   owned={has(s.partner)}
-                  sub={traitAware ? traitSub(needMask, carrierFor(s.partner, needMask)) : undefined}
+                  sub={traitAware ? traitSub(needMask, carrierAt(`${stepIdx}:b`, s.partner, needMask)) : undefined}
                   active={openStep === stepIdx}
                   title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
                   onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
@@ -1666,9 +1689,14 @@ function HybridPathView({
                       id={open.id}
                       need={open.need}
                       desired={desired}
-                      owners={ownersOf(open.id)}
-                      pool={poolOf(open.id)}
+                      enabled={ownersOf(open.id) !== null}
                       details={detailsOf(open.id)}
+                      chosen={chosenPal[open.key]}
+                      onChoose={
+                        open.need > 0
+                          ? (row) => setChosenPal((prev) => ({ ...prev, [open.key]: row }))
+                          : undefined
+                      }
                       style={rowWidth(gen)}
                       onClose={() => setOpenOwner(null)}
                     />
@@ -3395,12 +3423,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                     id={open.id}
                                     need={0}
                                     desired={desired}
-                                    owners={
-                                      ownersBySpecies?.get(open.id.toLowerCase()) ?? (ownersBySpecies ? [] : null)
-                                    }
-                                    pool={ownedForTraits.filter(
-                                      (c) => normalizeSpecies(c.characterId) === open.id.toLowerCase(),
-                                    )}
+                                    enabled={palsBySpecies !== null}
                                     details={palsBySpecies?.get(open.id.toLowerCase()) ?? []}
                                     style={rowStyle}
                                     onClose={() => setPathOwner(null)}

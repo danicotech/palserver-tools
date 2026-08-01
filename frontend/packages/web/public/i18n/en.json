@@ -2471,5 +2471,12 @@
   "個體值": "IVs",
   "共 {n} 隻": "{n} total",
   "查看 {name} 的這 {n} 隻": "View {name}'s {n} pals",
-  "符合的排在前面並加綠框": "matching ones are listed first with a green outline"
+  "符合的排在前面並加綠框": "matching ones are listed first with a green outline",
+  "{n} / {total} 隻": "{n} / {total}",
+  "篩暱稱或詞條…": "Filter by nickname or passive…",
+  "沒有符合的帕魯": "No matching pals",
+  "沒有人有帶得動的這隻": "nobody has one carrying these",
+  "目前用": "Currently using",
+  "誰有帶得動的這隻(點名字挑一隻)": "Who has one that can carry these (click a name to pick)",
+  "點卡片就用這一隻": "click a card to use that one"
 }
