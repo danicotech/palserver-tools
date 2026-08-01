@@ -114,4 +114,7 @@ bash linux/start.sh
 
 - **`permission denied`** —— 先 `chmod +x linux/*.sh`,或一律用 `bash linux/start.sh` 執行。
 - **`docker: command not found`** —— 依 [官方文件](https://docs.docker.com/engine/install/) 安裝 Docker Engine。
+- **`Cannot connect to the Docker daemon`** —— 引擎沒跑或沒權限:
+  `sudo systemctl start docker`;權限問題用 `sudo usermod -aG docker "$USER"` 後重新登入。
+  啟動腳本現在會先檢查並直接提示,不會再掉到看不懂的 socket 錯誤。
 - **想改伺服器參數** —— 編輯專案根目錄的 `.env`,再跑 `bash linux/restart.sh`。

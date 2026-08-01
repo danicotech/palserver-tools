@@ -106,5 +106,9 @@ windows\start.bat
 ## 常見狀況
 
 - **跳出「找不到 Docker」** —— 先安裝並啟動 [Docker Desktop](https://www.docker.com/products/docker-desktop/)。
+- **出現 `dockerDesktopLinuxEngine ... The system cannot find the file specified`** ——
+  Docker **裝好了但引擎沒在跑**。`start.bat` 現在會自動幫你開 Docker Desktop 並等最多 3 分鐘;
+  若仍失敗:手動打開 Docker Desktop → 等工作列鯨魚圖示不再轉動 → 重跑 `start.bat`。
+  第一次安裝可能要求啟用 WSL 2 並重開機;卡在 Starting 就右鍵鯨魚 → Restart。
 - **視窗一閃就關** —— 改成在資料夾空白處按右鍵 →「在終端中開啟」,再輸入 `windows\start.bat`,就看得到訊息。
 - **想改伺服器參數** —— 編輯專案根目錄的 `.env`,再跑 `restart.bat`。

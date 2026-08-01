@@ -11,3 +11,5 @@
 | 遊戲改版後帕魯缺資料 | 跑 `frontend/scripts/fetch-palcalc-breeding.mjs` 與 `fetch-pal-meta.mjs` 後重建 panel |
 | 想把網站公開到外網 | 自行架反向代理/隧道指向本機 80 埠 |
 | 沒有 Docker | 見 [[SteamCMD 版]] |
+| `dockerDesktopLinuxEngine ... cannot find the file specified` | Docker 裝好了但**引擎沒在跑**。`start.bat` 會自動開 Docker Desktop 並等最多 3 分鐘;仍失敗就手動打開它、等鯨魚圖示不再轉動再重跑。首次安裝可能要啟用 WSL 2 並重開機 |
+| `Cannot connect to the Docker daemon`(Linux) | `sudo systemctl start docker`;權限問題 `sudo usermod -aG docker "$USER"` 後重新登入 |
