@@ -24,6 +24,7 @@ import os
 import re
 import json
 import argparse
+import struct
 
 try:
     import ooz  # pyooz：開源 Oodle 解壓（PlM 用）
@@ -202,7 +203,8 @@ def load_maps(here):
     }
 
 
-def load_gvas(path, full=False):
+def decompress_save(path):
+    """讀檔並解壓成 GVAS 原始位元組(PlM/PlZ/CNK 三種容器)。"""
     with open(path, "rb") as f:
         data = f.read()
     ulen = int.from_bytes(data[0:4], "little")
@@ -220,6 +222,11 @@ def load_gvas(path, full=False):
         sys.exit(f"未知存檔格式 magic={magic!r}")
     if raw[:4] != b"GVAS":
         sys.exit(f"解壓後不是 GVAS：{raw[:8]!r}")
+    return raw
+
+
+def load_gvas(path, full=False):
+    raw = decompress_save(path)
     # 只掛 character 的 custom decoder;Group/BaseCamp 的官方 decoder 跟不上 v1.0 格式
     # 會整段解析失敗,改由 _decode_guild_raw/_decode_basecamp_raw 自行解 raw bytes。
     wanted = {k: v for k, v in PALWORLD_CUSTOM_PROPERTIES.items()
@@ -408,16 +415,47 @@ def extract(gvas, maps):
     return out
 
 
-def extract_guilds(path):
-    """慢路徑:完整解析到 GroupSaveDataMap,回傳公會清單(含據點座標)。
-    約 15 秒(視存檔大小),呼叫端請自行做低頻快取。"""
-    global _STOP_AT
-    _STOP_AT = "GroupSaveDataMap"
+def _find_property_offsets(raw, name):
+    """在原始位元組中找出屬性名的 fstring 位置(i32 長度 + ASCII + NUL)。"""
+    pat = struct.pack("<i", len(name) + 1) + name.encode() + bytes(1)
+    out, i = [], 0
+    while True:
+        i = raw.find(pat, i)
+        if i < 0:
+            return out
+        out.append(i)
+        i += 1
+
+
+def _read_map_property(raw, offset, name):
+    """從指定位置讀一個 MapProperty;名稱/型別對不上或解析失敗回 None。"""
+    reader = _archive.FArchiveReader(raw[offset:], PALWORLD_TYPE_HINTS, {}, allow_nan=True)
     try:
-        gvas = load_gvas(path)
-    finally:
-        _STOP_AT = "CharacterSaveParameterMap"
-    return build_guilds(gvas.properties["worldSaveData"]["value"])
+        if reader.fstring() != name or reader.fstring() != "MapProperty":
+            return None
+        size = reader.u64()
+        return reader.property("MapProperty", size, f".worldSaveData.{name}")
+    except Exception:
+        return None
+
+
+def extract_guilds(path):
+    """公會與據點(含座標)。
+
+    不走循序解析:worldSaveData 前段只要有一個本工具看不懂的新欄位,整串就會中斷,
+    後面的 GroupSaveDataMap 便永遠讀不到(實際遇過存檔更新後就全部變 0)。
+    改成直接在解壓後的位元組裡定位這兩個欄位的屬性標頭再單獨解析 ——
+    與前面的欄位完全脫鉤,且省去掃描整份存檔的時間(約 15 秒 → 不到 1 秒)。
+    """
+    raw = decompress_save(path)
+    wsd = {}
+    for name in ("GroupSaveDataMap", "BaseCampSaveData"):
+        for offset in _find_property_offsets(raw, name):
+            prop = _read_map_property(raw, offset, name)
+            if prop is not None:
+                wsd[name] = prop
+                break
+    return build_guilds(wsd)
 
 
 def main():

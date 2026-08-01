@@ -647,3 +647,10 @@ body {
   .leaflet-marker-icon.pmap-base-wrap { transition: none; }
   .skeleton::after { animation: none; }
 }
+
+/* Leaflet 的內部圖層 z-index 高達 400~700。地圖容器只有 position:relative、
+   沒有自成堆疊環境時,這些數值會跟頁面上的彈窗(z-50)直接比大小而蓋住彈窗。
+   isolation 讓地圖自成一個堆疊環境,內部數值不再外溢。 */
+.leaflet-container {
+  isolation: isolate;
+}
