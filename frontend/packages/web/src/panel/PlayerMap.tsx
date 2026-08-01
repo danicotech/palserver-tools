@@ -7,7 +7,7 @@ import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
 import { MAP_IMAGE, IMAGE_BOUNDS, TREE_MAP_IMAGE, TREE_IMAGE_BOUNDS, escapeHtml } from "../mapLayers";
-import { playerAvatarUrl, playerInitial } from "./playerAvatar";
+import { usePlayerAvatar, playerInitial } from "./playerAvatar";
 import type { Player, Guild } from "./types";
 import type { Dataset } from "./data";
 import { t, useI18n } from "../i18n";
@@ -27,6 +27,8 @@ export function PlayerMap({
   onPlayerClick?: (p: Player) => void;
 }): JSX.Element | null {
   useI18n();
+  // 頭像跟右上角「設定頭像」連動(名冊更新 → 標記重畫)
+  const avatarOf = usePlayerAvatar();
   const [world, setWorld] = useState<World>("main");
   const [who, setWho] = useState<WhoFilter>("all");
   const [guildFilter, setGuildFilter] = useState("all");
@@ -193,8 +195,8 @@ export function PlayerMap({
     for (const p of shownPlayers) {
       const pos = project(p.location.x, p.location.y);
       if (!pos) continue;
-      // 頭像與玩家列表用同一份規則,兩邊才會長一樣
-      const iconUrl = playerAvatarUrl(p);
+      // 頭像與玩家列表/總覽用同一份規則,幾邊才會長一樣
+      const iconUrl = avatarOf(p);
       const guild = guildByUid.get(p.uid);
       const ring = guild ? guildColorFromId(guild.id) : "#ffffff";
       const on = isOnline(p);
@@ -229,7 +231,7 @@ export function PlayerMap({
         reg.delete(key);
       }
     }
-  }, [shownPlayers, shownGuilds, showBases, guildByUid, world, online]);
+  }, [shownPlayers, shownGuilds, showBases, guildByUid, world, online, avatarOf]);
 
   if (!located.length && !data.guilds.length) return null;
 

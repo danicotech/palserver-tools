@@ -1548,10 +1548,13 @@ function HybridPathView({
                 compact
               />
               <span
-                className={`ml-auto w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
+                className={`ml-auto flex min-w-14 shrink-0 items-center justify-center gap-1 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:min-w-16 sm:text-[11px] ${
                   s.kind === "mutation" ? "bg-berry/15 text-berry ring-berry/40" : "bg-pal/15 text-pal ring-pal/40"
                 }`}
+                title={s.kind === "mutation" ? t("這一代要靠突變蛋") : undefined}
               >
+                {/* 靠突變的那一代直接掛變異圖示,不用讀到下面那行才知道 */}
+                {s.kind === "mutation" && <img src={MUTATION_ICON} alt="" className="size-3.5 shrink-0" />}
                 {isLast ? `🎯 ${t("目標")}` : t("第 {n} 代", { n: gen + 1 })}
               </span>
             </div>
@@ -2153,25 +2156,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     return map;
   }, [index, chainFrom]);
 
-  /** 詞條可行性:某詞條要能「配」到目標,至少要有一隻持有牠的自有帕魯
-   *  (性別有效)且其物種在配種圖上真的能配到目標(startOptions)或就是目標本身。
-   *  沒選目標時無從判斷,回 null = 不過濾。 */
-  const feasibleTraits = useMemo<Set<string> | null>(() => {
-    if (!dataset || !chainTo || !startOptions) return null;
-    const reach = new Set([...startOptions.keys()].map((s) => s.toLowerCase()));
-    reach.add(chainTo.toLowerCase());
-    const ok = new Set<string>();
-    for (const { pal, owner } of dataset.allPals) {
-      if (!inTraitPool(owner.uid)) continue;
-      if (pal.gender !== "Male" && pal.gender !== "Female") continue;
-      if (!reach.has(normalizeSpecies(pal.species))) continue;
-      for (const s of pal.passives) ok.add(s);
-      for (const s of pal.mastered_skills) ok.add(s);
-    }
-    return ok;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataset, chainTo, startOptions, persp]);
-
   /** 目前模式下,哪些帕魯已被選入插槽(卡片高亮用)。 */
   const selectedIds = useMemo(() => {
     if (mode === "pair") {
@@ -2189,6 +2173,42 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
 
   /** 突變可達表(299×299 窗口計算,只在資料就緒時算一次)。 */
   const mutReach = useMemo<MutationReach | null>(() => (mutIndex ? buildMutationReach(mutIndex, null) : null), [mutIndex]);
+
+  /** 目前配種來源下「能配到目標」的物種(不含詞條限制)。
+   *  純變異模式下目標若不在突變名單裡,這裡就是空的 —— 詞條可行性也該跟著全部反灰。 */
+  const modeReach = useMemo<Map<string, StartCandidate> | null>(() => {
+    if (!index || !chainTo) return null;
+    if (pathMode === "pure") {
+      if (!startOptions) return null;
+      const m = new Map<string, StartCandidate>();
+      for (const [id, v] of startOptions)
+        m.set(id, { depth: v.dist, overall: 1, expectedEggs: v.dist, mutationSteps: 0 });
+      return m;
+    }
+    if (!mutIndex || !mutReach) return null;
+    return startCandidates(index, mutIndex, mutReach, chainTo, pathMode, cake);
+  }, [index, chainTo, pathMode, startOptions, mutIndex, mutReach, cake]);
+
+  /** 詞條可行性:某詞條要能「配」到目標,至少要有一隻持有牠的自有帕魯
+   *  (性別有效)且其物種在配種圖上真的能配到目標(startOptions)或就是目標本身。
+   *  沒選目標時無從判斷,回 null = 不過濾。 */
+  const feasibleTraits = useMemo<Set<string> | null>(() => {
+    if (!dataset || !chainTo || !modeReach) return null;
+    const reach = new Set([...modeReach.keys()].map((s) => s.toLowerCase()));
+    // 純變異一定要經過突變蛋,目標自己身上的詞條帶不過去,所以不放行目標物種
+    if (pathMode !== "mutation") reach.add(chainTo.toLowerCase());
+    const ok = new Set<string>();
+    for (const { pal, owner } of dataset.allPals) {
+      if (!inTraitPool(owner.uid)) continue;
+      if (pal.gender !== "Male" && pal.gender !== "Female") continue;
+      if (!reach.has(normalizeSpecies(pal.species))) continue;
+      for (const s of pal.passives) ok.add(s);
+      for (const s of pal.mastered_skills) ok.add(s);
+    }
+    return ok;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataset, chainTo, modeReach, pathMode, persp]);
+
 
   /** 詞條模式:擁有「帶任一所選詞條」帕魯的物種(配種表命名空間,原大小寫)。 */
   const traitCarrierSpecies = useMemo<Set<string> | null>(() => {
@@ -2268,21 +2288,12 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       desired.length > 0 && traitCarrierSpecies
         ? new Map([...m].filter(([id]) => traitCarrierSpecies.has(id)))
         : m;
-    if (pathMode === "pure") {
-      // 純直系沿用既有的 startOptions(每物種一次 solveChain),轉成同一種形狀
-      if (!startOptions) return null;
-      const m = new Map<string, StartCandidate>();
-      // 純直系:每一步必定生得出,期望蛋數就等於代數
-      for (const [id, v] of startOptions)
-        m.set(id, { depth: v.dist, overall: 1, expectedEggs: v.dist, mutationSteps: 0 });
-      return withTraits(m);
-    }
-    if (!mutIndex || !mutReach) return null;
     // 有選詞條 → 初代清單直接來自詞條圖,每一筆都保證能把詞條帶到目標
     if (traitGraph) return traitGraph.starts;
-    return startCandidates(index, mutIndex, mutReach, chainTo, pathMode, cake);
+    if (!modeReach) return null;
+    return pathMode === "pure" ? withTraits(modeReach) : modeReach;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, chainTo, pathMode, startOptions, mutIndex, mutReach, cake, desired, traitCarrierSpecies, traitGraph]);
+  }, [index, chainTo, pathMode, modeReach, desired, traitCarrierSpecies, traitGraph]);
 
   /** 混合/純突變路徑:pure 模式沿用原本的 solveChain,不走這裡。 */
   const hybrid = useMemo<HybridPath | null>(() => {

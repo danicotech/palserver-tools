@@ -5,7 +5,7 @@ import type { Pal, Player } from "./types";
 import type { OwnedPal } from "./data";
 import { Chip, fmtNum, OnlineDot } from "./ui";
 import { PalBrowser } from "./PalBrowser";
-import { playerAvatarUrl, playerInitial } from "./playerAvatar";
+import { usePlayerAvatar, playerInitial } from "./playerAvatar";
 import { t } from "../i18n";
 
 export function PlayerCard({
@@ -24,7 +24,9 @@ export function PlayerCard({
   const sp = player.status_points;
   const [open, setOpen] = useState(defaultOpen);
   const owned = useMemo<OwnedPal[]>(() => player.pals.map((p) => ({ pal: p, owner: player })), [player]);
-  const avatar = useMemo(() => playerAvatarUrl(player), [player]);
+  // 頭像跟右上角「設定頭像」連動;沒設定才用固定備援(與總覽同一條規則)
+  const avatarOf = usePlayerAvatar();
+  const avatar = useMemo(() => avatarOf(player), [avatarOf, player]);
 
   return (
     <div className={`overflow-hidden rounded-2xl bg-card ring-1 ${online ? "ring-2 ring-grass" : "ring-line"}`}>
@@ -34,7 +36,7 @@ export function PlayerCard({
       >
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="flex items-center gap-2 text-xl font-bold text-ink">
-            {/* 左上頭像:與地圖標記用同一份規則(playerAvatar) */}
+            {/* 左上頭像:與地圖標記、總覽用同一份規則(playerAvatar) */}
             <span
               className={`inline-flex size-9 shrink-0 items-center justify-center self-center overflow-hidden rounded-full bg-card-soft ring-2 ${
                 online ? "ring-grass" : "ring-line"

@@ -1,32 +1,31 @@
 /**
- * 玩家頭像的單一真相來源 —— 玩家卡與地圖標記共用,兩邊才會長一樣。
+ * 玩家頭像的單一真相來源 —— 玩家卡、地圖標記、總覽/排行榜/上線分析共用同一條規則:
  *
- * 玩家本身沒有頭像圖,故從他擁有的帕魯挑一隻當代表:以 UID 做穩定雜湊來選,
- * 這樣同一位玩家每次進站都是同一張臉(不會因為抓了新帕魯就換頭像)。
- * 沒有任何帕魯時回 undefined,呼叫端改顯示名字首字。
+ *   1. 他在右上角「設定頭像」選的那隻(共用名冊,設定後全站即時連動)
+ *   2. 沒設定 → 用 UID 做穩定雜湊挑一隻固定的帕魯(randomPalAvatar,與各榜單同一支)
+ *
+ * 玩家卡與地圖原本是「從他擁有的帕魯挑一隻」,規則和總覽那邊不同,又沒讀名冊,
+ * 所以設定過頭像也不會變 —— 統一到這裡之後三邊才會一致。
  */
-import type { Player } from "./types";
-import { palInfo } from "./paldex";
+import { useCallback } from "react";
+import { useRoster } from "./rosterCtx";
+import { randomPalAvatar } from "./paldex";
 
-function hash(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
+/** 沒設定頭像時的固定備援(與總覽/排行榜同一條規則)。 */
+export function fallbackAvatarUrl(uid: string, name?: string): string {
+  return randomPalAvatar(uid || name || "");
 }
 
-export function playerAvatarUrl(player: Player): string | undefined {
-  const pals = player.pals;
-  if (!pals?.length) return undefined;
-  // 只考慮查得到圖鑑頭像的帕魯,避免挑到沒有圖的變體
-  const withIcon = pals.filter((p) => palInfo(p.species).iconUrl);
-  if (!withIcon.length) return undefined;
-  return palInfo(withIcon[hash(player.uid) % withIcon.length].species).iconUrl;
+/** 取得「這位玩家該顯示哪張頭像」;名冊更新會換一個新函式,呼叫端記得放進 deps。 */
+export function usePlayerAvatar(): (p: { uid: string; name: string }) => string | undefined {
+  const { avatarUrlFor } = useRoster();
+  return useCallback(
+    (p: { uid: string; name: string }) => avatarUrlFor(p.name) || fallbackAvatarUrl(p.uid, p.name) || undefined,
+    [avatarUrlFor],
+  );
 }
 
-/** 沒有頭像時的備援:名字首字。 */
-export function playerInitial(player: Player): string {
+/** 連備援圖都拿不到時:顯示名字首字。 */
+export function playerInitial(player: { name: string }): string {
   return (player.name || "?").slice(0, 1);
 }
