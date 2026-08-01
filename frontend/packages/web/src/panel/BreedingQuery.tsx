@@ -519,30 +519,32 @@ function PalCell({
   );
 }
 
-/** 梯度上滑過帕魯時的浮動說明:誰有這隻、誰身上有這一步要帶的詞條。
- *  這些是「要去找誰」才需要的細節,平常擺在版面上太吵,所以只在滑過時出現。 */
-export interface PalTipData {
-  id: string;
-  /** 這一步這隻必須帶進來的詞條 bitmask(0 = 不必帶) */
-  need: number;
-  rect: DOMRect;
-}
-function PalTip({
-  data,
+/** 「誰有這隻」面板:誰擁有、誰身上帶著這一步要用的詞條。
+ *  原本做成滑過就浮出來的浮層,但它會蓋住下面的梯度 —— 改成點「👥 誰有」
+ *  才展開,而且是接在該列下方,把內容往下推而不是遮住。 */
+function OwnerPanel({
+  id,
+  need,
   desired,
   owners,
   pool,
+  style,
+  onClose,
 }: {
-  data: PalTipData;
+  id: string;
+  /** 這一步這隻必須帶進來的詞條 bitmask(0 = 不必帶) */
+  need: number;
   /** 目前選的詞條(空 = 沒開篩選) */
   desired: string[];
   /** 物種持有者;null = 玩家視角關掉 */
   owners: { name: string; n: number }[] | null;
   /** 這個物種、在視角範圍內的自有個體 */
   pool: SaveBreedingPal[];
+  style?: CSSProperties;
+  onClose: () => void;
 }): JSX.Element {
   useI18n();
-  const info = palInfo(data.id.toLowerCase());
+  const info = palInfo(id.toLowerCase());
   const total = owners?.reduce((a, b) => a + b.n, 0) ?? 0;
   const maskOf = (c: SaveBreedingPal) => {
     let m = 0;
@@ -558,83 +560,121 @@ function PalTip({
         .filter((x) => x.m !== 0)
         .sort(
           (x, y) =>
-            Number((data.need & ~y.m) === 0) - Number((data.need & ~x.m) === 0) ||
-            y.m.toString(2).replace(/0/g, "").length - x.m.toString(2).replace(/0/g, "").length,
+            Number((need & ~y.m) === 0) - Number((need & ~x.m) === 0) ||
+            popcount(y.m) - popcount(x.m),
         )
     : [];
-  const top = Math.min(data.rect.bottom + 6, Math.max(8, window.innerHeight - 320));
-  const left = Math.max(8, Math.min(data.rect.left, window.innerWidth - 300));
   return (
-    <div
-      className="pointer-events-none fixed z-50 w-72 rounded-cute bg-card p-2.5 text-[11px] shadow-cute ring-1 ring-line"
-      style={{ top, left }}
-    >
-      <div className="flex items-center gap-2">
-        {info.iconUrl && <img src={info.iconUrl} alt="" className="size-8 rounded-full bg-card-soft ring-1 ring-line" />}
+    <div className="mt-1 rounded-xl bg-card-soft/80 p-2 text-[11px] ring-1 ring-pal/40" style={style}>
+      <div className="mb-1 flex items-center gap-2">
+        {info.iconUrl && <img src={info.iconUrl} alt="" className="size-6 rounded-full bg-card ring-1 ring-line" />}
         <span className="min-w-0 flex-1">
-          <b className="text-sm text-ink">{info.zh || data.id}</b>
+          <b className="text-ink">{info.zh || id}</b>
           {owners && (
             <span className="ml-1 text-ink-muted">
               {owners.length ? t("{n} 人共 {total} 隻", { n: owners.length, total }) : t("全服沒有人有")}
             </span>
           )}
+          {need > 0 && (
+            <span className="ml-1 text-ink-muted">
+              · {t("這一步要帶")}{" "}
+              {desired
+                .filter((_, i) => need & (1 << i))
+                .map((x) => (
+                  <span key={x} className="ml-0.5 rounded bg-pal/12 px-1 py-0.5 font-bold text-pal">
+                    {x}
+                  </span>
+                ))}
+            </span>
+          )}
         </span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("收合")}
+          className="shrink-0 rounded-full px-1.5 text-ink-muted transition hover:text-ink"
+        >
+          ✕
+        </button>
       </div>
 
-      {data.need > 0 && (
-        <p className="mt-1.5 flex flex-wrap items-center gap-1">
-          <span className="text-ink-muted">{t("這一步要帶")}</span>
-          {desired
-            .filter((_, i) => data.need & (1 << i))
-            .map((x) => (
-              <span key={x} className="rounded bg-pal/12 px-1.5 py-0.5 font-bold text-pal">
-                {x}
-              </span>
-            ))}
-        </p>
-      )}
-
       {carriers.length > 0 && (
-        <div className="mt-1.5 border-t border-line pt-1.5">
+        <>
           <p className="mb-1 font-bold text-ink-muted">🏷️ {t("誰有帶詞條的這隻")}</p>
-          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
-            {carriers.slice(0, 10).map(({ c, m }) => (
-              <span key={c.instanceId} className={`flex flex-wrap items-center gap-1 ${(data.need & ~m) === 0 ? "" : "opacity-70"}`}>
+          <div className="mb-1.5 flex max-h-28 flex-wrap gap-1 overflow-y-auto">
+            {carriers.slice(0, 24).map(({ c, m }) => (
+              <span
+                key={c.instanceId}
+                className={`flex items-center gap-1 rounded bg-card px-1.5 py-0.5 ring-1 ${
+                  (need & ~m) === 0 ? "ring-grass/50" : "ring-line opacity-70"
+                }`}
+              >
                 <b className="text-ink">{c.ownerName || "?"}</b>
                 <span className="text-ink-muted">
                   {c.nickname ? `「${c.nickname}」` : ""}
-                  {c.level ? ` Lv${c.level}` : ""}
+                  {c.level ? `Lv${c.level}` : ""}
                 </span>
                 {desired
                   .filter((_, i) => m & (1 << i))
                   .map((x) => (
-                    <span key={x} className="rounded bg-grass/12 px-1 py-0.5 font-semibold text-grass">
+                    <span key={x} className="rounded bg-grass/12 px-1 font-semibold text-grass">
                       {x}
                     </span>
                   ))}
               </span>
             ))}
-            {carriers.length > 10 && <span className="text-ink-muted">{t("…還有 {n} 隻", { n: carriers.length - 10 })}</span>}
+            {carriers.length > 24 && (
+              <span className="text-ink-muted">{t("…還有 {n} 隻", { n: carriers.length - 24 })}</span>
+            )}
           </div>
-        </div>
+        </>
       )}
 
       {owners && owners.length > 0 && (
-        <div className="mt-1.5 border-t border-line pt-1.5">
+        <>
           <p className="mb-1 font-bold text-ink-muted">👥 {t("持有者")}</p>
-          <div className="flex flex-wrap gap-1">
-            {owners.slice(0, 12).map((o) => (
-              <span key={o.name} className="rounded bg-card-soft px-1.5 py-0.5 ring-1 ring-line">
+          <div className="flex max-h-28 flex-wrap gap-1 overflow-y-auto">
+            {owners.map((o) => (
+              <span key={o.name} className="rounded bg-card px-1.5 py-0.5 ring-1 ring-line">
                 <b className="text-ink">{o.name}</b>
                 <span className="text-ink-muted">×{o.n}</span>
               </span>
             ))}
-            {owners.length > 12 && <span className="text-ink-muted">{t("…還有 {n} 人", { n: owners.length - 12 })}</span>}
           </div>
-        </div>
+        </>
       )}
     </div>
   );
+}
+
+/** 由每輪成功率還原「突變時中獎率」:overall = 觸發率^k × Π中獎率。
+ *  提示文字要同時給出兩個數字,免得 3.00% 被誤讀成中獎率。 */
+function hitRateOf(info: StartCandidate, cake: CakeKind): number {
+  if (!info.mutationSteps) return 1;
+  return Math.min(1, info.overall / Math.pow(MUTATION_RATE[cake], info.mutationSteps));
+}
+
+/** 一顆「👥 誰有」小鈕:點開該帕魯的持有者面板。 */
+function OwnerToggle({ id, on, onClick }: { id: string; on: boolean; onClick: () => void }): JSX.Element {
+  useI18n();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={t("查看誰有這隻")}
+      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ring-1 transition ${
+        on ? "bg-pal text-white ring-pal" : "bg-card-soft text-ink-muted ring-line hover:ring-pal"
+      }`}
+    >
+      👥 {palInfo(id.toLowerCase()).zh || id}
+    </button>
+  );
+}
+
+function popcount(x: number): number {
+  let c = 0;
+  for (let v = x; v; v &= v - 1) c++;
+  return c;
 }
 
 function PyramidTier({
@@ -1208,10 +1248,8 @@ function HybridPathView({
   const traitNames = (mask: number) => desired.filter((_, i) => mask & (1 << i));
   /** 解算器算過詞條(steps 帶著 mask)= 這條路線保證把詞條送到目標。 */
   const traitAware = desired.length > 0 && path.steps[0]?.fromNeed !== undefined;
-  /** 滑鼠移到哪一隻身上(誰有牠、誰帶著詞條都收在浮動說明裡) */
-  const [tip, setTip] = useState<PalTipData | null>(null);
-  const hover = (id: string, need: number) => (rect: DOMRect | null) =>
-    setTip(rect ? { id, need, rect } : null);
+  /** 哪一列的哪一格正在看持有者(key = `${列}:${a|b}`);一次只開一個 */
+  const [openOwner, setOpenOwner] = useState<string | null>(null);
   const poolOf = (id: string) => ownedPool.filter((c) => normalizeSpecies(c.characterId) === id.toLowerCase());
   return (
     <Card className="overflow-hidden">
@@ -1284,7 +1322,6 @@ function HybridPathView({
                 id={s.from}
                 meta={metaOf(s.from)}
                 owned={has(s.from)}
-                onHover={stepIdx === 0 ? hover(s.from, s.fromNeed ?? 0) : undefined}
                 active={stepIdx === 0 && openStart}
                 title={stepIdx === 0 ? t("點擊更換初代(會重新計算整條路線)") : undefined}
                 onClick={
@@ -1306,7 +1343,6 @@ function HybridPathView({
                   id={s.partner}
                   meta={metaOf(s.partner)}
                   owned={has(s.partner)}
-                  onHover={hover(s.partner, needMask)}
                   active={openStep === stepIdx}
                   title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
                   onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
@@ -1372,13 +1408,14 @@ function HybridPathView({
                           {info.mutationSteps > 0 && (
                             <span
                               className={`flex items-center gap-0.5 ${on ? "text-white/85" : "text-berry"}`}
-                              title={t("每顆蛋 {p}%,平均要 {n} 顆", {
+                              title={t("突變時中獎 {h}%,每顆蛋 {p}%,平均要 {n} 顆蛋", {
+                                h: (hitRateOf(info, cake) * 100).toFixed(1),
                                 p: (info.overall * 100).toFixed(2),
                                 n: Math.round(info.expectedEggs),
                               })}
                             >
                               <img src={MUTATION_ICON} alt="" className="size-3.5" />
-                              {t("約 {n} 顆蛋", { n: Math.round(info.expectedEggs) })}
+                              {t("每顆蛋")} {(info.overall * 100).toFixed(2)}%
                             </span>
                           )}
                           {own && <span className={on ? "text-white/85" : "text-grass"}>✓</span>}
@@ -1433,7 +1470,7 @@ function HybridPathView({
             )}
             {traitAware && (() => {
               // 一行結論:這一列誰要帶什麼進來、生出來會累積到幾個。
-              // 「誰有這隻/誰身上帶著這些詞條」滑過帕魯就會浮出來,不佔版面。
+              // 「誰有這隻/誰身上帶著這些詞條」點下方的 👥 才展開,不佔版面也不遮畫面。
               const fromMask = stepIdx === 0 ? (s.fromNeed ?? 0) : 0;
               const childMask = s.childNeed ?? 0;
               const fromPal = fromMask ? carrierFor(s.from, fromMask) : undefined;
@@ -1480,6 +1517,39 @@ function HybridPathView({
                 </div>
               );
             })()}
+            {/* 誰有這隻:只有「你要自己準備」的那幾格需要查(最底列的 A、每一列的 B) */}
+            {(() => {
+              const slots: { key: string; id: string; need: number }[] = [];
+              if (stepIdx === 0) slots.push({ key: `${stepIdx}:a`, id: s.from, need: traitAware ? (s.fromNeed ?? 0) : 0 });
+              if (s.partner) slots.push({ key: `${stepIdx}:b`, id: s.partner, need: needMask });
+              const open = slots.find((x) => x.key === openOwner);
+              if (!slots.length) return null;
+              return (
+                <>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 px-1" style={rowWidth(gen)}>
+                    {slots.map((x) => (
+                      <OwnerToggle
+                        key={x.key}
+                        id={x.id}
+                        on={openOwner === x.key}
+                        onClick={() => setOpenOwner(openOwner === x.key ? null : x.key)}
+                      />
+                    ))}
+                  </div>
+                  {open && (
+                    <OwnerPanel
+                      id={open.id}
+                      need={open.need}
+                      desired={desired}
+                      owners={ownersOf(open.id)}
+                      pool={poolOf(open.id)}
+                      style={rowWidth(gen)}
+                      onClose={() => setOpenOwner(null)}
+                    />
+                  )}
+                </>
+              );
+            })()}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-ink-muted" style={rowWidth(gen)}>
               {s.kind === "mutation" ? (
                 <>
@@ -1504,9 +1574,6 @@ function HybridPathView({
           </div>
         );
       })}
-      {tip && (
-        <PalTip data={tip} desired={desired} owners={ownersOf(tip.id)} pool={poolOf(tip.id)} />
-      )}
     </Card>
   );
 }
@@ -1741,8 +1808,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     return set;
   }, [dataset, persp]);
 
-  /** 純直系梯度上滑到哪一隻(浮動說明用) */
-  const [pathTip, setPathTip] = useState<PalTipData | null>(null);
+  /** 純直系梯度上哪一格正在看持有者(key = `${代}:${a|b}`) */
+  const [pathOwner, setPathOwner] = useState<string | null>(null);
 
   /** 物種 → 這個視角下誰擁有、各幾隻(多→少)。「全部帕魯種類」時不看擁有者。 */
   const ownersBySpecies = useMemo<Map<string, { name: string; n: number }[]> | null>(() => {
@@ -2896,12 +2963,13 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               {info.mutationSteps > 0 && (
                                 <span
                                   className="text-berry"
-                                  title={t("每顆蛋 {p}%,平均要 {n} 顆", {
+                                  title={t("突變時中獎 {h}%,每顆蛋 {p}%,平均要 {n} 顆蛋", {
+                                    h: (hitRateOf(info, cake) * 100).toFixed(1),
                                     p: (info.overall * 100).toFixed(2),
                                     n: Math.round(info.expectedEggs),
                                   })}
                                 >
-                                  {t("約 {n} 顆蛋", { n: Math.round(info.expectedEggs) })}
+                                  {t("每顆蛋")} {(info.overall * 100).toFixed(2)}%
                                 </span>
                               )}
                               {own && <span className="text-grass">✓</span>}
@@ -3129,7 +3197,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               resultOwned={
                                 gen < d - 1 && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
                               }
-                              onHover={(rect) => setPathTip(rect ? { id: sp, need: 0, rect } : null)}
                               active={openTier === gen}
                               onClick={() => {
                                 setOpenTier(openTier === gen ? null : gen);
@@ -3146,7 +3213,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                           id={chosen.partner}
                                           meta={metaOf(chosen.partner)}
                                           owned={ownedSet ? has(chosen.partner) : undefined}
-                                          onHover={(rect) => setPathTip(rect ? { id: chosen.partner, need: 0, rect } : null)}
                                           active={openSteps.has(gen)}
                                           title={t("點擊更換夥伴")}
                                           onClick={() => {
@@ -3170,6 +3236,45 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               }
                             />
                           </div>
+
+                          {/* 誰有這隻:最底列的 A 與每一列的 B 才需要自己準備 */}
+                          {gen < d && (() => {
+                            const rowStyle = { width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" };
+                            const slots = [
+                              ...(gen === 0 ? [{ key: `${gen}:a`, id: sp }] : []),
+                              { key: `${gen}:b`, id: chosenOf(gen).partner },
+                            ];
+                            const open = slots.find((x) => x.key === pathOwner);
+                            return (
+                              <>
+                                <div className="mt-1 flex flex-wrap items-center gap-1.5 px-1" style={rowStyle}>
+                                  {slots.map((x) => (
+                                    <OwnerToggle
+                                      key={x.key}
+                                      id={x.id}
+                                      on={pathOwner === x.key}
+                                      onClick={() => setPathOwner(pathOwner === x.key ? null : x.key)}
+                                    />
+                                  ))}
+                                </div>
+                                {open && (
+                                  <OwnerPanel
+                                    id={open.id}
+                                    need={0}
+                                    desired={desired}
+                                    owners={
+                                      ownersBySpecies?.get(open.id.toLowerCase()) ?? (ownersBySpecies ? [] : null)
+                                    }
+                                    pool={ownedForTraits.filter(
+                                      (c) => normalizeSpecies(c.characterId) === open.id.toLowerCase(),
+                                    )}
+                                    style={rowStyle}
+                                    onClose={() => setPathOwner(null)}
+                                  />
+                                )}
+                              </>
+                            );
+                          })()}
 
                           {/* 內嵌:B 夥伴選擇(點選即套用) */}
                           {gen < d && openSteps.has(gen) && (
@@ -3308,20 +3413,12 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                           )}
                         </div>
                       ))}
-                    {pathTip && (
-                      <PalTip
-                        data={pathTip}
-                        desired={desired}
-                        owners={ownersBySpecies?.get(pathTip.id.toLowerCase()) ?? (ownersBySpecies ? [] : null)}
-                        pool={ownedForTraits.filter((c) => normalizeSpecies(c.characterId) === pathTip.id.toLowerCase())}
-                      />
-                    )}
                   </Card>
                 );
               })()}
 
               <p className="text-center text-xs text-ink-muted">
-                {t("由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;滑過帕魯看誰有牠,點 A 換那一代的帕魯、點 B 換夥伴。")}
+                {t("由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;點 👥 看誰有那隻,點 A 換那一代的帕魯、點 B 換夥伴。")}
               </p>
             </div>
           )}

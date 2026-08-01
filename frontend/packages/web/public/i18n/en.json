@@ -2462,5 +2462,8 @@
   "這一步不必補詞條": "no passive needed at this step",
   "這一步要帶": "Must carry here",
   "約 {n} 顆蛋": "~{n} eggs",
-  "每顆蛋 {p}%,平均要 {n} 顆": "{p}% per egg — about {n} eggs on average"
+  "每顆蛋 {p}%,平均要 {n} 顆": "{p}% per egg — about {n} eggs on average",
+  "查看誰有這隻": "See who owns one",
+  "由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;點 👥 看誰有那隻,點 A 換那一代的帕魯、點 B 換夥伴。": "Read bottom-up: each row breeds A + B into the row above. Tap 👥 to see who owns a pal; click A to swap that generation, B to swap the partner.",
+  "突變時中獎 {h}%,每顆蛋 {p}%,平均要 {n} 顆蛋": "{h}% to hit once a mutation occurs; {p}% per egg; about {n} eggs on average"
 }
