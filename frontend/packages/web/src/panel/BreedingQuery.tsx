@@ -1682,19 +1682,40 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   /** 突變可達表(299×299 窗口計算,只在資料就緒時算一次)。 */
   const mutReach = useMemo<MutationReach | null>(() => (mutIndex ? buildMutationReach(mutIndex, null) : null), [mutIndex]);
 
+  /** 詞條模式:擁有「帶任一所選詞條」帕魯的物種(配種表命名空間,原大小寫)。 */
+  const traitCarrierSpecies = useMemo<Set<string> | null>(() => {
+    if (!index || !dataset || desired.length === 0) return null;
+    const carriers = new Set<string>();
+    for (const { pal, owner } of dataset.allPals) {
+      if (!inTraitPool(owner.uid)) continue;
+      if (
+        desired.some((d) => pal.passives.includes(d) || pal.mastered_skills.includes(d))
+      )
+        carriers.add(normalizeSpecies(pal.species));
+    }
+    return new Set([...index.speciesSet].filter((s) => carriers.has(s.toLowerCase())));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, dataset, desired, persp]);
+
   /** 選完目標後,哪些帕魯能當初代(含要幾代、成功率)。三種模式共用,是選初代的唯一提示來源。 */
   const startPool = useMemo<Map<string, StartCandidate> | null>(() => {
     if (!index || !chainTo) return null;
+    /** 選了詞條時,初代必須是「你擁有且帶該詞條」的物種 —— 詞條只能從初代帶上去。 */
+    const withTraits = (m: Map<string, StartCandidate>) =>
+      desired.length > 0 && traitCarrierSpecies
+        ? new Map([...m].filter(([id]) => traitCarrierSpecies.has(id)))
+        : m;
     if (pathMode === "pure") {
       // 純直系沿用既有的 startOptions(每物種一次 solveChain),轉成同一種形狀
       if (!startOptions) return null;
       const m = new Map<string, StartCandidate>();
       for (const [id, v] of startOptions) m.set(id, { depth: v.dist, overall: 1, mutationSteps: 0 });
-      return m;
+      return withTraits(m);
     }
     if (!mutIndex || !mutReach) return null;
-    return startCandidates(index, mutIndex, mutReach, chainTo, pathMode, cake);
-  }, [index, chainTo, pathMode, startOptions, mutIndex, mutReach, cake]);
+    return withTraits(startCandidates(index, mutIndex, mutReach, chainTo, pathMode, cake));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, chainTo, pathMode, startOptions, mutIndex, mutReach, cake, desired, traitCarrierSpecies]);
 
   /** 混合/純突變路徑:pure 模式沿用原本的 solveChain,不走這裡。 */
   const hybrid = useMemo<HybridPath | null>(() => {
@@ -1902,21 +1923,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
 
   const pagedAsChild = usePaged(revAsChild);
   const pagedAsParent = usePaged(revAsParent);
-
-  /** 詞條模式:擁有「帶任一所選詞條」帕魯的物種(配種表命名空間,原大小寫)。 */
-  const traitCarrierSpecies = useMemo<Set<string> | null>(() => {
-    if (!index || !dataset || desired.length === 0) return null;
-    const carriers = new Set<string>();
-    for (const { pal, owner } of dataset.allPals) {
-      if (!inTraitPool(owner.uid)) continue;
-      if (
-        desired.some((d) => pal.passives.includes(d) || pal.mastered_skills.includes(d))
-      )
-        carriers.add(normalizeSpecies(pal.species));
-    }
-    return new Set([...index.speciesSet].filter((s) => carriers.has(s.toLowerCase())));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, dataset, desired, persp]);
 
   /** 最短路徑的「網格即候選」過濾:開著哪個替換面板,右側網格就只顯示該處的合法選項。 */
   const swapFilter = useMemo<Set<string> | null>(() => {
@@ -2580,13 +2586,13 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
           </Card>
           )}
 
-          {treeSub === "path" && desired.length > 0 && chainTo && traitBusy && (
+          {treeSub === "path" && pathMode === "pure" && desired.length > 0 && chainTo && traitBusy && (
             <Card className="flex items-center justify-center gap-2 py-8 text-sm text-ink-muted">
               <span className="inline-block size-4 animate-spin rounded-full border-2 border-pal border-t-transparent" />
               {t("計算帶詞條路線中…")}
             </Card>
           )}
-          {treeSub === "path" && desired.length > 0 && chainTo && !traitBusy && traitSolution && (
+          {treeSub === "path" && pathMode === "pure" && desired.length > 0 && chainTo && !traitBusy && traitSolution && (
             <TraitSolutionView
               solution={traitSolution}
               desired={desired}
@@ -2603,7 +2609,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
               speciesIdOf={(lower) => (index ? [...index.speciesSet].find((s) => s.toLowerCase() === lower) : undefined)}
             />
           )}
-          {treeSub === "path" && desired.length > 0 && !chainTo && (
+          {treeSub === "path" && pathMode === "pure" && desired.length > 0 && !chainTo && (
             <Card className="text-center text-sm text-ink-muted">{t("先選一隻目標帕魯,再看帶詞條路線。")}</Card>
           )}
 
