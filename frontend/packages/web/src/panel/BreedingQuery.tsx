@@ -38,7 +38,17 @@ import {
   type MutationIndex,
   type MutationPair,
 } from "../mutationTable";
-import { buildMutationReach, solveHybrid, type HybridPath, type MutationReach, type PathMode } from "../hybridPath";
+import {
+  buildMutationReach,
+  solveHybrid,
+  startCandidates,
+  stepOptions,
+  type HybridPath,
+  type MutationReach,
+  type PathMode,
+  type StartCandidate,
+  type StepOption,
+} from "../hybridPath";
 import { loadPaldex, palInfo } from "./paldex";
 import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
@@ -988,6 +998,8 @@ function HybridPathView({
   boosted,
   mode,
   onPick,
+  index,
+  mut,
 }: {
   path: HybridPath;
   metaOf: (id: string) => PalMeta | undefined;
@@ -997,8 +1009,17 @@ function HybridPathView({
   boosted: boolean;
   mode: PathMode;
   onPick?: (id: string) => void;
+  index: BreedingTableIndex;
+  mut: MutationIndex;
 }) {
   const has = (id: string) => (ownedSet ? ownedSet.has(id.toLowerCase()) : undefined);
+  /** 使用者為某一步挑的夥伴(換路線時重置)。 */
+  const [picked, setPicked] = useState<Record<number, StepOption>>({});
+  const [openStep, setOpenStep] = useState<number | null>(null);
+  useEffect(() => {
+    setPicked({});
+    setOpenStep(null);
+  }, [path]);
   const d = path.steps.length;
   const shrink = pyramidShrink(d);
   const rowWidth = (gen: number) => ({ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" as const });
@@ -1022,9 +1043,20 @@ function HybridPathView({
         </span>
       </div>
       {/* 由目標往下回推:最上面是最後一次配種的結果 */}
-      {[...path.steps].reverse().map((s, i) => {
+      {[...path.steps].reverse().map((raw, i) => {
         const gen = d - 1 - i;
+        const stepIdx = d - 1 - i;
         const isLast = i === 0;
+        const opts = stepOptions(index, mut, raw.from, raw.child, mode, cake);
+        const chosen = picked[stepIdx];
+        // 沒挑過就用解算器給的;直系步驟解算器沒指定夥伴 → 用第一個合法選項
+        const s = chosen
+          ? { ...raw, partner: chosen.partner, kind: chosen.kind, chance: chosen.chance, perEgg: chosen.perEgg }
+          : raw.partner
+            ? raw
+            : opts[0]
+              ? { ...raw, partner: opts[0].partner, kind: opts[0].kind, chance: opts[0].chance, perEgg: opts[0].perEgg }
+              : raw;
         return (
           <div key={i} className="mt-1.5">
             <div
@@ -1048,16 +1080,68 @@ function HybridPathView({
               <span className="shrink-0 text-lg font-bold text-ink-muted sm:text-xl">+</span>
               {/* B(夥伴);直系步驟沒指定夥伴時顯示提示 */}
               {s.partner ? (
-                <PalCell id={s.partner} meta={metaOf(s.partner)} owned={has(s.partner)} onClick={onPick && (() => onPick(s.partner))} compact />
+                <PalCell
+                  id={s.partner}
+                  meta={metaOf(s.partner)}
+                  owned={has(s.partner)}
+                  active={openStep === stepIdx}
+                  title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
+                  onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
+                  hint={opts.length > 1 ? <span className="shrink-0 text-[11px] font-semibold text-ink-muted">▾{opts.length}</span> : undefined}
+                  compact
+                />
               ) : (
                 <span className="min-w-0 flex-1 basis-0 truncate rounded-xl bg-card-soft px-2 py-1.5 text-[13px] text-ink-muted ring-1 ring-line">
-                  {t("任一合法夥伴")}
+                  —
                 </span>
               )}
               {/* = C:這一列配出來的結果,讓人一眼看出下一代是誰 */}
               <span className="shrink-0 text-lg font-bold text-pal sm:text-xl">=</span>
               <PalCell id={s.child} meta={metaOf(s.child)} owned={has(s.child)} compact />
             </div>
+            {openStep === stepIdx && opts.length > 0 && (
+              <div className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-pal/50" style={rowWidth(gen)}>
+                <p className="mb-1.5 px-1 text-[11px] font-bold text-ink-muted">
+                  {t("選夥伴 —— 直系必得,變異看機率")}
+                </p>
+                <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto">
+                  {opts.slice(0, 60).map((o) => {
+                    const inf = palInfo(o.partner);
+                    const on = o.partner === s.partner && o.kind === s.kind;
+                    const own = has(o.partner);
+                    return (
+                      <button
+                        key={`${o.kind}-${o.partner}`}
+                        type="button"
+                        onClick={() => {
+                          setPicked((prev) => ({ ...prev, [stepIdx]: o }));
+                          setOpenStep(null);
+                        }}
+                        className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition ${
+                          on
+                            ? "bg-pal text-white ring-pal"
+                            : own
+                              ? "bg-grass/10 text-ink ring-grass/40 hover:ring-pal"
+                              : "bg-card text-ink ring-line hover:ring-pal"
+                        }`}
+                      >
+                        {inf.iconUrl && <img src={inf.iconUrl} alt="" className="size-5 rounded-full bg-card-soft" />}
+                        {inf.zh || o.partner}
+                        {o.kind === "breed" ? (
+                          <span className={on ? "text-white/85" : "text-grass"}>{t("直系")} 100%</span>
+                        ) : (
+                          <span className={`flex items-center gap-0.5 ${on ? "text-white/85" : "text-berry"}`}>
+                            <img src={MUTATION_ICON} alt="" className="size-3.5" />
+                            {(o.chance * 100).toFixed(1)}%
+                          </span>
+                        )}
+                        {own && <span className={on ? "text-white/85" : "text-grass"}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-ink-muted" style={rowWidth(gen)}>
               {s.kind === "mutation" ? (
                 <>
@@ -1510,6 +1594,20 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   /** 突變可達表(299×299 窗口計算,只在資料就緒時算一次)。 */
   const mutReach = useMemo<MutationReach | null>(() => (mutIndex ? buildMutationReach(mutIndex, null) : null), [mutIndex]);
 
+  /** 選完目標後,哪些帕魯能當初代(含要幾代、成功率)。三種模式共用,是選初代的唯一提示來源。 */
+  const startPool = useMemo<Map<string, StartCandidate> | null>(() => {
+    if (!index || !chainTo) return null;
+    if (pathMode === "pure") {
+      // 純直系沿用既有的 startOptions(每物種一次 solveChain),轉成同一種形狀
+      if (!startOptions) return null;
+      const m = new Map<string, StartCandidate>();
+      for (const [id, v] of startOptions) m.set(id, { depth: v.dist, overall: 1, mutationSteps: 0 });
+      return m;
+    }
+    if (!mutIndex || !mutReach) return null;
+    return startCandidates(index, mutIndex, mutReach, chainTo, pathMode, cake);
+  }, [index, chainTo, pathMode, startOptions, mutIndex, mutReach, cake]);
+
   /** 混合/純突變路徑:pure 模式沿用原本的 solveChain,不走這裡。 */
   const hybrid = useMemo<HybridPath | null>(() => {
     if (pathMode === "pure" || !index || !mutIndex || !mutReach || !chainFrom || !chainTo) return null;
@@ -1734,9 +1832,12 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
 
   /** 最短路徑的「網格即候選」過濾:開著哪個替換面板,右側網格就只顯示該處的合法選項。 */
   const swapFilter = useMemo<Set<string> | null>(() => {
-    // 純變異模式:網格只顯示「能由突變產出」的 143 隻
+    // 選目標時:純變異模式只列「能由突變產出」的 143 隻
     if (mode === "chain" && treeSub === "path" && pathMode === "mutation" && activeSlot === "to")
       return mutIndex ? new Set(mutIndex.eligible.map((p) => p.id)) : null;
+    // 選初代時:三種模式都只列「這個模式下到得了目標」的帕魯
+    if (mode === "chain" && treeSub === "path" && activeSlot === "from" && startPool)
+      return new Set(startPool.keys());
     if (mode !== "chain" || treeSub !== "path") return null;
     // 詞條模式:挑起點時只顯示「擁有且帶所選詞條」的物種;
     // 目標不受限 —— 詞條靠多代遺傳帶過去,目標本身不必是玩家已擁有的帶詞條帕魯。
@@ -1751,7 +1852,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     }
     if (activeSlot === "from" && chainTo && startOptions) return new Set(startOptions.keys());
     return null;
-  }, [mode, treeSub, openTier, chain, targetOptions, startOptions, tierCandidates, activeSlot, chainTo, desired, traitCarrierSpecies, mutIndex]);
+  }, [mode, treeSub, openTier, chain, targetOptions, startOptions, tierCandidates, activeSlot, chainTo, desired, traitCarrierSpecies, mutIndex, startPool]);
 
   const gridRows = useMemo(() => {
     const raw = q.trim();
@@ -2317,6 +2418,60 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 />
               </div>
             </div>
+            {/* 選完目標就直接告訴你有哪些初代可用(三種模式都適用) */}
+            {chainTo && !chainFrom && startPool && (
+              <div className="mt-2.5 rounded-cute bg-card-soft p-2.5 ring-1 ring-line">
+                {startPool.size === 0 ? (
+                  <p className="text-sm text-ink-muted">
+                    ⚠ {t("這個模式下沒有任何帕魯能配到 {name}", { name: nameOf(chainTo) })}
+                  </p>
+                ) : (
+                  <>
+                    <p className="mb-1.5 text-xs font-bold text-ink-muted">
+                      👉 {t("有 {n} 種帕魯能配到 {name},點下面或右側清單挑一隻當初代", {
+                        n: startPool.size,
+                        name: nameOf(chainTo),
+                      })}
+                    </p>
+                    <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
+                      {[...startPool.entries()]
+                        .sort((x, y) => {
+                          const ox = ownedSet?.has(x[0].toLowerCase()) ? 1 : 0;
+                          const oy = ownedSet?.has(y[0].toLowerCase()) ? 1 : 0;
+                          return oy - ox || x[1].depth - y[1].depth || y[1].overall - x[1].overall;
+                        })
+                        .slice(0, 40)
+                        .map(([id, info]) => {
+                          const inf = palInfo(id);
+                          const own = ownedSet?.has(id.toLowerCase());
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => {
+                                setChainFrom(id);
+                                setAutoStart(false);
+                                setActiveSlot(null);
+                              }}
+                              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition hover:ring-pal ${
+                                own ? "bg-grass/10 text-ink ring-grass/40" : "bg-card text-ink ring-line"
+                              }`}
+                            >
+                              {inf.iconUrl && <img src={inf.iconUrl} alt="" className="size-5 rounded-full bg-card-soft" />}
+                              {inf.zh || id}
+                              <span className="text-ink-muted">{t("{n} 代", { n: info.depth })}</span>
+                              {info.mutationSteps > 0 && (
+                                <span className="text-berry">{(info.overall * 100).toFixed(2)}%</span>
+                              )}
+                              {own && <span className="text-grass">✓</span>}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             {autoPool && chainTo && (
               <div className="mt-2.5 flex justify-center">
                 <button
@@ -2378,7 +2533,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
             <Card className="text-center text-sm text-ink-muted">{t("先選一隻目標帕魯,再看帶詞條路線。")}</Card>
           )}
 
-          {treeSub === "path" && pathMode !== "pure" && chainFrom && chainTo && (
+          {treeSub === "path" && pathMode !== "pure" && chainFrom && chainTo && mutIndex && (
             hybrid ? (
               <HybridPathView
                 path={hybrid}
@@ -2389,6 +2544,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 boosted={eggBoost}
                 mode={pathMode}
                 onPick={(id) => setChainFrom(id)}
+                index={index}
+                mut={mutIndex}
               />
             ) : (
               <Card className="text-center">
