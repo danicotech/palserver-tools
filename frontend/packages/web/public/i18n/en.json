@@ -2452,5 +2452,13 @@
   "要湊": "Needs",
   "隻帶詞條的帕魯": "passive-carrying pals",
   "全服沒有人有": "nobody on the server has one",
-  "等 {n} 人,共 {total} 隻": "and {n} owners in total, {total} pals"
+  "等 {n} 人,共 {total} 隻": "and {n} owners in total, {total} pals",
+  "{n} 人共 {total} 隻": "{n} owners, {total} pals",
+  "…還有 {n} 人": "…and {n} more owners",
+  "…還有 {n} 隻": "…and {n} more",
+  "持有者": "Owners",
+  "由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;滑過帕魯看誰有牠,點 A 換那一代的帕魯、點 B 換夥伴。": "Read bottom-up: each row breeds A + B into the row above. Hover a pal to see who owns it; click A to swap that generation, B to swap the partner.",
+  "誰有帶詞條的這隻": "Who has one with these passives",
+  "這一步不必補詞條": "no passive needed at this step",
+  "這一步要帶": "Must carry here"
 }

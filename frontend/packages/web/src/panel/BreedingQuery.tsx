@@ -458,6 +458,7 @@ function PalCell({
   hint,
   big,
   compact,
+  onHover,
 }: {
   id: string;
   meta?: PalMeta;
@@ -473,6 +474,8 @@ function PalCell({
   big?: boolean;
   /** 精簡樣式:省略屬性點與擁有徽章(用在「= 結果」格,一列才塞得下) */
   compact?: boolean;
+  /** 滑入/滑出:開關「誰有這隻」的浮動說明(傳 null = 關) */
+  onHover?: (rect: DOMRect | null) => void;
 }): JSX.Element {
   const info = palInfo(id);
   const Tag = onClick ? "button" : "div";
@@ -481,6 +484,10 @@ function PalCell({
       type={onClick ? "button" : undefined}
       onClick={onClick}
       title={title}
+      onMouseEnter={onHover ? (e) => onHover(e.currentTarget.getBoundingClientRect()) : undefined}
+      onMouseLeave={onHover ? () => onHover(null) : undefined}
+      onFocus={onHover ? (e) => onHover(e.currentTarget.getBoundingClientRect()) : undefined}
+      onBlur={onHover ? () => onHover(null) : undefined}
       className={`flex min-w-24 flex-1 basis-24 items-center gap-2 rounded-xl px-1.5 py-1 text-left sm:gap-2.5 ${
         onClick ? "cursor-pointer transition hover:bg-pal/10" : ""
       } ${active ? "ring-2 ring-sun" : ""}`}
@@ -512,52 +519,120 @@ function PalCell({
   );
 }
 
-/** 一列梯度下方的「誰有這隻」——(玩家視角是全服或某位玩家時才有意義)。
- *  配種要真的湊得到父母,所以 A/B 兩隻各列出持有者與隻數;沒人有就明講。 */
-function OwnerLine({
-  pals,
-  ownersOf,
-  style,
+/** 梯度上滑過帕魯時的浮動說明:誰有這隻、誰身上有這一步要帶的詞條。
+ *  這些是「要去找誰」才需要的細節,平常擺在版面上太吵,所以只在滑過時出現。 */
+export interface PalTipData {
+  id: string;
+  /** 這一步這隻必須帶進來的詞條 bitmask(0 = 不必帶) */
+  need: number;
+  rect: DOMRect;
+}
+function PalTip({
+  data,
+  desired,
+  owners,
+  pool,
 }: {
-  /** 這一列要湊的帕魯(A 與 B) */
-  pals: string[];
-  ownersOf: (id: string) => { name: string; n: number }[] | null;
-  style?: CSSProperties;
-}): JSX.Element | null {
+  data: PalTipData;
+  /** 目前選的詞條(空 = 沒開篩選) */
+  desired: string[];
+  /** 物種持有者;null = 玩家視角關掉 */
+  owners: { name: string; n: number }[] | null;
+  /** 這個物種、在視角範圍內的自有個體 */
+  pool: SaveBreedingPal[];
+}): JSX.Element {
   useI18n();
-  const rows = pals
-    .filter((id, i) => id && pals.indexOf(id) === i)
-    .map((id) => ({ id, owners: ownersOf(id) }))
-    .filter((r) => r.owners !== null);
-  if (!rows.length) return null;
+  const info = palInfo(data.id.toLowerCase());
+  const total = owners?.reduce((a, b) => a + b.n, 0) ?? 0;
+  const maskOf = (c: SaveBreedingPal) => {
+    let m = 0;
+    desired.forEach((d, i) => {
+      if (c.passives.includes(d)) m |= 1 << i;
+    });
+    return m;
+  };
+  // 帶著任一所選詞條的個體;能補齊這一步的排前面
+  const carriers = desired.length
+    ? pool
+        .map((c) => ({ c, m: maskOf(c) }))
+        .filter((x) => x.m !== 0)
+        .sort(
+          (x, y) =>
+            Number((data.need & ~y.m) === 0) - Number((data.need & ~x.m) === 0) ||
+            y.m.toString(2).replace(/0/g, "").length - x.m.toString(2).replace(/0/g, "").length,
+        )
+    : [];
+  const top = Math.min(data.rect.bottom + 6, Math.max(8, window.innerHeight - 320));
+  const left = Math.max(8, Math.min(data.rect.left, window.innerWidth - 300));
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-ink-muted" style={style}>
-      {rows.map((r) => {
-        const owners = r.owners!;
-        const total = owners.reduce((a, b) => a + b.n, 0);
-        return (
-          <span key={r.id} className="flex min-w-0 flex-wrap items-center gap-1">
-            <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold ring-1 ring-line">
-              {palInfo(r.id.toLowerCase()).zh || r.id}
+    <div
+      className="pointer-events-none fixed z-50 w-72 rounded-cute bg-card p-2.5 text-[11px] shadow-cute ring-1 ring-line"
+      style={{ top, left }}
+    >
+      <div className="flex items-center gap-2">
+        {info.iconUrl && <img src={info.iconUrl} alt="" className="size-8 rounded-full bg-card-soft ring-1 ring-line" />}
+        <span className="min-w-0 flex-1">
+          <b className="text-sm text-ink">{info.zh || data.id}</b>
+          {owners && (
+            <span className="ml-1 text-ink-muted">
+              {owners.length ? t("{n} 人共 {total} 隻", { n: owners.length, total }) : t("全服沒有人有")}
             </span>
-            {owners.length === 0 ? (
-              <span className="shrink-0 font-semibold text-sun">⚠ {t("全服沒有人有")}</span>
-            ) : (
-              <>
-                {owners.slice(0, 3).map((o) => (
-                  <span key={o.name} className="shrink-0">
-                    <b className="text-ink">{o.name}</b>
-                    <span className="text-ink-muted">×{o.n}</span>
-                  </span>
-                ))}
-                {owners.length > 3 && (
-                  <span className="shrink-0">{t("等 {n} 人,共 {total} 隻", { n: owners.length, total })}</span>
-                )}
-              </>
-            )}
-          </span>
-        );
-      })}
+          )}
+        </span>
+      </div>
+
+      {data.need > 0 && (
+        <p className="mt-1.5 flex flex-wrap items-center gap-1">
+          <span className="text-ink-muted">{t("這一步要帶")}</span>
+          {desired
+            .filter((_, i) => data.need & (1 << i))
+            .map((x) => (
+              <span key={x} className="rounded bg-pal/12 px-1.5 py-0.5 font-bold text-pal">
+                {x}
+              </span>
+            ))}
+        </p>
+      )}
+
+      {carriers.length > 0 && (
+        <div className="mt-1.5 border-t border-line pt-1.5">
+          <p className="mb-1 font-bold text-ink-muted">🏷️ {t("誰有帶詞條的這隻")}</p>
+          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
+            {carriers.slice(0, 10).map(({ c, m }) => (
+              <span key={c.instanceId} className={`flex flex-wrap items-center gap-1 ${(data.need & ~m) === 0 ? "" : "opacity-70"}`}>
+                <b className="text-ink">{c.ownerName || "?"}</b>
+                <span className="text-ink-muted">
+                  {c.nickname ? `「${c.nickname}」` : ""}
+                  {c.level ? ` Lv${c.level}` : ""}
+                </span>
+                {desired
+                  .filter((_, i) => m & (1 << i))
+                  .map((x) => (
+                    <span key={x} className="rounded bg-grass/12 px-1 py-0.5 font-semibold text-grass">
+                      {x}
+                    </span>
+                  ))}
+              </span>
+            ))}
+            {carriers.length > 10 && <span className="text-ink-muted">{t("…還有 {n} 隻", { n: carriers.length - 10 })}</span>}
+          </div>
+        </div>
+      )}
+
+      {owners && owners.length > 0 && (
+        <div className="mt-1.5 border-t border-line pt-1.5">
+          <p className="mb-1 font-bold text-ink-muted">👥 {t("持有者")}</p>
+          <div className="flex flex-wrap gap-1">
+            {owners.slice(0, 12).map((o) => (
+              <span key={o.name} className="rounded bg-card-soft px-1.5 py-0.5 ring-1 ring-line">
+                <b className="text-ink">{o.name}</b>
+                <span className="text-ink-muted">×{o.n}</span>
+              </span>
+            ))}
+            {owners.length > 12 && <span className="text-ink-muted">{t("…還有 {n} 人", { n: owners.length - 12 })}</span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -575,6 +650,7 @@ function PyramidTier({
   resultId,
   resultMeta,
   resultOwned,
+  onHover,
 }: {
   id: string;
   gen: number;
@@ -593,6 +669,8 @@ function PyramidTier({
   resultId?: string;
   resultMeta?: PalMeta;
   resultOwned?: boolean;
+  /** 滑入/滑出 A 格:開關「誰有這隻」的浮動說明 */
+  onHover?: (rect: DOMRect | null) => void;
 }): JSX.Element {
   const mix = 4 + Math.round((depth === 0 ? 1 : gen / depth) * 12);
   const badge = role === "target" ? `🎯 ${t("目標")}` : role === "start" ? `🏁 ${t("初代")}` : t("第 {n} 代", { n: gen });
@@ -609,6 +687,7 @@ function PyramidTier({
         meta={meta}
         owned={owned}
         onClick={onClick}
+        onHover={onHover}
         active={active}
         title={onClick ? t("點擊替換這一代") : undefined}
         big={role === "target"}
@@ -1129,6 +1208,11 @@ function HybridPathView({
   const traitNames = (mask: number) => desired.filter((_, i) => mask & (1 << i));
   /** 解算器算過詞條(steps 帶著 mask)= 這條路線保證把詞條送到目標。 */
   const traitAware = desired.length > 0 && path.steps[0]?.fromNeed !== undefined;
+  /** 滑鼠移到哪一隻身上(誰有牠、誰帶著詞條都收在浮動說明裡) */
+  const [tip, setTip] = useState<PalTipData | null>(null);
+  const hover = (id: string, need: number) => (rect: DOMRect | null) =>
+    setTip(rect ? { id, need, rect } : null);
+  const poolOf = (id: string) => ownedPool.filter((c) => normalizeSpecies(c.characterId) === id.toLowerCase());
   return (
     <Card className="overflow-hidden">
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
@@ -1200,6 +1284,7 @@ function HybridPathView({
                 id={s.from}
                 meta={metaOf(s.from)}
                 owned={has(s.from)}
+                onHover={stepIdx === 0 ? hover(s.from, s.fromNeed ?? 0) : undefined}
                 active={stepIdx === 0 && openStart}
                 title={stepIdx === 0 ? t("點擊更換初代(會重新計算整條路線)") : undefined}
                 onClick={
@@ -1221,6 +1306,7 @@ function HybridPathView({
                   id={s.partner}
                   meta={metaOf(s.partner)}
                   owned={has(s.partner)}
+                  onHover={hover(s.partner, needMask)}
                   active={openStep === stepIdx}
                   title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
                   onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
@@ -1339,68 +1425,51 @@ function HybridPathView({
                 </div>
               </div>
             )}
-            {/* 誰有這兩隻 —— 最底列的 A 是初代要自己準備的,其餘 A 是上一代配出來的 */}
-            <OwnerLine
-              pals={stepIdx === 0 ? [s.from, s.partner] : [s.partner]}
-              ownersOf={ownersOf}
-              style={rowWidth(gen)}
-            />
             {traitAware && (() => {
-              // 這一列的詞條帳目:A 手上已經有什麼 ＋ B 帶進來什麼 ⇒ 子代變成幾個。
-              // 只印「B 要帶」會讓人以為中間那隻沒帶詞條,所以三段都印出來。
-              const fromMask = s.fromNeed ?? 0;
+              // 一行結論:這一列誰要帶什麼進來、生出來會累積到幾個。
+              // 「誰有這隻/誰身上帶著這些詞條」滑過帕魯就會浮出來,不佔版面。
+              const fromMask = stepIdx === 0 ? (s.fromNeed ?? 0) : 0;
               const childMask = s.childNeed ?? 0;
-              const fromPal = stepIdx === 0 && fromMask ? carrierFor(s.from, fromMask) : undefined;
+              const fromPal = fromMask ? carrierFor(s.from, fromMask) : undefined;
               const partnerPal = needMask ? carrierFor(s.partner, needMask) : undefined;
-              const who = (p?: SaveBreedingPal) =>
-                p ? (
-                  <>
-                    (<b className="text-ink">{p.ownerName || "?"}</b> {t("的帕魯")})
-                  </>
-                ) : null;
-              const chips = (mask: number, tone: string) =>
-                traitNames(mask).map((x) => (
-                  <span key={x} className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${tone}`}>
-                    {x}
+              const part = (id: string, mask: number, pal?: SaveBreedingPal) => (
+                <span className="flex min-w-0 flex-wrap items-center gap-1">
+                  <span className="shrink-0">
+                    {palInfo(id.toLowerCase()).zh || id}
+                    {pal && (
+                      <>
+                        (<b className="text-ink">{pal.ownerName || "?"}</b>)
+                      </>
+                    )}
                   </span>
-                ));
+                  {traitNames(mask).map((x) => (
+                    <span key={x} className="shrink-0 rounded bg-pal/12 px-1.5 py-0.5 text-[10px] font-bold text-pal">
+                      {x}
+                    </span>
+                  ))}
+                </span>
+              );
               return (
                 <div
-                  className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 px-1 text-[11px] text-ink-muted"
+                  className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[11px] text-ink-muted"
                   style={rowWidth(gen)}
                 >
-                  <span className="flex min-w-0 flex-wrap items-center gap-1">
-                    <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold ring-1 ring-line">
-                      {t("詞條")}
-                    </span>
-                    <span className="shrink-0">
-                      {palInfo(s.from.toLowerCase()).zh || s.from}
-                      {stepIdx === 0 ? who(fromPal) : null}
-                    </span>
-                    {fromMask ? (
-                      chips(fromMask, "bg-ink-muted/10 text-ink")
-                    ) : (
-                      <span className="shrink-0">{t("無")}</span>
-                    )}
-                    {stepIdx > 0 && fromMask ? <span className="shrink-0">{t("(上一代帶上來)")}</span> : null}
+                  <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold ring-1 ring-line">
+                    {t("要帶")}
                   </span>
-                  <span className="flex min-w-0 flex-wrap items-center gap-1">
-                    <span className="shrink-0 font-bold">＋</span>
-                    <span className="shrink-0">
-                      {palInfo(s.partner.toLowerCase()).zh || s.partner}
-                      {who(partnerPal)}
-                    </span>
-                    {needMask ? chips(needMask, "bg-pal/12 text-pal") : <span className="shrink-0">{t("不必帶詞條")}</span>}
-                  </span>
-                  <span className="flex min-w-0 flex-wrap items-center gap-1">
-                    <span className="shrink-0 font-bold text-pal">⇒</span>
-                    <span className="shrink-0">
-                      {palInfo(s.child.toLowerCase()).zh || s.child}{" "}
-                      <b className={childMask === (1 << desired.length) - 1 ? "text-grass" : "text-ink"}>
-                        {traitNames(childMask).length}/{desired.length}
-                      </b>
-                    </span>
-                    {chips(childMask, "bg-grass/12 text-grass")}
+                  {fromMask > 0 && (
+                    <>
+                      {part(s.from, fromMask, fromPal)}
+                      <span className="shrink-0 font-bold">＋</span>
+                    </>
+                  )}
+                  {needMask > 0 ? part(s.partner, needMask, partnerPal) : <span className="shrink-0">{t("這一步不必補詞條")}</span>}
+                  <span className="shrink-0 font-bold text-pal">⇒</span>
+                  <span className="shrink-0">
+                    {palInfo(s.child.toLowerCase()).zh || s.child}{" "}
+                    <b className={childMask === (1 << desired.length) - 1 ? "text-grass" : "text-ink"}>
+                      {traitNames(childMask).length}/{desired.length}
+                    </b>
                   </span>
                 </div>
               );
@@ -1429,6 +1498,9 @@ function HybridPathView({
           </div>
         );
       })}
+      {tip && (
+        <PalTip data={tip} desired={desired} owners={ownersOf(tip.id)} pool={poolOf(tip.id)} />
+      )}
     </Card>
   );
 }
@@ -1662,6 +1734,9 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     }
     return set;
   }, [dataset, persp]);
+
+  /** 純直系梯度上滑到哪一隻(浮動說明用) */
+  const [pathTip, setPathTip] = useState<PalTipData | null>(null);
 
   /** 物種 → 這個視角下誰擁有、各幾隻(多→少)。「全部帕魯種類」時不看擁有者。 */
   const ownersBySpecies = useMemo<Map<string, { name: string; n: number }[]> | null>(() => {
@@ -3038,6 +3113,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               resultOwned={
                                 gen < d - 1 && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
                               }
+                              onHover={(rect) => setPathTip(rect ? { id: sp, need: 0, rect } : null)}
                               active={openTier === gen}
                               onClick={() => {
                                 setOpenTier(openTier === gen ? null : gen);
@@ -3054,6 +3130,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                           id={chosen.partner}
                                           meta={metaOf(chosen.partner)}
                                           owned={ownedSet ? has(chosen.partner) : undefined}
+                                          onHover={(rect) => setPathTip(rect ? { id: chosen.partner, need: 0, rect } : null)}
                                           active={openSteps.has(gen)}
                                           title={t("點擊更換夥伴")}
                                           onClick={() => {
@@ -3077,13 +3154,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               }
                             />
                           </div>
-
-                          {/* 誰有這兩隻:初代要自己準備 A,其餘每一列只需要準備夥伴 */}
-                          <OwnerLine
-                            pals={gen === d ? [] : gen === 0 ? [sp, chosenOf(gen).partner] : [chosenOf(gen).partner]}
-                            ownersOf={(id) => ownersBySpecies?.get(id.toLowerCase()) ?? (ownersBySpecies ? [] : null)}
-                            style={{ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" }}
-                          />
 
                           {/* 內嵌:B 夥伴選擇(點選即套用) */}
                           {gen < d && openSteps.has(gen) && (
@@ -3222,12 +3292,20 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                           )}
                         </div>
                       ))}
+                    {pathTip && (
+                      <PalTip
+                        data={pathTip}
+                        desired={desired}
+                        owners={ownersBySpecies?.get(pathTip.id.toLowerCase()) ?? (ownersBySpecies ? [] : null)}
+                        pool={ownedForTraits.filter((c) => normalizeSpecies(c.characterId) === pathTip.id.toLowerCase())}
+                      />
+                    )}
                   </Card>
                 );
               })()}
 
               <p className="text-center text-xs text-ink-muted">
-                {t("由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;點 A 換那一代的帕魯、點 B 換夥伴,之後的路線會自動重算。")}
+                {t("由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;滑過帕魯看誰有牠,點 A 換那一代的帕魯、點 B 換夥伴。")}
               </p>
             </div>
           )}
