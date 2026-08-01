@@ -40,19 +40,37 @@ echo       已存在,略過
 rem ---------- 2. 遊戲伺服器 ----------
 :server
 echo [2/7] Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)...
-rem SteamCMD 第一次跑會先自我更新兩輪,更新完的那一輪必定回報
-rem 「Missing configuration」——這是已知行為,再跑一次就會開始下載,所以自動重試。
-set /a _try=0
-:apptry
-set /a _try+=1
-"%NATIVE%\steamcmd\steamcmd.exe" +force_install_dir "%SRVDIR%" +login anonymous +app_update 2394010 validate +quit
+rem 「Missing configuration」有三個已知成因,這裡逐次換招試:
+rem   1. SteamCMD 剛自我更新完 → 再跑一次
+rem   2. appcache 過期(自我更新後最常見)→ 刪掉再跑
+rem   3. 部分版本要 +login 在 +force_install_dir 之前 → 換參數順序
+rem 一律以 PalServer.exe 是否存在判定成功,steamcmd 的 exit code 不可靠。
+set "SCMD=%NATIVE%\steamcmd\steamcmd.exe"
+
+echo       嘗試 1/4:標準安裝
+"%SCMD%" +force_install_dir "%SRVDIR%" +login anonymous +app_update 2394010 validate +quit
 if exist "%SRVDIR%\PalServer.exe" goto :appok
-if %_try% GEQ 4 goto :appfail
+
 echo.
-echo       第 %_try% 次沒裝成功。SteamCMD 首次執行會先自我更新,
-echo       更新後那一輪一定要再跑一次才會開始下載 —— 自動重試中...
-timeout /t 3 /nobreak >nul
-goto :apptry
+echo       嘗試 2/4:清掉 SteamCMD 快取後再試(自我更新後最常見的卡點)
+if exist "%NATIVE%\steamcmd\appcache" rd /s /q "%NATIVE%\steamcmd\appcache"
+timeout /t 2 /nobreak >nul
+"%SCMD%" +force_install_dir "%SRVDIR%" +login anonymous +app_update 2394010 validate +quit
+if exist "%SRVDIR%\PalServer.exe" goto :appok
+
+echo.
+echo       嘗試 3/4:改用 login 在前的參數順序
+"%SCMD%" +login anonymous +force_install_dir "%SRVDIR%" +app_update 2394010 validate +quit
+if exist "%SRVDIR%\PalServer.exe" goto :appok
+
+echo.
+echo       嘗試 4/4:先裝到 SteamCMD 預設位置,再搬到 server 資料夾
+"%SCMD%" +login anonymous +app_update 2394010 validate +quit
+if not exist "%NATIVE%\steamcmd\steamapps\common\PalServer\PalServer.exe" goto :appfail
+echo       搬移中...
+robocopy "%NATIVE%\steamcmd\steamapps\common\PalServer" "%SRVDIR%" /E /MOVE /NFL /NDL /NJH /NJS >nul
+if not exist "%SRVDIR%\PalServer.exe" goto :appfail
+
 :appok
 echo       完成
 
@@ -167,8 +185,10 @@ exit /b 1
 echo [X] 伺服器安裝失敗。常見原因:
 echo     - 磁碟空間不足(伺服器本體約 6 GB,請留 10 GB 以上)
 echo     - 網路中斷 / Steam CDN 不穩 —— 重跑本檔會從中斷處續傳
-echo     - 訊息若是 Missing configuration:通常再跑一次即可(本檔已自動重試 4 次)
-echo     - 路徑含特殊字元或在 OneDrive 同步資料夾下,建議搬到 C:\palserver 之類的短路徑
+echo     - Missing configuration:本檔已試過四種解法(重跑、清快取、換參數順序、
+echo       改裝到預設位置再搬)。都失敗的話,多半是防毒/受控資料夾存取擋住寫入
+echo     - 路徑問題:放在「下載」「OneDrive」等會被同步或保護的資料夾容易失敗,
+echo       建議把整個專案搬到 C:\palserver 這種短路徑再重跑
 pause
 exit /b 1
 

@@ -46,13 +46,25 @@ fi
 
 echo "[2/7] Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)..."
 echo "      (若失敗且訊息含 lib32gcc:sudo apt install -y lib32gcc-s1)"
-# SteamCMD 第一次跑會先自我更新,更新完那一輪常回報 Missing configuration,
-# 這是已知行為,再跑一次就會開始下載 —— 自動重試。
-for i in 1 2 3 4; do
-  "$NATIVE/steamcmd/steamcmd.sh" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit || true
-  [ -x "$SRVDIR/PalServer.sh" ] && break
-  [ "$i" = "4" ] || { echo "      第 $i 次沒裝成功(SteamCMD 剛自我更新),3 秒後重試..."; sleep 3; }
-done
+# 「Missing configuration」的三個已知成因逐次換招:剛自我更新完、appcache 過期、參數順序。
+SCMD="$NATIVE/steamcmd/steamcmd.sh"
+echo "      嘗試 1/4:標準安裝"
+"$SCMD" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit || true
+if [ ! -x "$SRVDIR/PalServer.sh" ]; then
+  echo "      嘗試 2/4:清掉 SteamCMD 快取後再試"
+  rm -rf "$NATIVE/steamcmd/appcache"; sleep 2
+  "$SCMD" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit || true
+fi
+if [ ! -x "$SRVDIR/PalServer.sh" ]; then
+  echo "      嘗試 3/4:改用 login 在前的參數順序"
+  "$SCMD" +login anonymous +force_install_dir "$SRVDIR" +app_update 2394010 validate +quit || true
+fi
+if [ ! -x "$SRVDIR/PalServer.sh" ]; then
+  echo "      嘗試 4/4:先裝到預設位置再搬過去"
+  "$SCMD" +login anonymous +app_update 2394010 validate +quit || true
+  DEF="$NATIVE/steamcmd/steamapps/common/PalServer"
+  [ -x "$DEF/PalServer.sh" ] && mkdir -p "$SRVDIR" && cp -a "$DEF/." "$SRVDIR/" && rm -rf "$DEF"
+fi
 [ -x "$SRVDIR/PalServer.sh" ] || {
   echo "[X] 伺服器安裝失敗。常見原因:磁碟空間不足(需 10 GB 以上)、網路中斷、"
   echo "    或缺 32 位元函式庫(sudo apt install -y lib32gcc-s1)。重跑本檔會續傳。"
