@@ -1000,6 +1000,8 @@ function HybridPathView({
   onPick,
   index,
   mut,
+  startPool,
+  onChangeStart,
 }: {
   path: HybridPath;
   metaOf: (id: string) => PalMeta | undefined;
@@ -1011,14 +1013,21 @@ function HybridPathView({
   onPick?: (id: string) => void;
   index: BreedingTableIndex;
   mut: MutationIndex;
+  /** 這個模式下能當初代的帕魯(含代數與成功率),供直接在梯度上換初代 */
+  startPool: Map<string, StartCandidate> | null;
+  onChangeStart?: (id: string) => void;
 }) {
   const has = (id: string) => (ownedSet ? ownedSet.has(id.toLowerCase()) : undefined);
   /** 使用者為某一步挑的夥伴(換路線時重置)。 */
   const [picked, setPicked] = useState<Record<number, StepOption>>({});
   const [openStep, setOpenStep] = useState<number | null>(null);
+  /** 是否展開「換初代」清單 */
+  const [openStart, setOpenStart] = useState(false);
+  const [startQ, setStartQ] = useState("");
   useEffect(() => {
     setPicked({});
     setOpenStep(null);
+    setOpenStart(false);
   }, [path]);
   const d = path.steps.length;
   const shrink = pyramidShrink(d);
@@ -1069,7 +1078,24 @@ function HybridPathView({
               }}
             >
               {/* A(上一代留下來的) */}
-              <PalCell id={s.from} meta={metaOf(s.from)} owned={has(s.from)} onClick={onPick && (() => onPick(s.from))} compact />
+              <PalCell
+                id={s.from}
+                meta={metaOf(s.from)}
+                owned={has(s.from)}
+                active={stepIdx === 0 && openStart}
+                title={stepIdx === 0 ? t("點擊更換初代(會重新計算整條路線)") : undefined}
+                onClick={
+                  stepIdx === 0
+                    ? () => { setOpenStart((v) => !v); setOpenStep(null); }
+                    : onPick && (() => onPick(s.from))
+                }
+                hint={
+                  stepIdx === 0 && startPool ? (
+                    <span className="shrink-0 text-[11px] font-semibold text-ink-muted">▾{startPool.size}</span>
+                  ) : undefined
+                }
+                compact
+              />
               <span className="shrink-0 text-lg font-bold text-ink-muted sm:text-xl">+</span>
               {/* B(夥伴);直系步驟沒指定夥伴時顯示提示 */}
               {s.partner ? (
@@ -1099,6 +1125,59 @@ function HybridPathView({
                 {isLast ? `🎯 ${t("目標")}` : t("第 {n} 代", { n: gen + 1 })}
               </span>
             </div>
+            {stepIdx === 0 && openStart && startPool && (
+              <div className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-pal/50" style={rowWidth(gen)}>
+                <p className="mb-1.5 px-1 text-[11px] font-bold text-ink-muted">
+                  🏁 {t("換初代 —— 以下都配得到目標,選了會重新排整條梯度")}
+                </p>
+                <input
+                  value={startQ}
+                  onChange={(e) => setStartQ(e.target.value)}
+                  placeholder={t("搜尋帕魯…")}
+                  className="mb-1.5 w-full rounded-lg bg-card px-3 py-1.5 text-sm text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
+                />
+                <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto">
+                  {[...startPool.entries()]
+                    .filter(([id]) => {
+                      const q = startQ.trim();
+                      if (!q) return true;
+                      return id.toLowerCase().includes(q.toLowerCase()) || Boolean(palInfo(id).zh?.includes(q));
+                    })
+                    .sort((x, y) => {
+                      const ox = has(x[0]) ? 1 : 0;
+                      const oy = has(y[0]) ? 1 : 0;
+                      return oy - ox || x[1].depth - y[1].depth || y[1].overall - x[1].overall;
+                    })
+                    .slice(0, 60)
+                    .map(([id, info]) => {
+                      const inf = palInfo(id);
+                      const on = id === s.from;
+                      const own = has(id);
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => { onChangeStart?.(id); setOpenStart(false); }}
+                          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition ${
+                            on ? "bg-pal text-white ring-pal" : own ? "bg-grass/10 text-ink ring-grass/40 hover:ring-pal" : "bg-card text-ink ring-line hover:ring-pal"
+                          }`}
+                        >
+                          {inf.iconUrl && <img src={inf.iconUrl} alt="" className="size-5 rounded-full bg-card-soft" />}
+                          {inf.zh || id}
+                          <span className={on ? "text-white/85" : "text-ink-muted"}>{t("{n} 代", { n: info.depth })}</span>
+                          {info.mutationSteps > 0 && (
+                            <span className={`flex items-center gap-0.5 ${on ? "text-white/85" : "text-berry"}`}>
+                              <img src={MUTATION_ICON} alt="" className="size-3.5" />
+                              {(info.overall * 100).toFixed(2)}%
+                            </span>
+                          )}
+                          {own && <span className={on ? "text-white/85" : "text-grass"}>✓</span>}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
             {openStep === stepIdx && opts.length > 0 && (
               <div className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-pal/50" style={rowWidth(gen)}>
                 <p className="mb-1.5 px-1 text-[11px] font-bold text-ink-muted">
@@ -2546,6 +2625,11 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 onPick={(id) => setChainFrom(id)}
                 index={index}
                 mut={mutIndex}
+                startPool={startPool}
+                onChangeStart={(id) => {
+                  setChainFrom(id);
+                  setAutoStart(false);
+                }}
               />
             ) : (
               <Card className="text-center">
