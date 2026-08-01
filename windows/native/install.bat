@@ -16,10 +16,10 @@ rem   → 建置查詢網站 → 編譯排程器 → 產生設定檔
 rem 裝完直接雙擊 start-all.bat 就有完整服務。
 rem 一律單行 + goto:多行 if(...) 區塊只要換行不是 CRLF 就會被 cmd 拆爛。
 
-echo ============================================================
-echo   Palworld SteamCMD 版:一次裝好(不需要 Docker)
-echo   裝完雙擊 windows\native\start-all.bat 就能開服 + 開網站
-echo ============================================================
+echo ==================================================
+echo   Palworld SteamCMD 版:一次裝好
+echo   不需要 Docker,裝完就能開服 + 開網站
+echo ==================================================
 echo.
 
 rem ---------- 1. SteamCMD ----------
@@ -40,9 +40,20 @@ echo       已存在,略過
 rem ---------- 2. 遊戲伺服器 ----------
 :server
 echo [2/7] Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)...
+rem SteamCMD 第一次跑會先自我更新兩輪,更新完的那一輪必定回報
+rem 「Missing configuration」——這是已知行為,再跑一次就會開始下載,所以自動重試。
+set /a _try=0
+:apptry
+set /a _try+=1
 "%NATIVE%\steamcmd\steamcmd.exe" +force_install_dir "%SRVDIR%" +login anonymous +app_update 2394010 validate +quit
-if errorlevel 1 goto :appfail
-if not exist "%SRVDIR%\PalServer.exe" goto :appfail
+if exist "%SRVDIR%\PalServer.exe" goto :appok
+if %_try% GEQ 4 goto :appfail
+echo.
+echo       第 %_try% 次沒裝成功。SteamCMD 首次執行會先自我更新,
+echo       更新後那一輪一定要再跑一次才會開始下載 —— 自動重試中...
+timeout /t 3 /nobreak >nul
+goto :apptry
+:appok
 echo       完成
 
 rem ---------- 3. Python(存檔解析) ----------
@@ -100,12 +111,12 @@ if not exist "%ROOT%\backend\data" mkdir "%ROOT%\backend\data"
 echo       完成
 
 echo.
-echo ============================================================
+echo ==================================================
 echo   全部裝好了!
-echo   接著雙擊: windows\native\start-all.bat
-echo   會一次帶起 遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站
-echo   網站: http://localhost:9000    遊戲: 你的IP:8211
-echo ============================================================
+echo   接著雙擊 start-all.bat 啟動全部服務
+echo   網站: http://localhost:9000
+echo   遊戲: 你的IP:8211
+echo ==================================================
 pause
 exit /b 0
 
@@ -153,7 +164,11 @@ pause
 exit /b 1
 
 :appfail
-echo [X] 伺服器安裝失敗(下載中斷或磁碟空間不足)。重跑本檔會從中斷處續傳。
+echo [X] 伺服器安裝失敗。常見原因:
+echo     - 磁碟空間不足(伺服器本體約 6 GB,請留 10 GB 以上)
+echo     - 網路中斷 / Steam CDN 不穩 —— 重跑本檔會從中斷處續傳
+echo     - 訊息若是 Missing configuration:通常再跑一次即可(本檔已自動重試 4 次)
+echo     - 路徑含特殊字元或在 OneDrive 同步資料夾下,建議搬到 C:\palserver 之類的短路徑
 pause
 exit /b 1
 

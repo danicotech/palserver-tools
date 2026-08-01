@@ -46,8 +46,18 @@ fi
 
 echo "[2/7] Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)..."
 echo "      (若失敗且訊息含 lib32gcc:sudo apt install -y lib32gcc-s1)"
-"$NATIVE/steamcmd/steamcmd.sh" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit
-[ -x "$SRVDIR/PalServer.sh" ] || { echo "[X] 伺服器安裝失敗,重跑本檔會續傳"; exit 1; }
+# SteamCMD 第一次跑會先自我更新,更新完那一輪常回報 Missing configuration,
+# 這是已知行為,再跑一次就會開始下載 —— 自動重試。
+for i in 1 2 3 4; do
+  "$NATIVE/steamcmd/steamcmd.sh" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit || true
+  [ -x "$SRVDIR/PalServer.sh" ] && break
+  [ "$i" = "4" ] || { echo "      第 $i 次沒裝成功(SteamCMD 剛自我更新),3 秒後重試..."; sleep 3; }
+done
+[ -x "$SRVDIR/PalServer.sh" ] || {
+  echo "[X] 伺服器安裝失敗。常見原因:磁碟空間不足(需 10 GB 以上)、網路中斷、"
+  echo "    或缺 32 位元函式庫(sudo apt install -y lib32gcc-s1)。重跑本檔會續傳。"
+  exit 1
+}
 echo "      完成"
 
 echo "[3/7] Python(解析存檔,查詢網站的玩家/帕魯資料靠它)..."
