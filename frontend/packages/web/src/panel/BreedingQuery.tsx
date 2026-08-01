@@ -50,6 +50,7 @@ import {
   type StartCandidate,
   type StepOption,
 } from "../hybridPath";
+import { MutationSettings } from "./MutationSettings";
 import { loadPaldex, palInfo } from "./paldex";
 import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
@@ -2272,39 +2273,16 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 </div>
                 {pathMode !== "pure" && (
                   <>
-                    <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
-                      {(Object.keys(CAKES) as CakeKind[]).map((k) => (
-                        <button
-                          key={k}
-                          type="button"
-                          title={t(CAKES[k].note)}
-                          onClick={() => setCake(k)}
-                          className={`min-h-9 rounded-md px-2.5 text-xs font-semibold whitespace-nowrap transition ${
-                            cake === k ? "bg-pal text-white" : "text-ink hover:bg-card"
-                          }`}
-                        >
-                          {t(CAKES[k].label)} {Math.round(CAKES[k].rate * 100)}%
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
-                      {(Object.keys(FARMS) as FarmKind[]).map((k) => (
-                        <button
-                          key={k}
-                          type="button"
-                          onClick={() => setFarm(k)}
-                          className={`min-h-9 rounded-md px-2.5 text-xs font-semibold whitespace-nowrap transition ${
-                            farm === k ? "bg-pal text-white" : "text-ink hover:bg-card"
-                          }`}
-                        >
-                          {t(FARMS[k].label)}
-                        </button>
-                      ))}
-                    </div>
-                    <label className="flex items-center gap-1.5 text-sm text-ink" title={t("兩者效果不可疊加,取高者")}>
-                      <input type="checkbox" checked={eggBoost} onChange={(e) => setEggBoost(e.target.checked)} />
-                      {t("梁葉龍/寶寶保母")}
-                    </label>
+                    {/* 蛋糕/牧場/加成 + 突變說明整合成一顆設定鈕,平常不佔版面 */}
+                    <MutationSettings
+                      cake={cake}
+                      setCake={setCake}
+                      farm={farm}
+                      setFarm={setFarm}
+                      boosted={eggBoost}
+                      setBoosted={setEggBoost}
+                      icon={MUTATION_ICON}
+                    />
                     {/* 挑路線的偏好:代數最少 vs 最高成功率(期望蛋數最少) */}
                     <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
                       {(
@@ -2329,18 +2307,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                   </>
                 )}
               </div>
-              {pathMode !== "pure" && (
-                <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-line pt-2 text-[11px]">
-                  <span className="font-bold text-ink-muted">🎁 {t("突變固定帶")}:</span>
-                  {MUTATION_PERKS.map((x) => (
-                    <span key={x} className="rounded bg-grass/12 px-1.5 py-0.5 font-semibold text-grass">{t(x)}</span>
-                  ))}
-                  <span className="font-bold text-ink-muted">🌈 {t("突變專屬彩虹詞條")}:</span>
-                  {MUTATION_PASSIVES.map((x) => (
-                    <span key={x} className="rounded bg-berry/12 px-1.5 py-0.5 font-semibold text-berry">{x}</span>
-                  ))}
-                </div>
-              )}
             </Card>
           )}
 

@@ -243,8 +243,7 @@ export function PlayerMap({
       <div className="flex flex-wrap items-center gap-2 px-3 py-2">
         <span className="text-sm font-bold text-ink">🗺️ {t("玩家地圖")}</span>
         <span className="text-xs text-ink-muted">
-          {t("{n} 位玩家", { n: shownPlayers.length })}
-          {showBases ? ` · ${t("{n} 個據點", { n: baseCount })}` : ""}
+          {t("{n} 位玩家", { n: shownPlayers.length })} · {t("{n} 個據點", { n: baseCount })}
         </span>
 
         {/* 在線 / 離線 */}
