@@ -2446,5 +2446,9 @@
   "要帶": "must carry",
   "這 {n} 隻能當初代,把 {list} 帶到 {name} 身上": "These {n} pals can be Gen 0 and deliver {list} onto {name}",
   "這隻初代帶不齊詞條到 {name}": "This Gen 0 cannot deliver every passive to {name}",
-  "配不出帶齊這些詞條的 {name}": "No route produces a {name} carrying all of these passives"
+  "配不出帶齊這些詞條的 {name}": "No route produces a {name} carrying all of these passives",
+  "(上一代帶上來)": "(inherited from the previous generation)",
+  "不必帶詞條": "no passive needed",
+  "要湊": "Needs",
+  "隻帶詞條的帕魯": "passive-carrying pals"
 }

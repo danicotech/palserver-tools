@@ -533,6 +533,8 @@ export function buildTraitGraph(
   const costAt = new Float64Array(size).fill(Infinity);
   const logPAt = new Float64Array(size).fill(-Infinity);
   const mutsAt = new Int32Array(size);
+  /** 路線上有幾步需要「特定一隻帶詞條的帕魯」—— 同樣好走時當然是越少越好找 */
+  const carriersAt = new Int32Array(size);
   /** 往目標方向的下一步:夥伴、子代狀態、種類、機率 */
   const nextPartner = new Int32Array(size).fill(-1);
   const nextState = new Int32Array(size).fill(-1);
@@ -553,6 +555,7 @@ export function buildTraitGraph(
       const curCost = costAt[cur];
       const curLogP = logPAt[cur];
       const curMuts = mutsAt[cur];
+      const curCarriers = carriersAt[cur];
       /** 把「(src, needSrc) 配 partner 生出 cur 的物種」記進圖。 */
       const relax = (src: number, needSrc: number, partner: number, isMut: number, chance: number, perEgg: number) => {
         const k = src * nMask + needSrc;
@@ -560,16 +563,23 @@ export function buildTraitGraph(
         const cost = curCost + 1 / perEgg;
         const d = curDepth + 1;
         const logP = curLogP + Math.log(perEgg);
+        // 這一步有沒有動用到「特定一隻帶詞條的帕魯」
+        const carriers = curCarriers + (needSrc !== need ? 1 : 0);
+        // 同深度/同成本時,先看成功率,再看要湊幾隻帶詞條的帕魯(越少越好找)
         const win =
           depthAt[k] < 0 ||
           (strategy === "odds"
-            ? cost < costAt[k] - 1e-9
-            : d < depthAt[k] || (d === depthAt[k] && logP > logPAt[k] + 1e-12));
+            ? cost < costAt[k] - 1e-9 ||
+              (cost < costAt[k] + 1e-9 && carriers < carriersAt[k])
+            : d < depthAt[k] ||
+              (d === depthAt[k] &&
+                (logP > logPAt[k] + 1e-12 || (logP > logPAt[k] - 1e-12 && carriers < carriersAt[k]))));
         if (!win) return;
         depthAt[k] = d;
         costAt[k] = cost;
         logPAt[k] = logP;
         mutsAt[k] = curMuts + isMut;
+        carriersAt[k] = carriers;
         nextPartner[k] = partner;
         nextState[k] = cur;
         nextMut[k] = isMut;
@@ -612,8 +622,12 @@ export function buildTraitGraph(
       if (
         bestK < 0 ||
         (strategy === "odds"
-          ? costAt[k] < costAt[bestK]
-          : depthAt[k] < depthAt[bestK] || (depthAt[k] === depthAt[bestK] && logPAt[k] > logPAt[bestK]))
+          ? costAt[k] < costAt[bestK] ||
+            (costAt[k] < costAt[bestK] + 1e-9 && carriersAt[k] < carriersAt[bestK])
+          : depthAt[k] < depthAt[bestK] ||
+            (depthAt[k] === depthAt[bestK] &&
+              (logPAt[k] > logPAt[bestK] ||
+                (logPAt[k] > logPAt[bestK] - 1e-12 && carriersAt[k] < carriersAt[bestK]))))
       )
         bestK = k;
     }

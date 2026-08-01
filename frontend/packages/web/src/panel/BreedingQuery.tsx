@@ -1094,10 +1094,22 @@ function HybridPathView({
           <b className="ml-1 text-pal">≈ {totalTime}</b>
         </span>
         {traitAware && (
-          <span className="font-semibold text-grass">
-            ✓ {t("目標會帶齊全部 {n} 個詞條", { n: desired.length })}
-            <span className="ml-1 font-normal text-ink-muted">({desired.join("、")})</span>
-          </span>
+          <>
+            <span className="font-semibold text-grass">
+              ✓ {t("目標會帶齊全部 {n} 個詞條", { n: desired.length })}
+              <span className="ml-1 font-normal text-ink-muted">({desired.join("、")})</span>
+            </span>
+            <span>
+              {t("要湊")}{" "}
+              <b className="text-ink">
+                {path.steps.reduce(
+                  (n, x, i) => n + ((x.partnerNeed ?? 0) > 0 ? 1 : 0) + (i === 0 && (x.fromNeed ?? 0) > 0 ? 1 : 0),
+                  0,
+                )}
+              </b>{" "}
+              {t("隻帶詞條的帕魯")}
+            </span>
+          </>
         )}
       </div>
       {/* 由目標往下回推:最上面是最後一次配種的結果 */}
@@ -1275,37 +1287,62 @@ function HybridPathView({
               </div>
             )}
             {traitAware && (() => {
-              // 這一列要誰帶什麼進來:初代那隻(只有最底列)+ 這一步的夥伴
-              const rows: { mask: number; species: string; pal?: SaveBreedingPal; role: string }[] = [];
-              if (stepIdx === 0 && (s.fromNeed ?? 0) > 0)
-                rows.push({ mask: s.fromNeed!, species: s.from, pal: carrierFor(s.from, s.fromNeed!), role: t("初代") });
-              if (needMask > 0 && s.partner)
-                rows.push({ mask: needMask, species: s.partner, pal: carrierFor(s.partner, needMask), role: t("夥伴") });
-              if (!rows.length) return null;
+              // 這一列的詞條帳目:A 手上已經有什麼 ＋ B 帶進來什麼 ⇒ 子代變成幾個。
+              // 只印「B 要帶」會讓人以為中間那隻沒帶詞條,所以三段都印出來。
+              const fromMask = s.fromNeed ?? 0;
+              const childMask = s.childNeed ?? 0;
+              const fromPal = stepIdx === 0 && fromMask ? carrierFor(s.from, fromMask) : undefined;
+              const partnerPal = needMask ? carrierFor(s.partner, needMask) : undefined;
+              const who = (p?: SaveBreedingPal) =>
+                p ? (
+                  <>
+                    (<b className="text-ink">{p.ownerName || "?"}</b> {t("的帕魯")})
+                  </>
+                ) : null;
+              const chips = (mask: number, tone: string) =>
+                traitNames(mask).map((x) => (
+                  <span key={x} className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${tone}`}>
+                    {x}
+                  </span>
+                ));
               return (
-                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 px-1 text-[11px]" style={rowWidth(gen)}>
-                  {rows.map((r) => (
-                    <span key={r.role} className="flex min-w-0 flex-wrap items-center gap-1">
-                      <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold text-ink-muted ring-1 ring-line">
-                        {r.role}
-                      </span>
-                      <span className="shrink-0 text-ink-muted">
-                        {palInfo(r.species.toLowerCase()).zh || r.species}
-                        {r.pal && (
-                          <>
-                            {r.pal.nickname ? `「${r.pal.nickname}」` : ""}(
-                            <b className="text-ink">{r.pal.ownerName || "?"}</b> {t("的帕魯")})
-                          </>
-                        )}
-                        {t("要帶")}
-                      </span>
-                      {traitNames(r.mask).map((x) => (
-                        <span key={x} className="rounded bg-pal/10 px-1.5 py-0.5 text-[10px] font-bold text-pal">
-                          {x}
-                        </span>
-                      ))}
+                <div
+                  className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 px-1 text-[11px] text-ink-muted"
+                  style={rowWidth(gen)}
+                >
+                  <span className="flex min-w-0 flex-wrap items-center gap-1">
+                    <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold ring-1 ring-line">
+                      {t("詞條")}
                     </span>
-                  ))}
+                    <span className="shrink-0">
+                      {palInfo(s.from.toLowerCase()).zh || s.from}
+                      {stepIdx === 0 ? who(fromPal) : null}
+                    </span>
+                    {fromMask ? (
+                      chips(fromMask, "bg-ink-muted/10 text-ink")
+                    ) : (
+                      <span className="shrink-0">{t("無")}</span>
+                    )}
+                    {stepIdx > 0 && fromMask ? <span className="shrink-0">{t("(上一代帶上來)")}</span> : null}
+                  </span>
+                  <span className="flex min-w-0 flex-wrap items-center gap-1">
+                    <span className="shrink-0 font-bold">＋</span>
+                    <span className="shrink-0">
+                      {palInfo(s.partner.toLowerCase()).zh || s.partner}
+                      {who(partnerPal)}
+                    </span>
+                    {needMask ? chips(needMask, "bg-pal/12 text-pal") : <span className="shrink-0">{t("不必帶詞條")}</span>}
+                  </span>
+                  <span className="flex min-w-0 flex-wrap items-center gap-1">
+                    <span className="shrink-0 font-bold text-pal">⇒</span>
+                    <span className="shrink-0">
+                      {palInfo(s.child.toLowerCase()).zh || s.child}{" "}
+                      <b className={childMask === (1 << desired.length) - 1 ? "text-grass" : "text-ink"}>
+                        {traitNames(childMask).length}/{desired.length}
+                      </b>
+                    </span>
+                    {chips(childMask, "bg-grass/12 text-grass")}
+                  </span>
                 </div>
               );
             })()}
