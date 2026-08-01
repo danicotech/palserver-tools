@@ -61,7 +61,6 @@ import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
 import type { Pal, Player } from "./types";
 import { PalTile } from "./PalTile";
-import { PalDetailModal } from "./PalDetailModal";
 import { t, useI18n } from "../i18n";
 
 /** 一次顯示的列數;反查最多會有 1280 列,分批渲染避免一次塞爆 DOM。 */
@@ -677,7 +676,7 @@ function OwnerPanel({
 }
 
 /** 某位玩家的某物種全部個體 —— 點持有者才彈出。
- *  卡片與詳情都直接用帕魯查詢那兩個現成元件(PalTile / PalDetailModal),
+ *  卡片直接用帕魯查詢的現成元件(PalTile),點一下就是選這一隻,
  *  頭像、屬性、星級、工作適性、詞條的呈現全站一致。 */
 function OwnerPalsModal({
   title,
@@ -697,18 +696,14 @@ function OwnerPalsModal({
   onClose: () => void;
 }): JSX.Element {
   useI18n();
-  const [detail, setDetail] = useState<OwnedPalRow | null>(null);
   const [q, setQ] = useState("");
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (detail) setDetail(null);
-        else onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose, detail]);
+  }, [onClose]);
 
   const needNames = desired.filter((_, i) => need & (1 << i));
   const covers = (p: Pal) =>
@@ -766,7 +761,7 @@ function OwnerPalsModal({
                   {x}
                 </span>
               ))}
-              · {onChoose ? t("點卡片就用這一隻") : t("符合的排在前面並加綠框")}
+              · {t("點卡片就用這一隻")}
             </p>
           )}
           {rows.length > 8 && (
@@ -790,7 +785,7 @@ function OwnerPalsModal({
                 className={`w-full [&>button]:w-full ${covers(r.pal) ? "rounded-cute ring-2 ring-grass" : ""}`}
               >
                 {/* 主人名不重複印 —— 標題已經寫了「某某的某某」 */}
-                <PalTile pal={r.pal} onClick={() => (onChoose ? onChoose(r) : setDetail(r))} />
+                <PalTile pal={r.pal} onClick={() => onChoose?.(r)} />
               </div>
             ))}
             {shown.length === 0 && (
@@ -799,7 +794,6 @@ function OwnerPalsModal({
           </div>
         </div>
       </div>
-      {detail && <PalDetailModal pal={detail.pal} owner={detail.owner} onClose={() => setDetail(null)} />}
     </>
   );
 }
@@ -1426,7 +1420,7 @@ function HybridPathView({
   /** 掛在帕魯格子底下的小字:要帶哪些詞條(誰的),或已經累積到幾個。
    *  資訊貼著它所描述的那一格,才不會被讀成在講整列或旁邊那隻。 */
   const traitSub = (mask: number, pal?: { ownerName: string }) =>
-    mask > 0 ? (
+    mask > 0 || pal ? (
       <>
         {pal && <span className="shrink-0 font-semibold text-ink-muted">{pal.ownerName || "?"}</span>}
         {traitNames(mask).map((x) => (
@@ -1544,11 +1538,11 @@ function HybridPathView({
                 meta={metaOf(s.from)}
                 owned={has(s.from)}
                 sub={
-                  traitAware
-                    ? stepIdx === 0
-                      ? traitSub(s.fromNeed ?? 0, carrierAt(`${stepIdx}:a`, s.from, s.fromNeed ?? 0))
-                      : countSub(s.fromNeed ?? 0)
-                    : undefined
+                  stepIdx === 0
+                    ? traitSub(traitAware ? (s.fromNeed ?? 0) : 0, carrierAt(`${stepIdx}:a`, s.from, s.fromNeed ?? 0))
+                    : traitAware
+                      ? countSub(s.fromNeed ?? 0)
+                      : undefined
                 }
                 active={stepIdx === 0 && openStart}
                 title={stepIdx === 0 ? t("點擊更換初代(會重新計算整條路線)") : undefined}
@@ -1571,7 +1565,7 @@ function HybridPathView({
                   id={s.partner}
                   meta={metaOf(s.partner)}
                   owned={has(s.partner)}
-                  sub={traitAware ? traitSub(needMask, carrierAt(`${stepIdx}:b`, s.partner, needMask)) : undefined}
+                  sub={traitSub(needMask, carrierAt(`${stepIdx}:b`, s.partner, needMask))}
                   active={openStep === stepIdx}
                   title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
                   onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
@@ -1741,11 +1735,7 @@ function HybridPathView({
                       scopeOwner={scopeOwner}
                       details={detailsOf(open.id)}
                       chosen={chosenPal[open.key]}
-                      onChoose={
-                        open.need > 0
-                          ? (row) => setChosenPal((prev) => ({ ...prev, [open.key]: row }))
-                          : undefined
-                      }
+                      onChoose={(row) => setChosenPal((prev) => ({ ...prev, [open.key]: row }))}
                       style={rowWidth(gen)}
                       onClose={() => setOpenOwner(null)}
                     />
