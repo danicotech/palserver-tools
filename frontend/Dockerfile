@@ -4,7 +4,7 @@ WORKDIR /app
 RUN corepack enable
 
 # 先只複製依賴清單，善用 layer 快取
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/web/package.json ./packages/web/
 RUN pnpm install --no-frozen-lockfile
