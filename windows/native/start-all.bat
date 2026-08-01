@@ -11,6 +11,8 @@ rem   PalServer  : 由排程器依 backend\config.json 的時段表自動開關
 rem 一律單行 + goto,避免多行 if(...) 區塊在非 CRLF 換行時被 cmd 拆爛。
 
 set "SERVER_DIR=%CD%\windows\native\server"
+rem 舊版(1.0.2 以前)裝在 windows\server,兩個位置都認
+if not exist "%SERVER_DIR%\PalServer.exe" if exist "%CD%\windows\server\PalServer.exe" set "SERVER_DIR=%CD%\windows\server"
 set "PANEL_DIR=%CD%\frontend\packages\web\dist"
 set "CONFIG_PATH=%CD%\backend\config.json"
 set "SAVE_ROOT=%SERVER_DIR%"
@@ -66,6 +68,18 @@ timeout /t 2 /nobreak >nul
 start "palscheduler" /min cmd /c "cd /d "%CD%\backend" && palscheduler.exe serve"
 timeout /t 3 /nobreak >nul
 
+rem 確認真的起來了 —— 埠被佔用(例如 Docker 版正在跑)時 palscheduler 會直接結束,
+rem 這時候還印「完成」只會讓人以為好了。
+set /a _hc=0
+:health
+curl -s -o nul -m 2 http://127.0.0.1:9000/healthz
+if not errorlevel 1 goto :healthy
+set /a _hc+=1
+if %_hc% GEQ 10 goto :notup
+timeout /t 2 /nobreak >nul
+goto :health
+
+:healthy
 echo.
 echo 完成!(遊戲伺服器由排程器依時段表自動開關)
 echo   查詢網站:http://localhost:9000
@@ -76,8 +90,23 @@ start http://localhost:9000
 pause
 exit /b 0
 
+:notup
+echo.
+echo [X] 服務沒有起來(http://localhost:9000 沒有回應)。最常見的原因:
+echo     1. Docker 版正在跑,佔住了同一個埠 —— 先跑 windows\stop.bat 把 Docker 版停掉
+echo     2. 排程器啟動失敗 —— 打開剛才那個 palscheduler 視窗看錯誤訊息
+echo     3. 防火牆擋住本機連線
+pause
+exit /b 1
+
 :noserver
-echo [X] 還沒安裝伺服器本體,請先雙擊 windows\native\install.bat
+echo [X] 找不到伺服器本體(PalServer.exe)。已檢查這兩個位置:
+echo       %CD%\windows\native\server\
+echo       %CD%\windows\server\          (1.0.2 以前的舊位置)
+if exist "%CD%\windows\native\steamcmd\steamcmd.exe" echo.
+if exist "%CD%\windows\native\steamcmd\steamcmd.exe" echo     SteamCMD 有、伺服器沒有 = 安裝中途被關掉了(伺服器本體約 6 GB)。
+echo.
+echo     請雙擊 windows\native\install.bat —— 它會從中斷處續傳,不會重下已完成的部分。
 pause
 exit /b 1
 

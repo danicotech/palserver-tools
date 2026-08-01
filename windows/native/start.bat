@@ -1,7 +1,10 @@
 @echo off
 chcp 65001 >nul
 setlocal
-cd /d "%~dp0..\server"
+rem 伺服器位置:新版 windows\native\server;舊版(1.0.2 以前)windows\server
+set "SRVDIR=%~dp0server"
+if not exist "%SRVDIR%\PalServer.exe" if exist "%~dp0..\server\PalServer.exe" set "SRVDIR=%~dp0..\server"
+cd /d "%SRVDIR%"
 title Palworld 伺服器(原生)
 
 rem 同 install.bat:一律單行 + goto,避免多行 if(...) 在非 CRLF 換行時被 cmd 拆爛。

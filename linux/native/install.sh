@@ -7,6 +7,9 @@ set -e
 cd "$(dirname "$0")/../.."
 ROOT="$PWD"
 NATIVE="$ROOT/linux/native"
+# 伺服器安裝位置:預設 linux/native/server;舊版裝在 linux/server,沿用以免重下 6 GB
+SRVDIR="$NATIVE/server"
+[ -x "$ROOT/linux/server/PalServer.sh" ] && SRVDIR="$ROOT/linux/server"
 
 echo "============================================================"
 echo "  Palworld SteamCMD 版:一次裝好(不需要 Docker)"
@@ -43,8 +46,8 @@ fi
 
 echo "[2/7] Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)..."
 echo "      (若失敗且訊息含 lib32gcc:sudo apt install -y lib32gcc-s1)"
-"$NATIVE/steamcmd/steamcmd.sh" +force_install_dir "$NATIVE/server" +login anonymous +app_update 2394010 validate +quit
-[ -x "$NATIVE/server/PalServer.sh" ] || { echo "[X] 伺服器安裝失敗,重跑本檔會續傳"; exit 1; }
+"$NATIVE/steamcmd/steamcmd.sh" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit
+[ -x "$SRVDIR/PalServer.sh" ] || { echo "[X] 伺服器安裝失敗,重跑本檔會續傳"; exit 1; }
 echo "      完成"
 
 echo "[3/7] Python(解析存檔,查詢網站的玩家/帕魯資料靠它)..."

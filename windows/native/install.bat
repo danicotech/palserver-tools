@@ -4,6 +4,10 @@ setlocal
 cd /d "%~dp0..\.."
 set "ROOT=%CD%"
 set "NATIVE=%ROOT%\windows\native"
+rem 伺服器安裝位置:預設 windows\native\server;
+rem 舊版(1.0.2 以前)裝在 windows\server,偵測到就沿用,免得重下 6 GB。
+set "SRVDIR=%NATIVE%\server"
+if exist "%ROOT%\windows\server\PalServer.exe" set "SRVDIR=%ROOT%\windows\server"
 title Palworld SteamCMD 版 - 一次裝好全部
 
 rem 這支把「跑起完整服務」需要的東西一次裝完:
@@ -36,9 +40,9 @@ echo       已存在,略過
 rem ---------- 2. 遊戲伺服器 ----------
 :server
 echo [2/7] Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)...
-"%NATIVE%\steamcmd\steamcmd.exe" +force_install_dir "%NATIVE%\server" +login anonymous +app_update 2394010 validate +quit
+"%NATIVE%\steamcmd\steamcmd.exe" +force_install_dir "%SRVDIR%" +login anonymous +app_update 2394010 validate +quit
 if errorlevel 1 goto :appfail
-if not exist "%NATIVE%\server\PalServer.exe" goto :appfail
+if not exist "%SRVDIR%\PalServer.exe" goto :appfail
 echo       完成
 
 rem ---------- 3. Python(存檔解析) ----------

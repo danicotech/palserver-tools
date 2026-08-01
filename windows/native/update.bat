@@ -6,7 +6,9 @@ title Palworld 更新(原生)
 
 if not exist "steamcmd\steamcmd.exe" goto :nosteamcmd
 echo 更新前請先用 stop.bat 停止伺服器。
-"%~dp0steamcmd\steamcmd.exe" +force_install_dir "%~dp0..\server" +login anonymous +app_update 2394010 validate +quit
+set "SRVDIR=%~dp0server"
+if not exist "%SRVDIR%\PalServer.exe" if exist "%~dp0..\server\PalServer.exe" set "SRVDIR=%~dp0..\server"
+"%~dp0steamcmd\steamcmd.exe" +force_install_dir "%SRVDIR%" +login anonymous +app_update 2394010 validate +quit
 if errorlevel 1 goto :fail
 echo 更新完成!雙擊 start.bat 重新啟動。
 pause

@@ -7,7 +7,9 @@ set -e
 cd "$(dirname "$0")/../.."
 ROOT="$PWD"
 
+# 舊版裝在 linux/server,兩個位置都認
 export SERVER_DIR="$ROOT/linux/native/server"
+[ -x "$SERVER_DIR/PalServer.sh" ] || { [ -x "$ROOT/linux/server/PalServer.sh" ] && export SERVER_DIR="$ROOT/linux/server"; }
 export PANEL_DIR="$ROOT/frontend/packages/web/dist"
 export CONFIG_PATH="$ROOT/backend/config.json"
 export PRESENCE_PATH="$ROOT/backend/data/presence.json"
@@ -19,7 +21,12 @@ export RCON_HOST="127.0.0.1"
 
 echo "[1/5] 檢查伺服器本體..."
 [ -x "$SERVER_DIR/PalServer.sh" ] || {
-  echo "[X] 還沒安裝伺服器本體,請先執行 bash linux/native/install.sh"
+  echo "[X] 找不到伺服器本體(PalServer.sh)。已檢查這兩個位置:"
+  echo "      $ROOT/linux/native/server/"
+  echo "      $ROOT/linux/server/          (舊版位置)"
+  [ -x "$ROOT/linux/native/steamcmd/steamcmd.sh" ] &&
+    echo "      SteamCMD 有、伺服器沒有 = 安裝中途被中斷了(伺服器本體約 6 GB)。"
+  echo "    請執行 bash linux/native/install.sh —— 會從中斷處續傳。"
   exit 1
 }
 
@@ -68,6 +75,21 @@ mkdir -p backend/data/logs
 sleep 2
 ( cd backend && nohup ./palscheduler serve >"$ROOT/backend/data/logs/scheduler.log" 2>&1 & echo $! >"$ROOT/backend/data/scheduler.pid" )
 sleep 3
+
+# 確認真的起來了 —— 埠被佔用(例如 Docker 版正在跑)時排程器會直接結束
+ok=0
+for _ in $(seq 1 10); do
+  if curl -fsS -m 2 http://127.0.0.1:9000/healthz >/dev/null 2>&1; then ok=1; break; fi
+  sleep 2
+done
+if [ "$ok" != "1" ]; then
+  echo
+  echo "[X] 服務沒有起來(http://localhost:9000 沒有回應)。最常見的原因:"
+  echo "    1. Docker 版正在跑,佔住了同一個埠 —— 先 bash linux/stop.sh 停掉 Docker 版"
+  echo "    2. 排程器啟動失敗 —— 看 backend/data/logs/scheduler.log"
+  echo "    3. 存檔解析沒起來 —— 看 backend/data/logs/palsave.log"
+  exit 1
+fi
 
 echo
 echo "完成!(遊戲伺服器由排程器依時段表自動開關)"
