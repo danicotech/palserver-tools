@@ -15,6 +15,21 @@
 - 查詢網站 <http://localhost>
 - 遊戲連線 `你的IP:8211`
 
+## 🧱 沒有 Docker?兩步就有完整服務
+
+| 步驟 | 雙擊 | 做了什麼 |
+|---|---|---|
+| 1 | `windows\native\install.bat` | 一次裝好:SteamCMD → 遊戲伺服器 → Python → Node → Go → 建置查詢網站 → 編譯排程器 → 產生設定檔 |
+| 2 | `windows\native\start-all.bat` | 一次啟動:遊戲伺服器 + 排程開關服 + 存檔解析 + 查詢網站 |
+
+網站在 <http://localhost:9000>,關掉用 `windows\native\stop-all.bat`。
+
+缺的工具(Python / Node.js / Go)會用 **winget 自動安裝**;
+裝完若出現「請重跑一次」就再雙擊一次 `install.bat`(新裝的工具需要新的環境變數)。
+沒有 winget 的話畫面會列出三個官方下載連結。
+
+> 只想要遊戲伺服器、不要網站?那就用 `install.bat` + `start.bat`(不加 `-all`)。
+
 ## 🚚 已經有伺服器?把存檔搬過來
 
 ![Windows 存檔搬家](../docs/wiki/svg/migrate-windows.svg)

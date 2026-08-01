@@ -32,6 +32,11 @@ backend/pal.exe
 palserver.exe
 palserver
 
+# SteamCMD 版由 install 腳本編譯出來的排程器執行檔
+backend/palscheduler
+backend/palscheduler.exe
+backend/data/
+
 # SteamCMD 版的伺服器本體與 SteamCMD(數 GB,由 install 腳本自行下載)
 # 路徑是 windows/native 與 linux/native —— 舊版寫成 native/windows 是相反的,
 # 導致跑過 install.bat 後 steamcmd 整包被 git 追蹤。

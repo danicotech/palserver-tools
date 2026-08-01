@@ -17,6 +17,20 @@ bash linux/start.sh
 - 查詢網站 <http://localhost>
 - 遊戲連線 `你的IP:8211`
 
+## 🧱 沒有 Docker?兩行就有完整服務
+
+```bash
+bash linux/native/install.sh     # 一次裝好:SteamCMD → 伺服器 → Python → Node → Go → 建網站 → 編譯排程器 → 產生設定
+bash linux/native/start-all.sh   # 一次啟動:遊戲伺服器 + 排程開關服 + 存檔解析 + 查詢網站
+```
+
+網站在 <http://localhost:9000>,關掉用 `bash linux/native/stop-all.sh`。
+
+`install.sh` 會自己認出 apt / dnf / pacman / zypper / apk 並安裝缺少的系統套件
+(需要 sudo);Go 若發行版版本太舊,依畫面提示到 <https://go.dev/dl/> 裝新版再重跑。
+
+> 只想要遊戲伺服器、不要網站?那就用 `install.sh` + `start.sh`(不加 `-all`)。
+
 ## 🚚 已經有伺服器?把存檔搬過來
 
 ![Linux 存檔搬家](../docs/wiki/svg/migrate-linux.svg)

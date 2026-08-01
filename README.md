@@ -16,6 +16,33 @@
 
 ---
 
+## 🚀 最懶的做法(挑一條就好)
+
+### A. 有裝 Docker(或願意裝)—— 一個檔案搞定
+
+1. 裝好並打開 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+2. 下載本專案(綠色 `Code` → `Download ZIP` → 解壓縮)
+3. 雙擊 **`windows\start.bat`**(Linux/macOS:`bash linux/start.sh`)
+
+→ 網站 <http://localhost>,遊戲連線 `你的IP:8211`,密碼會顯示在視窗裡。
+
+### B. 完全不想碰 Docker —— 也是一個檔案搞定
+
+1. 下載本專案(同上)
+2. 雙擊 **`windows\native\install.bat`** —— 它會**自己**把要用的東西全裝好:
+   SteamCMD、遊戲伺服器、Python、Node、Go、建置查詢網站、編譯排程器、產生設定檔
+   (缺的工具用 winget 自動裝;裝完若提示「請重跑一次」就再雙擊一次)
+3. 雙擊 **`windows\native\start-all.bat`**
+
+→ 網站 <http://localhost:9000>,遊戲連線 `你的IP:8211`,一樣有排程開關服與完整查詢網站。
+
+Linux 對應:`bash linux/native/install.sh` → `bash linux/native/start-all.sh`。
+
+> 不確定要選哪條?直接雙擊 `windows\start.bat` —— 偵測不到 Docker 時,
+> 它會問你要不要改用 B 路線,按 Y 即可。
+
+---
+
 ## 🚀 三步驟開服(不用會任何指令)
 
 1. **安裝 Docker**([什麼是 Docker?](#-關於-docker))
