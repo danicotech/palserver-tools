@@ -54,7 +54,7 @@ docker compose version
 
 > **Windows 常见情况**:`start.bat` 说「找不到 Docker」= Docker Desktop 没开或还在启动中,
 > 等任务栏鲸鱼图标不再转动再重跑一次。首次安装可能会要求开启 WSL 2 并重启。
-> 不想装 Docker 的话,可以改用 [SteamCMD 版](docs/SteamCMD版.md)(SteamCMD 直接跑,没有查询网站)。
+> 不想装 Docker 的话,可以改用 [SteamCMD 版](docs/SteamCMD版.md)(一样是完整服务,只是不用容器)。
 
 ## 🕹️ 日常操作(双击即可)
 
@@ -181,9 +181,9 @@ steamcmd +force_install_dir <安装路径> +login anonymous +app_update 2394010 
 | | 🐳 **Docker 版**(推荐) | 🧱 **SteamCMD 版** |
 |---|---|---|
 | 游戏服务器 | ✅ | ✅ |
-| 玩家查询网站 | ✅ | ❌ |
-| 自动排程开关服 / 关服广播 | ✅ | ❌ |
-| 需要安装 | Docker Desktop | 只要 SteamCMD(脚本自动抓) |
+| 玩家查询网站 | ✅ `http://localhost` | ✅ `http://localhost:9000` |
+| 自动排程开关服 / 关服广播 | ✅ | ✅ |
+| 需要安装 | 只要 Docker Desktop | Python / Node / Go,首次由 install 自动装 |
 | 服务器设置改哪里 | 项目根目录 `.env` | `PalWorldSettings.ini` |
 | 存档位置 | `backend/palworld-data/` | `windows\native\server\` |
 

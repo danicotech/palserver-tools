@@ -55,7 +55,7 @@ docker compose version
 > **Common on Windows**: if `start.bat` says Docker isn't found, Docker Desktop is not running (or still
 > starting) — wait until the tray whale stops animating and run it again. A first install may ask you to
 > enable WSL 2 and reboot. If you'd rather not install Docker, see [SteamCMD edition](docs/SteamCMD版.md)
-> (SteamCMD only, no web panel).
+> (full stack too, just outside Docker).
 
 ## 🕹️ Day-to-day operation (just double-click)
 
@@ -159,7 +159,7 @@ Machines that can't (or don't want to) run Docker can still host the game server
 2. Double-click `windows\native\start.bat` (Linux: `bash linux/native/install.sh` then `bash linux/start.sh`)
 3. Edit settings in `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini` (never overwritten in the SteamCMD edition)
 
-The SteamCMD edition only covers install/start/stop/update of the game server; the lookup website and the scheduler still require the Docker edition.
+`start-all` brings up the game server, scheduler, save parser and the lookup website (<http://localhost:9000>) — the same site you get with Docker. Use `start.bat` (without `-all`) if you only want the game server.
 **Saves are fully interchangeable** - to upgrade later, move your world folder into `backend/palworld-data/` (see [docs/SteamCMD版.md](docs/SteamCMD版.md)).
 
 ### Where to download SteamCMD
@@ -184,9 +184,9 @@ steamcmd +force_install_dir <path> +login anonymous +app_update 2394010 validate
 | | 🐳 **Docker edition** (recommended) | 🧱 **SteamCMD edition** |
 |---|---|---|
 | Game server | ✅ | ✅ |
-| Player lookup website | ✅ | ❌ |
-| Auto schedule / shutdown broadcasts | ✅ | ❌ |
-| Requires | Docker Desktop | SteamCMD only (scripts fetch it) |
+| Player lookup website | ✅ `http://localhost` | ✅ `http://localhost:9000` |
+| Auto schedule / shutdown broadcasts | ✅ | ✅ |
+| Requires | Docker Desktop only | Python / Node / Go, installed automatically on first run |
 | Where settings live | `.env` in the project root | `PalWorldSettings.ini` |
 | Save location | `backend/palworld-data/` | `windows\native\server\` |
 

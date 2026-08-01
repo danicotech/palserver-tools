@@ -777,11 +777,17 @@ function OwnerPalsModal({
               className="mb-2 w-full shrink-0 rounded-lg bg-card-soft px-3 py-1.5 text-sm text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
             />
           )}
-          <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+          {/* auto-fit:只有一隻時就撐滿整個寬度,多隻才自動排成兩欄以上 */}
+          <div
+            className="grid min-h-0 flex-1 gap-2 overflow-y-auto pr-1"
+            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 20rem), 1fr))" }}
+          >
             {shown.map((r, i) => (
               <div
                 key={`${r.pal.nickname}-${r.pal.level}-${i}`}
-                className={covers(r.pal) ? "rounded-cute ring-2 ring-grass" : ""}
+                // PalTile 的根是 <button>，在 grid 裡預設是 fit-content；
+                // 補 w-full 才會撐滿欄寬（只有一隻時就是整個彈窗寬）
+                className={`w-full [&>button]:w-full ${covers(r.pal) ? "rounded-cute ring-2 ring-grass" : ""}`}
               >
                 {/* 主人名不重複印 —— 標題已經寫了「某某的某某」 */}
                 <PalTile pal={r.pal} onClick={() => (onChoose ? onChoose(r) : setDetail(r))} />

@@ -16,54 +16,62 @@
 
 ---
 
-## 🚀 最懶的做法(挑一條就好)
+## 🚀 兩種版本,挑一個
 
-### A. 有裝 Docker(或願意裝)—— 一個檔案搞定
+兩種都是**完整服務**(遊戲伺服器 + 自動排程開關服 + 存檔解析 + 玩家查詢網站),
+差別只在「誰來跑這些服務」:
 
-1. 裝好並打開 [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-2. 下載本專案(綠色 `Code` → `Download ZIP` → 解壓縮)
-3. 雙擊 **`windows\start.bat`**(Linux/macOS:`bash linux/start.sh`)
+| | 🐳 **Docker 版**(推薦) | 🧱 **SteamCMD 版** |
+|---|---|---|
+| 遊戲伺服器 | ✅ | ✅ |
+| 自動排程開關服 / 關服廣播 | ✅ | ✅ |
+| 玩家查詢網站 | ✅ `http://localhost` | ✅ `http://localhost:9000` |
+| 要先裝什麼 | **只要 Docker Desktop** | 首次由 install 自動裝 Python / Node / Go |
+| 怎麼開關伺服器 | Docker Engine API | 直接管本機行程 |
+| 伺服器設定改哪 | 專案根目錄 `.env`(約 50 項,一個檔搞定) | `PalWorldSettings.ini` |
+| 存檔放哪 | `backend/palworld-data/` | `windows\native\server\` |
+| 適合誰 | 大多數人;更新、搬機器都最省事 | 裝不了 Docker、或就是不想裝的人 |
 
-→ 網站 <http://localhost>,遊戲連線 `你的IP:8211`,密碼會顯示在視窗裡。
+**存檔格式完全相同**,兩邊隨時可以互搬(見 [docs/SteamCMD版.md](docs/SteamCMD版.md))。
 
-### B. 完全不想碰 Docker —— 也是一個檔案搞定
-
-1. 下載本專案(同上)
-2. 雙擊 **`windows\native\install.bat`** —— 它會**自己**把要用的東西全裝好:
-   SteamCMD、遊戲伺服器、Python、Node、Go、建置查詢網站、編譯排程器、產生設定檔
-   (缺的工具用 winget 自動裝;裝完若提示「請重跑一次」就再雙擊一次)
-3. 雙擊 **`windows\native\start-all.bat`**
-
-→ 網站 <http://localhost:9000>,遊戲連線 `你的IP:8211`,一樣有排程開關服與完整查詢網站。
-
-Linux 對應:`bash linux/native/install.sh` → `bash linux/native/start-all.sh`。
-
-> 不確定要選哪條?直接雙擊 `windows\start.bat` —— 偵測不到 Docker 時,
-> 它會問你要不要改用 B 路線,按 Y 即可。
-
----
-
-## 🚀 三步驟開服(不用會任何指令)
+### 🐳 Docker 版:三步驟
 
 1. **安裝 Docker**([什麼是 Docker?](#-關於-docker))
-   - Windows / macOS:下載並安裝 [Docker Desktop](https://www.docker.com/products/docker-desktop/),裝完**要把它打開**(工作列出現鯨魚圖示才算啟動)
+   - Windows / macOS:裝 [Docker Desktop](https://www.docker.com/products/docker-desktop/),裝完**要把它打開**(工作列出現鯨魚圖示才算啟動)
    - Linux:`curl -fsSL https://get.docker.com | sh`
-2. **下載本專案**:點 GitHub 綠色 `Code` 按鈕 → `Download ZIP` → 解壓縮(或 `git clone`)
-3. **啟動**
-   - Windows:雙擊 **`windows\start.bat`**
-   - Linux/macOS:`bash linux/start.sh`
+2. **下載本專案**:GitHub 綠色 `Code` → `Download ZIP` → 解壓縮(或 `git clone`)
+3. **啟動**:雙擊 **`windows\start.bat`**(Linux/macOS:`bash linux/start.sh`)
 
-第一次啟動會**自動產生所有設定與兩組隨機密碼**(顯示在視窗裡,請抄下來),然後自動下載映像並開好四個服務。完成後:
+第一次啟動會**自動產生所有設定與兩組隨機密碼**(顯示在視窗裡,請抄下來),
+然後自動下載映像並開好四個服務:
 
 | 服務 | 位址 |
 |---|---|
 | 玩家查詢網站 | `http://localhost`(或 `http://主機IP`) |
 | 遊戲連線 | `主機IP:8211`(UDP)+ 視窗顯示的進服密碼 |
 
+### 🧱 SteamCMD 版:兩步驟
+
+1. 雙擊 **`windows\native\install.bat`** —— 它會**自己**把要用的東西一次裝好:
+   SteamCMD → 遊戲伺服器 → Python → Node → Go → 建置查詢網站 → 編譯排程器 → 產生設定檔
+   (缺的工具用 winget 自動裝;若提示「請重跑一次」就再雙擊一次,會從剛才的進度接著跑)
+2. 雙擊 **`windows\native\start-all.bat`** —— 一次帶起四項服務
+
+| 服務 | 位址 |
+|---|---|
+| 玩家查詢網站 | `http://localhost:9000` |
+| 遊戲連線 | `主機IP:8211`(UDP) |
+
+Linux 對應:`bash linux/native/install.sh` → `bash linux/native/start-all.sh`。
+
+> **選不下去?** 直接雙擊 `windows\start.bat` —— 偵測不到 Docker 時,
+> 它會問你要不要改用 SteamCMD 版,按 Y 就會自動走那條路。
+
 ## 🐳 關於 Docker
 
-本專案的伺服器、排程器、存檔解析、查詢網站四個服務都跑在 Docker 容器裡。
+**Docker 版**把伺服器、排程器、存檔解析、查詢網站四個服務各自跑在一個容器裡。
 你**不需要**懂 Docker —— 只要裝好、打開,剩下交給 `start.bat` / `start.sh`。
+(SteamCMD 版一樣有這四項服務,只是直接跑在本機,不用容器。)
 
 | 連結 | 用途 |
 |---|---|
@@ -81,9 +89,11 @@ docker compose version
 
 > **Windows 常見狀況**:`start.bat` 說「找不到 Docker」= Docker Desktop 沒開或還在啟動中,
 > 等工作列鯨魚圖示不再轉動再重跑一次。首次安裝可能會要求開啟 WSL 2 並重開機。
-> 不想裝 Docker 的話,可以改用 [SteamCMD 版](docs/SteamCMD版.md)(SteamCMD 直接跑,沒有查詢網站)。
+> 不想裝 Docker 的話,改用 [SteamCMD 版](docs/SteamCMD版.md) 一樣有完整服務(含查詢網站),只是要多裝 Python / Node / Go。
 
 ## 🕹️ 日常操作(雙擊即可)
+
+**🐳 Docker 版**
 
 | 動作 | Windows | Linux/macOS |
 |---|---|---|
@@ -91,6 +101,16 @@ docker compose version
 | 重啟(套用新設定) | `windows\restart.bat` | `bash linux/restart.sh` |
 | 停止全部 | `windows\stop.bat` | `bash linux/stop.sh` |
 | 看狀態/日誌 | `windows\status.bat` | `bash linux/status.sh` |
+
+**🧱 SteamCMD 版**
+
+| 動作 | Windows | Linux/macOS |
+|---|---|---|
+| 一次裝好全部 | `windows\native\install.bat` | `bash linux/native/install.sh` |
+| 啟動全部服務 | `windows\native\start-all.bat` | `bash linux/native/start-all.sh` |
+| 停止全部服務 | `windows\native\stop-all.bat` | `bash linux/native/stop-all.sh` |
+| 只開/關遊戲伺服器 | `windows\native\start.bat` / `stop.bat` | `linux/native/start.sh` / `stop.sh` |
+| 更新遊戲版本 | `windows\native\update.bat` | `bash linux/native/update.sh` |
 
 偏好單一執行檔?裝好 [Go](https://go.dev/dl/) 後 `cd tools/launcher && go build -o ../../palserver.exe .`,雙擊 `palserver.exe` 會有數字選單(啟動/重啟/停止/狀態/只更新網站)。
 
@@ -185,7 +205,8 @@ pnpm build && cd .. && docker compose up -d --no-deps --build panel
 2. 雙擊 `windows\native\start.bat` 啟動(Linux:`bash linux/native/install.sh` → `bash linux/start.sh`)
 3. 設定改 `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini`(SteamCMD 版不會被覆寫)
 
-SteamCMD 版只涵蓋遊戲伺服器的安裝/啟動/停止/更新;查詢網站與自動排程仍需 Docker 版。
+`start-all` 會一次帶起遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站(<http://localhost:9000>),
+和 Docker 版看到的網站完全一樣;只想要遊戲伺服器就用不加 `-all` 的 `start.bat`。
 **兩邊存檔完全互通**,之後想升級整套,把世界資料夾搬到 `backend/palworld-data/` 即可(詳見 [docs/SteamCMD版.md](docs/SteamCMD版.md))。
 
 ### SteamCMD 要去哪下載?
@@ -204,18 +225,7 @@ Palworld 專用伺服器的 App ID 是 **2394010**,手動安裝指令:
 steamcmd +force_install_dir <安裝路徑> +login anonymous +app_update 2394010 validate +quit
 ```
 
-### Docker 版 vs SteamCMD 版
-
-| | 🐳 **Docker 版**(推薦) | 🧱 **SteamCMD 版** |
-|---|---|---|
-| 遊戲伺服器 | ✅ | ✅ |
-| 玩家查詢網站 | ✅ | ❌ |
-| 自動排程開關服 / 關服廣播 | ✅ | ❌ |
-| 需要安裝 | Docker Desktop | 只要 SteamCMD(腳本自動抓) |
-| 伺服器設定改哪裡 | 專案根目錄 `.env` | `PalWorldSettings.ini` |
-| 存檔位置 | `backend/palworld-data/` | `windows\native\server\` |
-
-**存檔格式完全相同**,兩邊隨時能互搬(見 [docs/SteamCMD版.md](docs/SteamCMD版.md))。
+> 兩種版本的完整比較表在最上面的 [兩種版本,挑一個](#-兩種版本挑一個)。
 
 ## 🌐 查詢網站有什麼
 

@@ -56,7 +56,7 @@ docker compose version
 > **Windows でよくある例**:`start.bat` が「Docker が見つからない」と言う場合は Docker Desktop が
 > 未起動(または起動中)です。トレイのクジラが止まってからもう一度実行してください。
 > 初回は WSL 2 の有効化と再起動を求められることがあります。
-> Docker を入れたくない場合は [SteamCMD 版](docs/SteamCMD版.md)(SteamCMD 直接実行、検索サイトなし)。
+> Docker を入れたくない場合は [SteamCMD 版](docs/SteamCMD版.md)(こちらもフルセット。コンテナを使わないだけ)。
 
 ## 🕹️ 日常操作(ダブルクリックだけ)
 
@@ -183,9 +183,9 @@ steamcmd +force_install_dir <パス> +login anonymous +app_update 2394010 valida
 | | 🐳 **Docker 版**(推奨) | 🧱 **SteamCMD 版** |
 |---|---|---|
 | ゲームサーバー | ✅ | ✅ |
-| プレイヤー検索サイト | ✅ | ❌ |
-| 自動スケジュール / 終了アナウンス | ✅ | ❌ |
-| 必要なもの | Docker Desktop | SteamCMD のみ(スクリプトが自動取得) |
+| プレイヤー検索サイト | ✅ `http://localhost` | ✅ `http://localhost:9000` |
+| 自動スケジュール / 終了アナウンス | ✅ | ✅ |
+| 必要なもの | Docker Desktop だけ | Python / Node / Go(初回に install が自動導入) |
 | 設定の場所 | プロジェクト直下の `.env` | `PalWorldSettings.ini` |
 | セーブの場所 | `backend/palworld-data/` | `windows\native\server\` |
 
