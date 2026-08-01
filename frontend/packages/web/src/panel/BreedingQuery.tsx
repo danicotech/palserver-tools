@@ -895,6 +895,11 @@ function TraitSolutionView({
                 role={startRow ? "start" : "mid"}
                 meta={metaOf(pa.species)}
                 owned={ownedOf(pa)}
+                /* 這一列 A+B 配出來的就是 s 本身。詞條梯度的目標列同時掛著「目標將繼承」的
+                   說明,和配種列長得不一樣,所以每一列都標出結果,單代路線也看得懂。 */
+                resultId={s.species}
+                resultMeta={metaOf(s.species)}
+                resultOwned={ownedOf(s)}
                 active={openSlot === slotA}
                 onClick={() => setOpenSlot(openSlot === slotA ? null : slotA)}
                 partner={
