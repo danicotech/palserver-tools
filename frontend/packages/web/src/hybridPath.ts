@@ -59,6 +59,12 @@ export interface HybridStep {
   chance: number;
   /** 突變步驟:每顆蛋成功的機率(= 觸發率 × chance);直系步驟為 1 */
   perEgg: number;
+  /** 詞條模式:from 這隻必須帶著的詞條(bitmask,對應 TraitCtx.desired 的位) */
+  fromNeed?: number;
+  /** 詞條模式:夥伴必須帶進來的詞條 */
+  partnerNeed?: number;
+  /** 詞條模式:這一列配出來的子代身上會有的詞條 */
+  childNeed?: number;
 }
 
 export interface HybridPath {
@@ -379,4 +385,268 @@ export function startCandidates(
     frontier = next;
   }
   return out;
+}
+
+// ── 詞條約束下的路線 ──────────────────────────────────────────────────
+//
+// 詞條(被動技能)只能從「真的有人擁有的帕魯」帶進來,子代拿到的是雙親的聯集。
+// 直系配種一次最多帶四格,但**突變蛋固定佔兩格彩虹詞條,只剩兩格繼承父母**
+// (巴哈整理:「突變必定自帶 2 個虹詞,然後再從父母身上繼承兩個詞條」),
+// 所以突變步驟一次最多只帶得動兩個指定詞條 —— 這是變異路線最硬的限制。
+//
+// 解法:狀態 =(物種, 還缺哪些詞條),從「目標 + 全部詞條」反向搜。
+// 反向邊 (X, needX) --夥伴 Y--> (C, needC) 的條件:
+//   直系  needX = needC & ~mask(Y)
+//   突變  同上,且 popcount(needC) ≤ inherit
+// 終點:某個 (X, need) 能被 X 物種實際擁有的個體詞條涵蓋 → X 可當初代。
+// 於是「找得到路線」等價於「目標一定帶得齊詞條」,找不到就是真的配不出來。
+
+/** 突變蛋能從父母繼承幾個詞條(另外兩格固定是彩虹詞條)。 */
+export const MUTATION_INHERIT = 2;
+
+export interface TraitCtx {
+  /** 要帶到目標身上的詞條;bit i 對應 desired[i] */
+  desired: string[];
+  /** 物種 → 範圍內真的有人擁有的詞條組合(bitmask,只留極大值);未列出者只能提供 0 */
+  masks: Map<string, number[]>;
+  /** 一次突變能從父母帶走幾個詞條 */
+  inherit: number;
+}
+
+/** 詞條模式專用的突變可達表:來源 → 子代 → 夥伴詞條 → 最佳夥伴。 */
+export type MaskReach = Map<string, Map<string, Map<number, MutationEdge>>>;
+
+/**
+ * 建立「帶詞條夥伴」的突變可達表。夥伴池限定為真的有人持有所選詞條的物種,
+ * 通常遠少於 299,所以比全表便宜得多。
+ */
+export function buildCarrierReach(mut: MutationIndex, masks: Map<string, number[]>): MaskReach {
+  const carriers = [...mut.byId.values()]
+    .map((p) => ({ pal: p, ms: (masks.get(p.id) ?? []).filter((m) => m !== 0) }))
+    .filter((x) => x.ms.length > 0);
+  const out: MaskReach = new Map();
+  if (!carriers.length) return out;
+  for (const src of mut.byId.values()) {
+    const byChild = new Map<string, Map<number, MutationEdge>>();
+    for (const { pal, ms } of carriers) {
+      for (const o of mutationOutcomes(mut, src.rank, pal.rank)) {
+        let byMask = byChild.get(o.pal.id);
+        if (!byMask) {
+          byMask = new Map();
+          byChild.set(o.pal.id, byMask);
+        }
+        for (const m of ms) {
+          const prev = byMask.get(m);
+          if (!prev || o.chance > prev.chance) byMask.set(m, { partner: pal.id, chance: o.chance });
+        }
+      }
+    }
+    if (byChild.size) out.set(src.id, byChild);
+  }
+  return out;
+}
+
+export interface TraitGraph {
+  /** 能當初代的物種 → 代數與成功率(每一筆都保證帶得齊詞條) */
+  starts: Map<string, StartCandidate>;
+  /** 從某初代出發的完整路線;不在 starts 裡就是 null */
+  solve(from: string): HybridPath | null;
+}
+
+const ZERO_MASK = [0];
+function popcount(x: number): number {
+  let c = 0;
+  for (let v = x; v; v &= v - 1) c++;
+  return c;
+}
+
+/**
+ * 反向建圖:一次算完「哪些初代帶得齊詞條」與「各自的走法」。
+ * strategy 決定挑法(代數最少 / 期望蛋數最少),語意與無詞條時相同。
+ */
+export function buildTraitGraph(
+  index: BreedingTableIndex,
+  mut: MutationIndex,
+  reach: MutationReach,
+  carrierReach: MaskReach,
+  target: string,
+  mode: PathMode,
+  cake: CakeKind,
+  trait: TraitCtx,
+  maxDepth = 6,
+  strategy: PathStrategy = "short",
+): TraitGraph {
+  const rate = MUTATION_RATE[cake];
+  const nMask = 1 << trait.desired.length;
+  const full = nMask - 1;
+
+  // 物種一律換成整數索引,狀態鍵 = 物種 × nMask + need。
+  // 字串鍵的 Map 在這裡會慢一個數量級(每輪要跑上百萬次)。
+  const spList = [...index.speciesSet];
+  const spIdx = new Map(spList.map((s, i) => [s, i]));
+  const nSp = spList.length;
+  const masksBy: number[][] = spList.map((s) => trait.masks.get(s) ?? ZERO_MASK);
+  const targetIdx = spIdx.get(target);
+  if (targetIdx === undefined) return { starts: new Map(), solve: () => null };
+
+  /** 反向直系邊:子代 → [來源, 夥伴] 交錯陣列。 */
+  const revBreed: Int32Array[] = new Array(nSp);
+  if (mode !== "mutation") {
+    const tmp: number[][] = Array.from({ length: nSp }, () => []);
+    for (const [child, recipes] of index.byChild) {
+      const ci = spIdx.get(child);
+      if (ci === undefined) continue;
+      const list = tmp[ci];
+      for (const r of recipes) {
+        const a = spIdx.get(r[0]);
+        const b = spIdx.get(r[2]);
+        if (a === undefined || b === undefined) continue;
+        if (a !== ci) list.push(a, b);
+        if (b !== a && b !== ci) list.push(b, a);
+      }
+    }
+    for (let i = 0; i < nSp; i++) revBreed[i] = Int32Array.from(tmp[i]);
+  }
+
+  /** 反向突變邊:子代 → 能突變出牠的(來源, 夥伴, 夥伴詞條, 條件機率)。 */
+  const revMut: { src: number; partner: number; chance: number; mask: number }[][] = Array.from(
+    { length: nSp },
+    () => [],
+  );
+  if (mode !== "pure") {
+    const push = (child: string, src: string, partner: string, chance: number, mask: number) => {
+      const ci = spIdx.get(child);
+      const si = spIdx.get(src);
+      const pi = spIdx.get(partner);
+      if (ci === undefined || si === undefined || pi === undefined || ci === si) return;
+      revMut[ci].push({ src: si, partner: pi, chance, mask });
+    };
+    for (const [src, children] of reach)
+      for (const [child, edge] of children) push(child, src, edge.partner, edge.chance, 0);
+    for (const [src, children] of carrierReach)
+      for (const [child, byMask] of children)
+        for (const [mask, edge] of byMask) push(child, src, edge.partner, edge.chance, mask);
+  }
+
+  const size = nSp * nMask;
+  const depthAt = new Int32Array(size).fill(-1);
+  const costAt = new Float64Array(size).fill(Infinity);
+  const logPAt = new Float64Array(size).fill(-Infinity);
+  const mutsAt = new Int32Array(size);
+  /** 往目標方向的下一步:夥伴、子代狀態、種類、機率 */
+  const nextPartner = new Int32Array(size).fill(-1);
+  const nextState = new Int32Array(size).fill(-1);
+  const nextMut = new Uint8Array(size);
+  const nextChance = new Float64Array(size);
+
+  const root = targetIdx * nMask + full;
+  depthAt[root] = 0;
+  costAt[root] = 0;
+  logPAt[root] = 0;
+  let frontier = [root];
+
+  for (let depth = 1; depth <= maxDepth && frontier.length; depth++) {
+    const improved: number[] = [];
+    for (const cur of frontier) {
+      const need = cur % nMask;
+      const curDepth = depthAt[cur];
+      const curCost = costAt[cur];
+      const curLogP = logPAt[cur];
+      const curMuts = mutsAt[cur];
+      /** 把「(src, needSrc) 配 partner 生出 cur 的物種」記進圖。 */
+      const relax = (src: number, needSrc: number, partner: number, isMut: number, chance: number, perEgg: number) => {
+        const k = src * nMask + needSrc;
+        if (k === root) return; // 回到起始狀態沒有意義
+        const cost = curCost + 1 / perEgg;
+        const d = curDepth + 1;
+        const logP = curLogP + Math.log(perEgg);
+        const win =
+          depthAt[k] < 0 ||
+          (strategy === "odds"
+            ? cost < costAt[k] - 1e-9
+            : d < depthAt[k] || (d === depthAt[k] && logP > logPAt[k] + 1e-12));
+        if (!win) return;
+        depthAt[k] = d;
+        costAt[k] = cost;
+        logPAt[k] = logP;
+        mutsAt[k] = curMuts + isMut;
+        nextPartner[k] = partner;
+        nextState[k] = cur;
+        nextMut[k] = isMut;
+        nextChance[k] = chance;
+        improved.push(k);
+      };
+
+      // 直系:兩個方向都當「上一代留下來的那隻」
+      if (mode !== "mutation") {
+        const adj = revBreed[(cur / nMask) | 0];
+        for (let i = 0; i < adj.length; i += 2) {
+          const partner = adj[i + 1];
+          const ms = masksBy[partner];
+          for (let j = 0; j < ms.length; j++) relax(adj[i], need & ~ms[j], partner, 0, 1, 1);
+        }
+      }
+      // 突變:只剩兩格能繼承,子代要帶的詞條超過上限就走不了
+      if (mode !== "pure" && popcount(need) <= trait.inherit) {
+        const list = revMut[(cur / nMask) | 0];
+        for (let i = 0; i < list.length; i++) {
+          const e = list[i];
+          const perEgg = rate * e.chance;
+          if (perEgg > 0) relax(e.src, need & ~e.mask, e.partner, 1, e.chance, perEgg);
+        }
+      }
+    }
+    frontier = improved;
+  }
+
+  /** 物種 → 最佳可行狀態(初代必須用自己擁有的個體補齊剩下的詞條)。 */
+  const bestStart = new Map<string, number>();
+  for (let sp = 0; sp < nSp; sp++) {
+    if (sp === targetIdx) continue;
+    const ms = masksBy[sp];
+    let bestK = -1;
+    for (let need = 0; need < nMask; need++) {
+      const k = sp * nMask + need;
+      if (depthAt[k] < 0 || nextState[k] < 0) continue;
+      if (!ms.some((m) => (need & ~m) === 0)) continue;
+      if (
+        bestK < 0 ||
+        (strategy === "odds"
+          ? costAt[k] < costAt[bestK]
+          : depthAt[k] < depthAt[bestK] || (depthAt[k] === depthAt[bestK] && logPAt[k] > logPAt[bestK]))
+      )
+        bestK = k;
+    }
+    if (bestK >= 0) bestStart.set(spList[sp], bestK);
+  }
+
+  const starts = new Map<string, StartCandidate>();
+  for (const [sp, k] of bestStart)
+    starts.set(sp, { depth: depthAt[k], overall: Math.exp(logPAt[k]), mutationSteps: mutsAt[k] });
+
+  return {
+    starts,
+    solve(from: string): HybridPath | null {
+      const head = bestStart.get(from);
+      if (head === undefined) return null;
+      const steps: HybridStep[] = [];
+      for (let k = head; nextState[k] >= 0 && steps.length <= maxDepth + 2; k = nextState[k]) {
+        const child = nextState[k];
+        const isMut = nextMut[k] === 1;
+        const chance = isMut ? nextChance[k] : 1;
+        steps.push({
+          from: spList[(k / nMask) | 0],
+          partner: spList[nextPartner[k]],
+          child: spList[(child / nMask) | 0],
+          kind: isMut ? "mutation" : "breed",
+          chance,
+          perEgg: isMut ? rate * chance : 1,
+          fromNeed: k % nMask,
+          partnerNeed: (child % nMask) & ~(k % nMask),
+          childNeed: child % nMask,
+        });
+      }
+      return steps.length ? assemble(steps) : null;
+    },
+  };
 }

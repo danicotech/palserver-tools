@@ -39,16 +39,21 @@ import {
   type MutationPair,
 } from "../mutationTable";
 import {
+  buildCarrierReach,
   buildMutationReach,
+  buildTraitGraph,
   solveHybrid,
   startCandidates,
   stepOptions,
+  MUTATION_INHERIT,
   type HybridPath,
+  type MaskReach,
   type MutationReach,
   type PathMode,
   type PathStrategy,
   type StartCandidate,
   type StepOption,
+  type TraitGraph,
 } from "../hybridPath";
 import { MutationSettings } from "./MutationSettings";
 import { loadPaldex, palInfo } from "./paldex";
@@ -1047,40 +1052,30 @@ function HybridPathView({
   const rowWidth = (gen: number) => ({ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" as const });
   const totalTime = humanDuration(eggsToSeconds(path.expectedEggs, cake, farm, boosted));
 
-  /** 從底往上跑一次,替每一步的兩位親代挑「帶著目前還缺的詞條」的自有個體。
-   *  詞條只能從實際存在的帕魯帶進來,所以這裡要挑的是「個體」而不是物種,
-   *  才答得出「誰有這隻」。子代繼承雙親聯集,故覆蓋是累積的。 */
-  const carriers = new Map<number, { a?: SaveBreedingPal; b?: SaveBreedingPal }>();
-  /** 每一步開始時還缺哪些詞條(排序夥伴用) */
-  const neededAt = new Map<number, string[]>();
-  let covered = new Set<string>();
-  if (desired.length) {
-    const bestFor = (species: string, need: Set<string>) => {
-      const sp = species.toLowerCase();
-      let best: SaveBreedingPal | undefined;
-      let bestHit = 0;
-      for (const c of ownedPool) {
-        if (normalizeSpecies(c.characterId) !== sp) continue;
-        const hit = [...need].filter((x) => c.passives.includes(x)).length;
-        if (hit > bestHit) {
-          best = c;
-          bestHit = hit;
-        }
-      }
-      return bestHit > 0 ? best : undefined;
-    };
-    path.steps.forEach((st, i) => {
-      const need = new Set(desired.filter((x) => !covered.has(x)));
-      neededAt.set(i, [...need]);
-      const a = need.size ? bestFor(st.from, need) : undefined;
-      const b = need.size && st.partner ? bestFor(st.partner, need) : undefined;
-      carriers.set(i, { a, b });
-      const next = new Set(covered);
-      for (const c of [a, b]) for (const x of c?.passives ?? []) if (desired.includes(x)) next.add(x);
-      covered = next;
+  /** 詞條交給解算器當硬條件:每一步都已標明「誰必須帶什麼進來」(bitmask),
+   *  這裡只負責把 bitmask 換成真正的個體 —— 才答得出「這隻是誰的」。 */
+  const maskOfPal = (c: SaveBreedingPal) => {
+    let m = 0;
+    desired.forEach((d, i) => {
+      if (c.passives.includes(d)) m |= 1 << i;
     });
-  }
-  const missing = desired.filter((x) => !covered.has(x));
+    return m;
+  };
+  /** 該物種中「帶得齊 mask」且雜詞條最少的個體(雜詞條少 → 遺傳時比較不會被擠掉)。 */
+  const carrierFor = (species: string, mask: number): SaveBreedingPal | undefined => {
+    if (!mask) return undefined;
+    const sp = species.toLowerCase();
+    let best: SaveBreedingPal | undefined;
+    for (const c of ownedPool) {
+      if (normalizeSpecies(c.characterId) !== sp) continue;
+      if ((mask & ~maskOfPal(c)) !== 0) continue;
+      if (!best || c.passives.length < best.passives.length) best = c;
+    }
+    return best;
+  };
+  const traitNames = (mask: number) => desired.filter((_, i) => mask & (1 << i));
+  /** 解算器算過詞條(steps 帶著 mask)= 這條路線保證把詞條送到目標。 */
+  const traitAware = desired.length > 0 && path.steps[0]?.fromNeed !== undefined;
   return (
     <Card className="overflow-hidden">
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
@@ -1098,15 +1093,10 @@ function HybridPathView({
           {t("期望")} <b className="text-ink">{Math.round(path.expectedEggs)}</b> {t("顆蛋")}
           <b className="ml-1 text-pal">≈ {totalTime}</b>
         </span>
-        {desired.length > 0 && (
-          <span className={missing.length ? "font-semibold text-sun" : "font-semibold text-grass"}>
-            {missing.length
-              ? t("詞條只帶到 {n}/{total}(缺 {list})", {
-                  n: desired.length - missing.length,
-                  total: desired.length,
-                  list: missing.join("、"),
-                })
-              : t("這條路線可帶齊全部 {n} 個詞條", { n: desired.length })}
+        {traitAware && (
+          <span className="font-semibold text-grass">
+            ✓ {t("目標會帶齊全部 {n} 個詞條", { n: desired.length })}
+            <span className="ml-1 font-normal text-ink-muted">({desired.join("、")})</span>
           </span>
         )}
       </div>
@@ -1116,17 +1106,10 @@ function HybridPathView({
         const stepIdx = d - 1 - i;
         const isLast = i === 0;
         let opts = stepOptions(index, mut, raw.from, raw.child, mode, cake);
-        // 有選詞條時,夥伴優先挑「你擁有、且帶著這一步還缺的詞條」的物種 ——
-        // 這樣預設路線就會盡量把詞條收齊,而不是只看成功率。
-        if (desired.length) {
-          const need = new Set(neededAt.get(stepIdx) ?? []);
-          const carries = (sp: string) =>
-            need.size > 0 &&
-            ownedPool.some(
-              (c) => normalizeSpecies(c.characterId) === sp.toLowerCase() && c.passives.some((x) => need.has(x)),
-            );
-          opts = [...opts].sort((x, y) => Number(carries(y.partner)) - Number(carries(x.partner)) || y.perEgg - x.perEgg);
-        }
+        // 詞條模式:這一步的夥伴要負責帶進 partnerNeed,換夥伴時只能換成同樣帶得動的,
+        // 否則整條路線的保證就破了。
+        const needMask = traitAware ? (raw.partnerNeed ?? 0) : 0;
+        if (needMask) opts = opts.filter((o) => carrierFor(o.partner, needMask));
         const chosen = picked[stepIdx];
         // 沒挑過就用解算器給的;直系步驟解算器沒指定夥伴 → 用第一個合法選項
         const s = chosen
@@ -1291,26 +1274,41 @@ function HybridPathView({
                 </div>
               </div>
             )}
-            {desired.length > 0 && (carriers.get(stepIdx)?.a || carriers.get(stepIdx)?.b) && (
-              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 px-1 text-[11px]" style={rowWidth(gen)}>
-                {([carriers.get(stepIdx)?.a, carriers.get(stepIdx)?.b].filter(Boolean) as SaveBreedingPal[]).map((c) => {
-                  const hits = c.passives.filter((x) => desired.includes(x));
-                  return (
-                    <span key={c.instanceId} className="flex min-w-0 flex-wrap items-center gap-1">
-                      <span className="shrink-0 text-ink-muted">
-                        {palInfo(normalizeSpecies(c.characterId)).zh || c.characterId}
-                        (<b className="text-ink">{c.ownerName || "?"}</b> {t("的帕魯")}):
+            {traitAware && (() => {
+              // 這一列要誰帶什麼進來:初代那隻(只有最底列)+ 這一步的夥伴
+              const rows: { mask: number; species: string; pal?: SaveBreedingPal; role: string }[] = [];
+              if (stepIdx === 0 && (s.fromNeed ?? 0) > 0)
+                rows.push({ mask: s.fromNeed!, species: s.from, pal: carrierFor(s.from, s.fromNeed!), role: t("初代") });
+              if (needMask > 0 && s.partner)
+                rows.push({ mask: needMask, species: s.partner, pal: carrierFor(s.partner, needMask), role: t("夥伴") });
+              if (!rows.length) return null;
+              return (
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 px-1 text-[11px]" style={rowWidth(gen)}>
+                  {rows.map((r) => (
+                    <span key={r.role} className="flex min-w-0 flex-wrap items-center gap-1">
+                      <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold text-ink-muted ring-1 ring-line">
+                        {r.role}
                       </span>
-                      {hits.map((x) => (
+                      <span className="shrink-0 text-ink-muted">
+                        {palInfo(r.species.toLowerCase()).zh || r.species}
+                        {r.pal && (
+                          <>
+                            {r.pal.nickname ? `「${r.pal.nickname}」` : ""}(
+                            <b className="text-ink">{r.pal.ownerName || "?"}</b> {t("的帕魯")})
+                          </>
+                        )}
+                        {t("要帶")}
+                      </span>
+                      {traitNames(r.mask).map((x) => (
                         <span key={x} className="rounded bg-pal/10 px-1.5 py-0.5 text-[10px] font-bold text-pal">
                           {x}
                         </span>
                       ))}
                     </span>
-                  );
-                })}
-              </div>
-            )}
+                  ))}
+                </div>
+              );
+            })()}
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-ink-muted" style={rowWidth(gen)}>
               {s.kind === "mutation" ? (
                 <>
@@ -1780,6 +1778,61 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, dataset, desired, persp]);
 
+  /** 詞條模式:物種 → 範圍內真的有人擁有的詞條組合(bitmask,只留極大值)。
+   *  這是「誰真的有帶這些詞條的帕魯」的唯一事實來源,變異路線也吃這份資料。 */
+  const traitMasks = useMemo<Map<string, number[]>>(() => {
+    const out = new Map<string, number[]>();
+    if (!index || desired.length === 0) return out;
+    const idOf = new Map([...index.speciesSet].map((s) => [s.toLowerCase(), s]));
+    const raw = new Map<string, Set<number>>();
+    for (const c of ownedForTraits) {
+      const id = idOf.get(normalizeSpecies(c.characterId));
+      if (!id) continue;
+      let mask = 0;
+      desired.forEach((d, i) => {
+        if (c.passives.includes(d)) mask |= 1 << i;
+      });
+      if (!mask) continue;
+      const set = raw.get(id);
+      if (set) set.add(mask);
+      else raw.set(id, new Set([mask]));
+    }
+    // 只留極大值:被別的組合完全涵蓋的個體不會讓路線更好走
+    for (const [id, set] of raw) {
+      const all = [...set];
+      out.set(
+        id,
+        all.filter((m) => !all.some((o) => o !== m && (m & ~o) === 0)),
+      );
+    }
+    return out;
+  }, [index, desired, ownedForTraits]);
+
+  /** 帶詞條夥伴的突變可達表(夥伴池只有持有所選詞條的物種,遠比全表便宜)。 */
+  const carrierReach = useMemo<MaskReach | null>(() => {
+    if (!mutIndex || pathMode === "pure" || traitMasks.size === 0) return null;
+    return buildCarrierReach(mutIndex, traitMasks);
+  }, [mutIndex, pathMode, traitMasks]);
+
+  /** 詞條 × 變異:一次反向建圖,同時得到「哪些初代帶得齊詞條」與各自的走法。
+   *  找不到就是真的配不出來(而不是配得到但詞條掉了)。 */
+  const traitGraph = useMemo<TraitGraph | null>(() => {
+    if (pathMode === "pure" || desired.length === 0) return null;
+    if (!index || !mutIndex || !mutReach || !chainTo) return null;
+    return buildTraitGraph(
+      index,
+      mutIndex,
+      mutReach,
+      carrierReach ?? new Map(),
+      chainTo,
+      pathMode,
+      cake,
+      { desired, masks: traitMasks, inherit: MUTATION_INHERIT },
+      6,
+      strategy,
+    );
+  }, [pathMode, desired, index, mutIndex, mutReach, carrierReach, chainTo, cake, traitMasks, strategy]);
+
   /** 選完目標後,哪些帕魯能當初代(含要幾代、成功率)。三種模式共用,是選初代的唯一提示來源。 */
   const startPool = useMemo<Map<string, StartCandidate> | null>(() => {
     if (!index || !chainTo) return null;
@@ -1796,15 +1849,18 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       return withTraits(m);
     }
     if (!mutIndex || !mutReach) return null;
-    return withTraits(startCandidates(index, mutIndex, mutReach, chainTo, pathMode, cake));
+    // 有選詞條 → 初代清單直接來自詞條圖,每一筆都保證能把詞條帶到目標
+    if (traitGraph) return traitGraph.starts;
+    return startCandidates(index, mutIndex, mutReach, chainTo, pathMode, cake);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, chainTo, pathMode, startOptions, mutIndex, mutReach, cake, desired, traitCarrierSpecies]);
+  }, [index, chainTo, pathMode, startOptions, mutIndex, mutReach, cake, desired, traitCarrierSpecies, traitGraph]);
 
   /** 混合/純突變路徑:pure 模式沿用原本的 solveChain,不走這裡。 */
   const hybrid = useMemo<HybridPath | null>(() => {
     if (pathMode === "pure" || !index || !mutIndex || !mutReach || !chainFrom || !chainTo) return null;
+    if (traitGraph) return traitGraph.solve(chainFrom);
     return solveHybrid(index, mutIndex, mutReach, chainFrom, chainTo, pathMode, cake, 6, strategy);
-  }, [pathMode, index, mutIndex, mutReach, chainFrom, chainTo, cake, strategy]);
+  }, [pathMode, index, mutIndex, mutReach, chainFrom, chainTo, cake, strategy, traitGraph]);
 
   /** 點卡片 → 填入作用中插槽,並自動前進到下一個空插槽。 */
   const pickPal = (id: string) => {
@@ -2586,15 +2642,27 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
               <div className="mt-2.5 rounded-cute bg-card-soft p-2.5 ring-1 ring-line">
                 {startPool.size === 0 ? (
                   <p className="text-sm text-ink-muted">
-                    ⚠ {t("這個模式下沒有任何帕魯能配到 {name}", { name: nameOf(chainTo) })}
+                    ⚠{" "}
+                    {desired.length > 0
+                      ? t("找不到能把這些詞條帶到 {name} 的初代 —— 減少詞條或擴大玩家視角範圍。", {
+                          name: nameOf(chainTo),
+                        })
+                      : t("這個模式下沒有任何帕魯能配到 {name}", { name: nameOf(chainTo) })}
                   </p>
                 ) : (
                   <>
                     <p className="mb-1.5 text-xs font-bold text-ink-muted">
-                      👉 {t("有 {n} 種帕魯能配到 {name},點下面或右側清單挑一隻當初代", {
-                        n: startPool.size,
-                        name: nameOf(chainTo),
-                      })}
+                      👉{" "}
+                      {desired.length > 0 && traitGraph
+                        ? t("這 {n} 隻能當初代,把 {list} 帶到 {name} 身上", {
+                            n: startPool.size,
+                            list: desired.join("、"),
+                            name: nameOf(chainTo),
+                          })
+                        : t("有 {n} 種帕魯能配到 {name},點下面或右側清單挑一隻當初代", {
+                            n: startPool.size,
+                            name: nameOf(chainTo),
+                          })}
                     </p>
                     <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
                       {[...startPool.entries()]
@@ -2717,6 +2785,43 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 desired={desired}
                 ownedPool={ownedForTraits}
               />
+            ) : desired.length > 0 ? (
+              <Card className="text-center">
+                <p className="font-bold text-ink">
+                  {startPool && startPool.size > 0
+                    ? t("這隻初代帶不齊詞條到 {name}", { name: nameOf(chainTo) })
+                    : t("配不出帶齊這些詞條的 {name}", { name: nameOf(chainTo) })}
+                </p>
+                {startPool && startPool.size > 0 ? (
+                  <p className="mt-1 text-sm text-ink-muted">
+                    {t("換成下列 {n} 隻初代之一就帶得齊 —— 點梯度最底列或右側清單即可更換。", { n: startPool.size })}
+                  </p>
+                ) : (
+                  <>
+                    <p className="mt-1 text-sm text-ink-muted">
+                      {t("目標身上必須真的帶得到這 {n} 個詞條,否則就算配得出物種也不算數。", { n: desired.length })}
+                    </p>
+                    {desired.length > MUTATION_INHERIT && (
+                      <p className="mt-2 rounded-xl bg-berry/8 px-3 py-2 text-left text-[13px] text-ink-muted ring-1 ring-berry/25">
+                        <b className="text-berry">
+                          {t("突變蛋只從父母繼承 {n} 個詞條", { n: MUTATION_INHERIT })}
+                        </b>
+                        {t("(另外兩格固定是彩虹詞條),所以最後一步是突變時帶不動 {n} 個詞條。", {
+                          n: desired.length,
+                        })}
+                        {pathMode === "mutation"
+                          ? t("改用「包含變異可能性」讓最後一步走直系,或把詞條減到 {n} 個以內。", {
+                              n: MUTATION_INHERIT,
+                            })
+                          : t("減少詞條數量,或改用「純粹帕魯配種」。")}
+                      </p>
+                    )}
+                    <p className="mt-2 text-[13px] text-ink-muted">
+                      {t("也可以擴大玩家視角範圍(全服),讓更多人的帕魯進來當父母。")}
+                    </p>
+                  </>
+                )}
+              </Card>
             ) : (
               <Card className="text-center">
                 <p className="font-bold text-ink">{t("這個模式下配不到目標")}</p>
