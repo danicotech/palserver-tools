@@ -6,6 +6,7 @@ import { useDataset } from "./data";
 import { useThemeMode, useSystemDark, isDarkNow, setThemeMode } from "./theme";
 import { PalDetailModal } from "./PalDetailModal";
 import { Dashboard } from "./Dashboard";
+import { RefreshControl } from "./RefreshControl";
 import { PlayerQuery } from "./PlayerQuery";
 import { SpeciesQuery } from "./SpeciesQuery";
 import { TraitQuery } from "./TraitQuery";
@@ -16,7 +17,6 @@ import { HeaderAvatar } from "./HeaderAvatar";
 import { RosterProvider } from "./rosterCtx";
 import { OnlineAnalysis } from "./OnlineAnalysis";
 import { BreedingQuery } from "./BreedingQuery";
-import { FiRefreshCw } from "react-icons/fi";
 import { t, useI18n, LangSelect } from "../i18n";
 
 type Tab = "dashboard" | "player" | "species" | "trait" | "breeding" | "paldex" | "boss" | "ranking" | "online";
@@ -107,14 +107,7 @@ export function PanelApp(): JSX.Element {
           <div className="flex items-center gap-2">
             <HeaderAvatar players={data?.players ?? []} />
             <LangSelect />
-            <button
-              onClick={reload}
-              className="flex size-9 items-center justify-center rounded-full border-2 border-line bg-card-soft text-ink-muted transition hover:border-pal hover:text-ink"
-              title={t("重新載入最新存檔資料")}
-              aria-label={t("重新載入最新存檔資料")}
-            >
-              <FiRefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            </button>
+            <RefreshControl loading={loading} onReload={reload} />
             <ThemeToggle />
           </div>
         </header>
