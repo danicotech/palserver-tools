@@ -2450,5 +2450,7 @@
   "(上一代帶上來)": "(inherited from the previous generation)",
   "不必帶詞條": "no passive needed",
   "要湊": "Needs",
-  "隻帶詞條的帕魯": "passive-carrying pals"
+  "隻帶詞條的帕魯": "passive-carrying pals",
+  "全服沒有人有": "nobody on the server has one",
+  "等 {n} 人,共 {total} 隻": "and {n} owners in total, {total} pals"
 }

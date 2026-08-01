@@ -3,7 +3,7 @@
 //   插槽(A + B = C)+ 永遠可見的卡片網格 —— 點卡片填入作用中插槽,不用下拉選單。
 // 四種模式:配種計算(正查)、反查組合(作為子代/作為父母)、路徑金字塔、稀有配方。
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { JSX, ReactNode } from "react";
+import type { CSSProperties, JSX, ReactNode } from "react";
 import { solveBreeding, type BreedingData, type BreedingGender, type BreedingNode, type BreedingSolution } from "../breedingSolver";
 import type { SaveBreedingPal } from "@palserver/shared";
 import {
@@ -512,6 +512,56 @@ function PalCell({
   );
 }
 
+/** 一列梯度下方的「誰有這隻」——(玩家視角是全服或某位玩家時才有意義)。
+ *  配種要真的湊得到父母,所以 A/B 兩隻各列出持有者與隻數;沒人有就明講。 */
+function OwnerLine({
+  pals,
+  ownersOf,
+  style,
+}: {
+  /** 這一列要湊的帕魯(A 與 B) */
+  pals: string[];
+  ownersOf: (id: string) => { name: string; n: number }[] | null;
+  style?: CSSProperties;
+}): JSX.Element | null {
+  useI18n();
+  const rows = pals
+    .filter((id, i) => id && pals.indexOf(id) === i)
+    .map((id) => ({ id, owners: ownersOf(id) }))
+    .filter((r) => r.owners !== null);
+  if (!rows.length) return null;
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-ink-muted" style={style}>
+      {rows.map((r) => {
+        const owners = r.owners!;
+        const total = owners.reduce((a, b) => a + b.n, 0);
+        return (
+          <span key={r.id} className="flex min-w-0 flex-wrap items-center gap-1">
+            <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold ring-1 ring-line">
+              {palInfo(r.id.toLowerCase()).zh || r.id}
+            </span>
+            {owners.length === 0 ? (
+              <span className="shrink-0 font-semibold text-sun">⚠ {t("全服沒有人有")}</span>
+            ) : (
+              <>
+                {owners.slice(0, 3).map((o) => (
+                  <span key={o.name} className="shrink-0">
+                    <b className="text-ink">{o.name}</b>
+                    <span className="text-ink-muted">×{o.n}</span>
+                  </span>
+                ))}
+                {owners.length > 3 && (
+                  <span className="shrink-0">{t("等 {n} 人,共 {total} 隻", { n: owners.length, total })}</span>
+                )}
+              </>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function PyramidTier({
   id,
   gen,
@@ -1016,6 +1066,7 @@ function HybridPathView({
   onChangeStart,
   desired,
   ownedPool,
+  ownersOf,
 }: {
   path: HybridPath;
   metaOf: (id: string) => PalMeta | undefined;
@@ -1034,6 +1085,8 @@ function HybridPathView({
   desired: string[];
   /** 可用的自有帕魯個體 —— 用來指出「誰有帶這些詞條的那一隻」 */
   ownedPool: SaveBreedingPal[];
+  /** 物種 → 誰有幾隻;回 null = 玩家視角關掉了,不顯示 */
+  ownersOf: (id: string) => { name: string; n: number }[] | null;
 }) {
   const has = (id: string) => (ownedSet ? ownedSet.has(id.toLowerCase()) : undefined);
   /** 使用者為某一步挑的夥伴(換路線時重置)。 */
@@ -1286,6 +1339,12 @@ function HybridPathView({
                 </div>
               </div>
             )}
+            {/* 誰有這兩隻 —— 最底列的 A 是初代要自己準備的,其餘 A 是上一代配出來的 */}
+            <OwnerLine
+              pals={stepIdx === 0 ? [s.from, s.partner] : [s.partner]}
+              ownersOf={ownersOf}
+              style={rowWidth(gen)}
+            />
             {traitAware && (() => {
               // 這一列的詞條帳目:A 手上已經有什麼 ＋ B 帶進來什麼 ⇒ 子代變成幾個。
               // 只印「B 要帶」會讓人以為中間那隻沒帶詞條,所以三段都印出來。
@@ -1602,6 +1661,29 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       if (persp === "all" || owner.uid === persp) set.add(normalizeSpecies(pal.species));
     }
     return set;
+  }, [dataset, persp]);
+
+  /** 物種 → 這個視角下誰擁有、各幾隻(多→少)。「全部帕魯種類」時不看擁有者。 */
+  const ownersBySpecies = useMemo<Map<string, { name: string; n: number }[]> | null>(() => {
+    if (!dataset || persp === "any" || persp === "off") return null;
+    const acc = new Map<string, Map<string, number>>();
+    for (const { pal, owner } of dataset.allPals) {
+      if (persp !== "all" && owner.uid !== persp) continue;
+      const sp = normalizeSpecies(pal.species);
+      let byOwner = acc.get(sp);
+      if (!byOwner) {
+        byOwner = new Map();
+        acc.set(sp, byOwner);
+      }
+      byOwner.set(owner.name, (byOwner.get(owner.name) ?? 0) + 1);
+    }
+    const out = new Map<string, { name: string; n: number }[]>();
+    for (const [sp, byOwner] of acc)
+      out.set(
+        sp,
+        [...byOwner].map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)),
+      );
+    return out;
   }, [dataset, persp]);
 
   /** 自動起點的來源池:any = 全部物種;否則 = 擁有的物種。 */
@@ -2821,6 +2903,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 }}
                 desired={desired}
                 ownedPool={ownedForTraits}
+                ownersOf={(id) => ownersBySpecies?.get(id.toLowerCase()) ?? (ownersBySpecies ? [] : null)}
               />
             ) : desired.length > 0 ? (
               <Card className="text-center">
@@ -2994,6 +3077,13 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               }
                             />
                           </div>
+
+                          {/* 誰有這兩隻:初代要自己準備 A,其餘每一列只需要準備夥伴 */}
+                          <OwnerLine
+                            pals={gen === d ? [] : gen === 0 ? [sp, chosenOf(gen).partner] : [chosenOf(gen).partner]}
+                            ownersOf={(id) => ownersBySpecies?.get(id.toLowerCase()) ?? (ownersBySpecies ? [] : null)}
+                            style={{ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" }}
+                          />
 
                           {/* 內嵌:B 夥伴選擇(點選即套用) */}
                           {gen < d && openSteps.has(gen) && (
