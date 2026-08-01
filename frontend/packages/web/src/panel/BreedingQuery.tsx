@@ -38,6 +38,7 @@ import {
   type MutationIndex,
   type MutationPair,
 } from "../mutationTable";
+import { buildMutationReach, solveHybrid, type HybridPath, type MutationReach, type PathMode } from "../hybridPath";
 import { loadPaldex, palInfo } from "./paldex";
 import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
@@ -50,7 +51,7 @@ const PAGE_SIZE = 40;
 // 靜態資料載入
 // ---------------------------------------------------------------------------
 
-type Mode = "pair" | "reverse" | "chain" | "mutation";
+type Mode = "pair" | "reverse" | "chain";
 
 interface PalMeta {
   el: string[];
@@ -439,6 +440,7 @@ function PalCell({
   title,
   hint,
   big,
+  compact,
 }: {
   id: string;
   meta?: PalMeta;
@@ -452,6 +454,8 @@ function PalCell({
   hint?: ReactNode;
   /** 目標列用大字 */
   big?: boolean;
+  /** 精簡樣式:省略屬性點與擁有徽章(用在「= 結果」格,一列才塞得下) */
+  compact?: boolean;
 }): JSX.Element {
   const info = palInfo(id);
   const Tag = onClick ? "button" : "div";
@@ -475,12 +479,14 @@ function PalCell({
         {info.zh || id}
       </span>
       {hint}
-      <span className="hidden shrink-0 gap-0.5 sm:flex">
-        {(meta?.el ?? []).map((e) => (
-          <ElementDot key={e} el={e} size="md" />
-        ))}
-      </span>
-      {owned !== undefined && (
+      {!compact && (
+        <span className="hidden shrink-0 gap-0.5 sm:flex">
+          {(meta?.el ?? []).map((e) => (
+            <ElementDot key={e} el={e} size="md" />
+          ))}
+        </span>
+      )}
+      {!compact && owned !== undefined && (
         <span className={`shrink-0 rounded-full px-1.5 py-px text-[10px] font-bold text-white ${owned ? "bg-grass" : "bg-sun"}`}>
           {owned ? "✓" : t("缺")}
         </span>
@@ -499,6 +505,9 @@ function PyramidTier({
   onClick,
   active,
   partner,
+  resultId,
+  resultMeta,
+  resultOwned,
 }: {
   id: string;
   gen: number;
@@ -513,9 +522,13 @@ function PyramidTier({
   active?: boolean;
   /** B 夥伴卡(內嵌在同一張列卡右端;A 與 B 分開點擊,兩格等寬) */
   partner?: ReactNode;
+  /** 這一列配出來的子代 id —— 讓人一眼看出 A + B 生的是誰(不傳則不顯示) */
+  resultId?: string;
+  resultMeta?: PalMeta;
+  resultOwned?: boolean;
 }): JSX.Element {
   const mix = 4 + Math.round((depth === 0 ? 1 : gen / depth) * 12);
-  const badge = role === "target" ? `🎯 ${t("目標")}` : role === "start" ? `🏁 ${t("起點")}` : t("第 {n} 代", { n: gen });
+  const badge = role === "target" ? `🎯 ${t("目標")}` : role === "start" ? `🏁 ${t("初代")}` : t("第 {n} 代", { n: gen });
   return (
     <div
       className={`flex h-full w-full items-center gap-1.5 rounded-cute px-2.5 py-2 shadow-cute ring-1 sm:gap-2.5 sm:px-3.5 sm:py-2.5 ${
@@ -523,6 +536,14 @@ function PyramidTier({
       }`}
       style={{ background: `color-mix(in oklab, var(--color-pal) ${mix}%, var(--color-card))` }}
     >
+      {/* 世代徽章放列首:一眼看出這是第幾代的配種 */}
+      <span
+        className={`w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
+          role === "mid" ? "bg-card-soft text-ink-muted ring-line" : "bg-pal/15 text-pal ring-pal/40"
+        }`}
+      >
+        {badge}
+      </span>
       {/* A:該代帕魯(中間代可點擊替換);與 B 各佔一半 */}
       <PalCell
         id={id}
@@ -540,14 +561,14 @@ function PyramidTier({
           {partner}
         </>
       )}
-      {/* 世代徽章放整列最右:A + B 合起來才是這一代的配種 */}
-      <span
-        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 sm:px-2.5 sm:py-1 sm:text-xs ${
-          role === "mid" ? "bg-card-soft text-ink-muted ring-line" : "bg-pal/15 text-pal ring-pal/40"
-        }`}
-      >
-        {badge}
-      </span>
+      {/* = C:這一列配出來的子代,直接標在同一列,不必對照上一列 */}
+      {resultId && (
+        <>
+          <span className="shrink-0 text-lg font-bold text-pal sm:text-xl">=</span>
+          <PalCell id={resultId} meta={resultMeta} owned={resultOwned} compact />
+        </>
+      )}
+
     </div>
   );
 }
@@ -649,7 +670,7 @@ function TraitSolutionView({
         </p>
         {fromName && (
           <p className="mt-1.5 text-sm text-ink-muted">
-            ⚠ {t("目前限制路線必須從 {name} 起手 —— 清除起點或換一隻起點再試。", { name: fromName })}
+            ⚠ {t("目前限制路線必須從 {name} 起手 —— 清除初代或換一隻初代再試。", { name: fromName })}
           </p>
         )}
       </Card>
@@ -788,7 +809,7 @@ function TraitSolutionView({
         {cross.length > 0 && (
           <div className="mt-2 border-t border-line pt-2">
             <p className="mb-1.5 px-1 text-[11px] font-bold text-ink-muted">
-              🔁 {t("換其他帶詞條的帕魯當起點(會重新計算路線與代數)")}
+              🔁 {t("換其他帶詞條的帕魯當初代(會重新計算路線與代數)")}
             </p>
             <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
               {cross.map(({ id, pal, traits }) => {
@@ -956,6 +977,115 @@ function MutationRow({
   );
 }
 
+
+/** 混合/純突變路徑梯度:目標在頂,往下每列 = 一次配種,明確標出 A + B = C。 */
+function HybridPathView({
+  path,
+  metaOf,
+  ownedSet,
+  cake,
+  farm,
+  boosted,
+  mode,
+  onPick,
+}: {
+  path: HybridPath;
+  metaOf: (id: string) => PalMeta | undefined;
+  ownedSet: Set<string> | null;
+  cake: CakeKind;
+  farm: FarmKind;
+  boosted: boolean;
+  mode: PathMode;
+  onPick?: (id: string) => void;
+}) {
+  const has = (id: string) => (ownedSet ? ownedSet.has(id.toLowerCase()) : undefined);
+  const d = path.steps.length;
+  const shrink = pyramidShrink(d);
+  const rowWidth = (gen: number) => ({ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" as const });
+  const totalTime = humanDuration(eggsToSeconds(path.expectedEggs, cake, farm, boosted));
+  return (
+    <Card className="overflow-hidden">
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
+        <span className="text-sm font-bold text-ink">
+          {mode === "mutation" ? t("全程變異路線") : t("直系 + 變異混合路線")}
+        </span>
+        <span>{t("共 {n} 代", { n: d })}</span>
+        {path.mutationSteps > 0 && (
+          <span>
+            {t("其中 {n} 步靠突變", { n: path.mutationSteps })} · {t("整體每輪成功率")}{" "}
+            <b className="text-ink">{(path.overall * 100).toFixed(3)}%</b>
+          </span>
+        )}
+        <span>
+          {t("期望")} <b className="text-ink">{Math.round(path.expectedEggs)}</b> {t("顆蛋")}
+          <b className="ml-1 text-pal">≈ {totalTime}</b>
+        </span>
+      </div>
+      {/* 由目標往下回推:最上面是最後一次配種的結果 */}
+      {[...path.steps].reverse().map((s, i) => {
+        const gen = d - 1 - i;
+        const isLast = i === 0;
+        return (
+          <div key={i} className="mt-1.5">
+            <div
+              className={`flex items-center gap-1.5 rounded-cute px-2.5 py-2 shadow-cute ring-1 sm:gap-2.5 sm:px-3.5 ${
+                isLast ? "ring-2 ring-pal" : "ring-line"
+              }`}
+              style={{
+                ...rowWidth(gen),
+                background: `color-mix(in oklab, var(--color-pal) ${4 + Math.round(((gen + 1) / (d || 1)) * 12)}%, var(--color-card))`,
+              }}
+            >
+              <span
+                className={`w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
+                  s.kind === "mutation" ? "bg-berry/15 text-berry ring-berry/40" : "bg-pal/15 text-pal ring-pal/40"
+                }`}
+              >
+                {isLast ? `🎯 ${t("目標")}` : t("第 {n} 代", { n: gen + 1 })}
+              </span>
+              {/* A(上一代留下來的) */}
+              <PalCell id={s.from} meta={metaOf(s.from)} owned={has(s.from)} onClick={onPick && (() => onPick(s.from))} compact />
+              <span className="shrink-0 text-lg font-bold text-ink-muted sm:text-xl">+</span>
+              {/* B(夥伴);直系步驟沒指定夥伴時顯示提示 */}
+              {s.partner ? (
+                <PalCell id={s.partner} meta={metaOf(s.partner)} owned={has(s.partner)} onClick={onPick && (() => onPick(s.partner))} compact />
+              ) : (
+                <span className="min-w-0 flex-1 basis-0 truncate rounded-xl bg-card-soft px-2 py-1.5 text-[13px] text-ink-muted ring-1 ring-line">
+                  {t("任一合法夥伴")}
+                </span>
+              )}
+              {/* = C:這一列配出來的結果,讓人一眼看出下一代是誰 */}
+              <span className="shrink-0 text-lg font-bold text-pal sm:text-xl">=</span>
+              <PalCell id={s.child} meta={metaOf(s.child)} owned={has(s.child)} compact />
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-ink-muted" style={rowWidth(gen)}>
+              {s.kind === "mutation" ? (
+                <>
+                  <span className="flex items-center gap-1 font-semibold text-berry">
+                    <img src={MUTATION_ICON} alt="" className="size-3.5" /> {t("靠突變")}
+                  </span>
+                  <span>
+                    {t("突變時中獎")} <b className="text-ink">{(s.chance * 100).toFixed(1)}%</b>
+                  </span>
+                  <span>
+                    {t("每顆蛋")} <b className="text-ink">{(s.perEgg * 100).toFixed(2)}%</b>
+                  </span>
+                  <span>
+                    {t("平均")} <b className="text-ink">{Math.round(1 / s.perEgg)}</b> {t("顆蛋")}
+                    <b className="ml-1 text-pal">≈ {humanDuration(eggsToSeconds(1 / s.perEgg, cake, farm, boosted))}</b>
+                  </span>
+                </>
+              ) : (
+                <span className="font-semibold text-grass">✓ {t("直系配方,必定生得出")}</span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </Card>
+  );
+}
+
 /** 變異配種主視圖:目標在頂,往下列出機率由高到低的父母組合。 */
 function MutationView({
   index,
@@ -1076,11 +1206,10 @@ function MutationView({
 const MUTATION_ICON = "/mutation-pal.webp";
 
 const MODES: { key: Mode; treeSub?: "tree" | "path"; icon: string; title: string; sub: string }[] = [
-  { key: "chain", treeSub: "path", icon: "🪜", title: "最短路徑", sub: "起點到目標的最短配種路線" },
+  { key: "chain", treeSub: "path", icon: "🪜", title: "最短路徑", sub: "初代到目標的最短配種路線" },
   { key: "pair", icon: "🥚", title: "配種計算", sub: "選兩隻父母,立刻看子代" },
   { key: "reverse", icon: "🔄", title: "反查組合", sub: "目標的全部父母組合" },
   { key: "chain", treeSub: "tree", icon: "🌳", title: "帕魯配種樹", sub: "樹狀展開 / 玩家視角" },
-  { key: "mutation", icon: MUTATION_ICON, title: "變異配種", sub: "突變機率與期望蛋數" },
 ];
 
 type SlotKey = "a" | "b" | "target" | "from" | "to";
@@ -1137,7 +1266,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   const [desired, setDesired] = useState<string[]>([]);
   // 變異配種:目標 / 蛋糕種類 / 只看擁有
   const [mutData, setMutData] = useState<MutationData | null>(null);
-  const [mutTarget, setMutTarget] = useState("");
+  /** 最短路徑的配種來源:純直系 / 直系+突變 / 全程突變 */
+  const [pathMode, setPathMode] = useState<PathMode>("pure");
   const [cake, setCake] = useState<CakeKind>("deluxe");
   const [farm, setFarm] = useState<FarmKind>("normal");
   /** 據點內有滿星梁葉龍或寶寶保母(兩者不可疊加) */
@@ -1371,12 +1501,20 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     if (mode === "reverse") return new Set([revTarget].filter(Boolean));
     if (mode === "chain")
       return new Set((treeSub === "tree" ? [treeTarget] : [chainFrom, chainTo]).filter(Boolean));
-    if (mode === "mutation") return new Set([mutTarget].filter(Boolean));
     return new Set<string>();
-  }, [mode, pairs, pairIdx, revTarget, chainFrom, chainTo, treeSub, treeTarget, mutTarget]);
+  }, [mode, pairs, pairIdx, revTarget, chainFrom, chainTo, treeSub, treeTarget]);
 
   /** 變異索引(資料抓不到就停用該模式)。 */
   const mutIndex = useMemo<MutationIndex | null>(() => (mutData ? buildMutationIndex(mutData) : null), [mutData]);
+
+  /** 突變可達表(299×299 窗口計算,只在資料就緒時算一次)。 */
+  const mutReach = useMemo<MutationReach | null>(() => (mutIndex ? buildMutationReach(mutIndex, null) : null), [mutIndex]);
+
+  /** 混合/純突變路徑:pure 模式沿用原本的 solveChain,不走這裡。 */
+  const hybrid = useMemo<HybridPath | null>(() => {
+    if (pathMode === "pure" || !index || !mutIndex || !mutReach || !chainFrom || !chainTo) return null;
+    return solveHybrid(index, mutIndex, mutReach, chainFrom, chainTo, pathMode, cake);
+  }, [pathMode, index, mutIndex, mutReach, chainFrom, chainTo, cake]);
 
   /** 點卡片 → 填入作用中插槽,並自動前進到下一個空插槽。 */
   const pickPal = (id: string) => {
@@ -1419,9 +1557,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
         setChainTo(id);
         setActiveSlot(chainFrom ? null : "from");
       }
-    } else if (mode === "mutation") {
-      setMutTarget(id);
-      setActiveSlot(null);
     }
   };
 
@@ -1438,7 +1573,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     else if (m === "reverse") setActiveSlot(revTarget ? null : "target");
     else if (m === "chain")
       setActiveSlot(s === "tree" ? (treeTarget ? null : "to") : chainFrom ? (chainTo ? null : "to") : "from");
-    else if (m === "mutation") setActiveSlot(mutTarget ? null : "target");
     else setActiveSlot(null);
   };
 
@@ -1600,8 +1734,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
 
   /** 最短路徑的「網格即候選」過濾:開著哪個替換面板,右側網格就只顯示該處的合法選項。 */
   const swapFilter = useMemo<Set<string> | null>(() => {
-    // 變異模式:網格只顯示「能由突變產出」的 143 隻
-    if (mode === "mutation")
+    // 純變異模式:網格只顯示「能由突變產出」的 143 隻
+    if (mode === "chain" && treeSub === "path" && pathMode === "mutation" && activeSlot === "to")
       return mutIndex ? new Set(mutIndex.eligible.map((p) => p.id)) : null;
     if (mode !== "chain" || treeSub !== "path") return null;
     // 詞條模式:挑起點時只顯示「擁有且帶所選詞條」的物種;
@@ -1920,108 +2054,92 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
         </div>
       )}
 
-      {/* ---------------- 變異配種 ---------------- */}
-      {mode === "mutation" && (
-        <>
-          <Card>
-            <div className="flex flex-wrap items-center gap-2">
-              {dataset && <PerspSelect players={dataset.players} value={persp} onChange={setPersp} />}
-              {/* 蛋糕:官方 1.0 更新說明的突變率 */}
-              <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
-                {(Object.keys(CAKES) as CakeKind[]).map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    title={t(CAKES[k].note)}
-                    onClick={() => setCake(k)}
-                    className={`min-h-9 rounded-md px-2.5 text-xs font-semibold whitespace-nowrap transition sm:text-sm ${
-                      cake === k ? "bg-pal text-white" : "text-ink hover:bg-card"
-                    }`}
-                  >
-                    {t(CAKES[k].label)} {Math.round(CAKES[k].rate * 100)}%
-                  </button>
-                ))}
-              </div>
-              {/* 產蛋設施:把期望顆數換算成實際時間 */}
-              <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
-                {(Object.keys(FARMS) as FarmKind[]).map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setFarm(k)}
-                    className={`min-h-9 rounded-md px-2.5 text-xs font-semibold whitespace-nowrap transition sm:text-sm ${
-                      farm === k ? "bg-pal text-white" : "text-ink hover:bg-card"
-                    }`}
-                  >
-                    {t(FARMS[k].label)}
-                  </button>
-                ))}
-              </div>
-              <label className="flex items-center gap-1.5 text-sm text-ink" title={t("兩者效果不可疊加,取高者")}>
-                <input type="checkbox" checked={eggBoost} onChange={(e) => setEggBoost(e.target.checked)} />
-                {t("梁葉龍/寶寶保母")}
-              </label>
-              {ownedSet && (
-                <label className="flex items-center gap-1.5 text-sm text-ink">
-                  <input type="checkbox" checked={mutOwnedOnly} onChange={(e) => setMutOwnedOnly(e.target.checked)} />
-                  {t("只看我有的父母")}
-                </label>
-              )}
-            </div>
-            <p className="mt-2 text-[11px] text-ink-muted">
-              {t("突變不走直系配方:父母的繁殖值決定一段區間,區間內的可突變帕魯都有機會生出。以下機率為估算(依 paldb 實測校正)。")}
-            </p>
-            {/* 玩家真正在意的:突變到底拿到什麼 */}
-            <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-line pt-2 text-[11px]">
-              <span className="font-bold text-ink-muted">🎁 {t("突變固定帶")}:</span>
-              {MUTATION_PERKS.map((p) => (
-                <span key={p} className="rounded bg-grass/12 px-1.5 py-0.5 font-semibold text-grass">
-                  {t(p)}
-                </span>
-              ))}
-            </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
-              <span className="font-bold text-ink-muted">🌈 {t("突變專屬彩虹詞條")}:</span>
-              {MUTATION_PASSIVES.map((p) => (
-                <span key={p} className="rounded bg-berry/12 px-1.5 py-0.5 font-semibold text-berry">
-                  {p}
-                </span>
-              ))}
-              <span className="text-ink-muted">{t("(也可用耗材植入體在手術台取得)")}</span>
-            </div>
-          </Card>
-
-          {!mutIndex ? (
-            <Card className="text-center text-sm text-ink-muted">{t("變異資料載入失敗。")}</Card>
-          ) : mutTarget ? (
-            <MutationView
-              index={mutIndex}
-              target={mutTarget}
-              metaOf={metaOf}
-              ownedSet={ownedSet}
-              cake={cake}
-              ownedOnly={mutOwnedOnly}
-              farm={farm}
-              boosted={eggBoost}
-              onTargetClick={() => setActiveSlot(activeSlot === "target" ? null : "target")}
-              targetActive={activeSlot === "target"}
-              onPick={(id) => gotoChain(id, "path")}
-            />
-          ) : (
-            <Card className="flex min-h-85 flex-col items-center justify-center py-10 text-center">
-              <img src={MUTATION_ICON} alt="" className="size-12 object-contain" />
-              <p className="mt-2 font-bold text-ink">{t("點選帕魯,看牠的突變機率")}</p>
-              <p className="mt-1 max-w-md text-sm text-ink-muted">
-                {t("右側清單只顯示 143 隻「可由突變產出」的帕魯。選一隻就會列出能突變出牠的父母組合、每顆蛋的機率與平均要孵幾顆。")}
-              </p>
-            </Card>
-          )}
-        </>
-      )}
-
       {/* ---------------- 帕魯配種樹 ---------------- */}
       {mode === "chain" && (
         <>
+          {/* 配種來源三段切換:純直系 / 直系+突變 / 全程突變 */}
+          {treeSub === "path" && mutIndex && (
+            <Card>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
+                  {(
+                    [
+                      ["pure", "🥚", "純粹帕魯配種", "只走直系配方,必定生得出"],
+                      ["hybrid", "🧬", "包含變異可能性", "直系與突變都可用,優先代數少"],
+                      ["mutation", "✨", "純粹變異配種", "全程靠突變蛋,代數最短但看運氣"],
+                    ] as [PathMode, string, string, string][]
+                  ).map(([k, icon, label, tip]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      title={t(tip)}
+                      onClick={() => setPathMode(k)}
+                      className={`flex min-h-10 items-center gap-1 rounded-md px-3 text-xs font-semibold whitespace-nowrap transition sm:text-sm ${
+                        pathMode === k ? "bg-pal text-white" : "text-ink hover:bg-card"
+                      }`}
+                    >
+                      {k === "mutation" || k === "hybrid" ? (
+                        <img src={MUTATION_ICON} alt="" className="size-4 shrink-0 object-contain" />
+                      ) : (
+                        <span>{icon}</span>
+                      )}
+                      {t(label)}
+                    </button>
+                  ))}
+                </div>
+                {pathMode !== "pure" && (
+                  <>
+                    <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
+                      {(Object.keys(CAKES) as CakeKind[]).map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          title={t(CAKES[k].note)}
+                          onClick={() => setCake(k)}
+                          className={`min-h-9 rounded-md px-2.5 text-xs font-semibold whitespace-nowrap transition ${
+                            cake === k ? "bg-pal text-white" : "text-ink hover:bg-card"
+                          }`}
+                        >
+                          {t(CAKES[k].label)} {Math.round(CAKES[k].rate * 100)}%
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
+                      {(Object.keys(FARMS) as FarmKind[]).map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => setFarm(k)}
+                          className={`min-h-9 rounded-md px-2.5 text-xs font-semibold whitespace-nowrap transition ${
+                            farm === k ? "bg-pal text-white" : "text-ink hover:bg-card"
+                          }`}
+                        >
+                          {t(FARMS[k].label)}
+                        </button>
+                      ))}
+                    </div>
+                    <label className="flex items-center gap-1.5 text-sm text-ink" title={t("兩者效果不可疊加,取高者")}>
+                      <input type="checkbox" checked={eggBoost} onChange={(e) => setEggBoost(e.target.checked)} />
+                      {t("梁葉龍/寶寶保母")}
+                    </label>
+                  </>
+                )}
+              </div>
+              {pathMode !== "pure" && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-line pt-2 text-[11px]">
+                  <span className="font-bold text-ink-muted">🎁 {t("突變固定帶")}:</span>
+                  {MUTATION_PERKS.map((x) => (
+                    <span key={x} className="rounded bg-grass/12 px-1.5 py-0.5 font-semibold text-grass">{t(x)}</span>
+                  ))}
+                  <span className="font-bold text-ink-muted">🌈 {t("突變專屬彩虹詞條")}:</span>
+                  {MUTATION_PASSIVES.map((x) => (
+                    <span key={x} className="rounded bg-berry/12 px-1.5 py-0.5 font-semibold text-berry">{x}</span>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
           {/* 玩家視角 + 詞條/主動技能兩個下拉(🪜/🌳 已提升為上層模式卡) */}
           {dataset && (
             <Card>
@@ -2161,7 +2279,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
             <div className="mx-auto flex max-w-xl items-center justify-center gap-1.5 sm:gap-3">
               <div className="min-w-0 flex-1">
                 <SlotCard
-                  role={t("起點(你擁有)")}
+                  role={t("初代(你擁有)")}
                   id={chainFrom}
                   meta={metaOf(chainFrom)}
                   active={activeSlot === "from"}
@@ -2175,8 +2293,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
               </div>
               <button
                 type="button"
-                title={t("交換起點與目標")}
-                aria-label={t("交換起點與目標")}
+                title={t("交換初代與目標")}
+                aria-label={t("交換初代與目標")}
                 onClick={() => {
                   setChainFrom(chainTo);
                   setChainTo(chainFrom);
@@ -2218,7 +2336,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                     autoStart ? "bg-pal text-white ring-pal" : "bg-pal/12 text-pal ring-pal/40 hover:bg-pal/20"
                   }`}
                 >
-                  ⚡ {persp === "any" ? t("自動找最短起點(全部帕魯種類)") : t("從我擁有的帕魯自動找最短起點")}
+                  ⚡ {persp === "any" ? t("自動找最短初代(全部帕魯種類)") : t("從我擁有的帕魯自動找最短初代")}
                   <span
                     className={`relative h-5 w-9 shrink-0 rounded-full transition ${autoStart ? "bg-white/35" : "bg-ink-muted/30"}`}
                     aria-hidden="true"
@@ -2260,7 +2378,31 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
             <Card className="text-center text-sm text-ink-muted">{t("先選一隻目標帕魯,再看帶詞條路線。")}</Card>
           )}
 
-          {treeSub === "path" && !desired.length && chainFrom && chainTo && !chain && (
+          {treeSub === "path" && pathMode !== "pure" && chainFrom && chainTo && (
+            hybrid ? (
+              <HybridPathView
+                path={hybrid}
+                metaOf={metaOf}
+                ownedSet={ownedSet}
+                cake={cake}
+                farm={farm}
+                boosted={eggBoost}
+                mode={pathMode}
+                onPick={(id) => setChainFrom(id)}
+              />
+            ) : (
+              <Card className="text-center">
+                <p className="font-bold text-ink">{t("這個模式下配不到目標")}</p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {pathMode === "mutation"
+                    ? t("全程只走突變無法從初代到達目標 —— 改用「包含變異可能性」或換一隻初代。")
+                    : t("6 代內找不到路線 —— 換一隻初代或目標再試。")}
+                </p>
+              </Card>
+            )
+          )}
+
+          {treeSub === "path" && pathMode === "pure" && !desired.length && chainFrom && chainTo && !chain && (
             <Card className="text-center">
               {isSelfOnlyChild(index, chainTo) ? (
                 <>
@@ -2269,21 +2411,21 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 </>
               ) : (
                 <>
-                  <p className="font-bold text-ink">{t("從這個起點配不出目標")}</p>
+                  <p className="font-bold text-ink">{t("從這個初代配不出目標")}</p>
                   <p className="mt-1 text-sm text-ink-muted">
-                    {t("{name} 只能在特定家族內配種取得,請換一隻起點或直接捕捉。", { name: nameOf(chainTo) })}
+                    {t("{name} 只能在特定家族內配種取得,請換一隻初代或直接捕捉。", { name: nameOf(chainTo) })}
                   </p>
                 </>
               )}
             </Card>
           )}
-          {treeSub === "path" && !desired.length && chain && chain.distance === 0 && (
+          {treeSub === "path" && pathMode === "pure" && !desired.length && chain && chain.distance === 0 && (
             <Card className="text-center">
-              <p className="font-bold text-ink">{t("起點就是目標帕魯")}</p>
+              <p className="font-bold text-ink">{t("初代就是目標帕魯")}</p>
               <p className="mt-1 text-sm text-ink-muted">{t("直接用兩隻 {name} 配種即可繁殖更多。", { name: nameOf(chainTo) })}</p>
             </Card>
           )}
-          {treeSub === "path" && !desired.length && chain && chain.distance > 0 && (
+          {treeSub === "path" && pathMode === "pure" && !desired.length && chain && chain.distance > 0 && (
             <div className="space-y-3">
               {/* 極簡控制列:只在套用過自訂替換時顯示還原 */}
               {custom && (
@@ -2337,6 +2479,12 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               role={gen === d ? "target" : gen === 0 ? "start" : "mid"}
                               meta={metaOf(sp)}
                               owned={ownedSet ? ownedSet.has(sp.toLowerCase()) : undefined}
+                              /* 這一列 A+B 生出的是下一代的那隻(目標列本身就是結果,不再重複標) */
+                              resultId={gen < d ? route.species[gen + 1] : undefined}
+                              resultMeta={gen < d ? metaOf(route.species[gen + 1]) : undefined}
+                              resultOwned={
+                                gen < d && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
+                              }
                               active={openTier === gen}
                               onClick={() => {
                                 setOpenTier(openTier === gen ? null : gen);
@@ -2585,7 +2733,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                       openTier === chain.distance
                         ? t("目標")
                         : openTier === 0
-                          ? t("起點")
+                          ? t("初代")
                           : t("第 {n} 代", { n: openTier }),
                   })}
                 </span>
@@ -2598,7 +2746,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                         : activeSlot === "b"
                           ? t("父母二")
                           : activeSlot === "from"
-                            ? t("起點(你擁有)")
+                            ? t("初代(你擁有)")
                             : t("目標帕魯"),
                   })}
                 </span>
