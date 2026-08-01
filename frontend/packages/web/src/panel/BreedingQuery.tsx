@@ -1418,15 +1418,37 @@ function HybridPathView({
         ))}
       </>
     ) : undefined;
-  const countSub = (mask: number) => (
-    <span
-      className={`shrink-0 rounded px-1 py-px font-bold ${
-        mask === (1 << desired.length) - 1 ? "bg-grass/15 text-grass" : "bg-ink-muted/12 text-ink-muted"
-      }`}
-    >
-      {t("詞條")} {traitNames(mask).length}/{desired.length}
-    </span>
-  );
+  /** 中間代/子代的詞條狀態:除了 n/m,把「已經到手的是哪幾個」也列出來,
+   *  只看數字不知道中的是哪一個。缺的則用刪除線標出來,一眼看得出還差什麼。 */
+  const countSub = (mask: number) => {
+    const full = (1 << desired.length) - 1;
+    const got = traitNames(mask);
+    return (
+      <>
+        <span
+          className={`shrink-0 rounded px-1 py-px font-bold ${
+            mask === full ? "bg-grass/15 text-grass" : "bg-ink-muted/12 text-ink-muted"
+          }`}
+        >
+          {got.length}/{desired.length}
+        </span>
+        {desired.map((x, i) => {
+          const has = (mask & (1 << i)) !== 0;
+          return (
+            <span
+              key={x}
+              className={`shrink-0 rounded px-1 py-px font-semibold ${
+                has ? "bg-grass/12 text-grass" : "text-ink-muted/70 line-through"
+              }`}
+              title={has ? t("這一代已經帶著") : t("還沒帶到,後面要補")}
+            >
+              {x}
+            </span>
+          );
+        })}
+      </>
+    );
+  };
   return (
     <Card className="overflow-hidden">
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
@@ -1446,9 +1468,13 @@ function HybridPathView({
         </span>
         {traitAware && (
           <>
-            <span className="font-semibold text-grass">
+            <span className="flex flex-wrap items-center gap-1 font-semibold text-grass">
               ✓ {t("目標會帶齊全部 {n} 個詞條", { n: desired.length })}
-              <span className="ml-1 font-normal text-ink-muted">({desired.join("、")})</span>
+              {desired.map((x) => (
+                <span key={x} className="rounded bg-grass/12 px-1.5 py-px text-[10px] font-bold text-grass">
+                  {x}
+                </span>
+              ))}
             </span>
             <span>
               {t("要湊")}{" "}

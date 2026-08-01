@@ -2479,5 +2479,7 @@
   "目前用": "Currently using",
   "誰有帶得動的這隻(點名字挑一隻)": "Who has one that can carry these (click a name to pick)",
   "點卡片就用這一隻": "click a card to use that one",
-  "這一代要靠突變蛋": "this generation needs a mutation egg"
+  "這一代要靠突變蛋": "this generation needs a mutation egg",
+  "這一代已經帶著": "already carried at this generation",
+  "還沒帶到,後面要補": "not carried yet — a later step brings it in"
 }
