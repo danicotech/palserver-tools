@@ -140,7 +140,7 @@ if not exist "%ROOT%\backend\palscheduler.exe" goto :buildfail
 echo       完成
 
 rem ---------- 7. 設定檔 ----------
-echo [7/7] 設定檔(第一次會產生隨機密碼)...
+echo [7/7] 設定檔(預設密碼:管理 654321、進服 123456)...
 if exist "%ROOT%\backend\config.json" goto :hasconfig
 call "%ROOT%\windows\setup.bat"
 if errorlevel 1 goto :setupfail

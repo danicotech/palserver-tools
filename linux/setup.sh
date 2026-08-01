@@ -10,8 +10,9 @@ rand() { tr -dc 'a-zA-Z0-9' </dev/urandom | head -c "$1"; }
 
 # ---- .env(所有伺服器參數都在這;從 .example.env 複製,並隨機生成兩組密碼)----
 if [ ! -f "$ROOT/.env" ]; then
-  sed -e "s/^ADMIN_PASSWORD=CHANGE_ME_ADMIN$/ADMIN_PASSWORD=$(rand 14)/" \
-      -e "s/^SERVER_PASSWORD=CHANGE_ME_JOIN$/SERVER_PASSWORD=$(rand 8)/" \
+  # 兩組密碼用好記的固定預設值(自用/區網夠用;要開放外網請自行改 .env)
+  sed -e "s/^ADMIN_PASSWORD=CHANGE_ME_ADMIN$/ADMIN_PASSWORD=654321/" \
+      -e "s/^SERVER_PASSWORD=CHANGE_ME_JOIN$/SERVER_PASSWORD=123456/" \
       "$ROOT/.example.env" > "$ROOT/.env"
   echo "已從 .example.env 產生 .env(兩組密碼已隨機生成;所有伺服器參數都可在 .env 調整)"
 fi

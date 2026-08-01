@@ -66,7 +66,7 @@ if not exist "backend\palscheduler.exe" goto :gofail
 
 rem 沒有設定檔就自己產生(不要叫使用者去手動跑指令)
 if exist "backend\config.json" goto :hascfg
-echo     第一次啟動,產生設定檔與隨機密碼...
+echo     第一次啟動,產生設定檔(預設密碼:管理 654321、進服 123456)...
 call "%CD%\windows\setup.bat"
 if not exist "backend\config.json" goto :noconfig
 :hascfg

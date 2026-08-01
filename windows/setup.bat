@@ -1,6 +1,6 @@
 @echo off
 rem 首次啟動自動設定(Windows,純 batch —— 不需要 PowerShell):
-rem   沒有 .env / backend\config.json 時自動產生 —— 隨機密碼 + token,
+rem   沒有 .env / backend\config.json 時自動產生 —— 預設密碼 + 隨機 token,
 rem   並讓 config.json 的 rcon.password 與 .env 的 ADMIN_PASSWORD 保持一致。
 rem 已存在的檔案一律不動,重複執行安全。
 rem
@@ -11,11 +11,12 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0.."
 set "ROOT=%CD%"
 
-rem ---------- 產生兩組隨機密碼與 API token ----------
-rem 用 %RANDOM% 逐字元從字元表取字(去掉容易看錯的 0/O/1/l/I)。
+rem ---------- 密碼與 API token ----------
+rem 兩組密碼用好記的固定預設值(自用/區網夠用;要開放外網請自行改 .env)。
+rem API token 是網站後台呼叫排程器用的,沒人會去記,所以仍隨機產生。
 set "CHARS=abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-call :rand 14 ADMINPW
-call :rand 8  JOINPW
+set "ADMINPW=654321"
+set "JOINPW=123456"
 call :rand 32 APITOKEN
 
 rem ---------- .env ----------
@@ -24,7 +25,7 @@ if not exist "%ROOT%\.example.env" goto :noexample
 rem 注意:搜尋字串不能含「=」—— batch 的 !VAR:搜尋=取代! 會從第一個 = 拆開,
 rem 所以這裡只比對佔位符本身(CHANGE_ME_ADMIN),不要連 KEY= 一起寫進去。
 call :render "%ROOT%\.example.env" "%ROOT%\.env" "CHANGE_ME_ADMIN" "!ADMINPW!" "CHANGE_ME_JOIN" "!JOINPW!"
-echo 已從 .example.env 產生 .env(兩組密碼已隨機生成;所有伺服器參數都可在 .env 調整)
+echo 已從 .example.env 產生 .env(使用預設密碼;所有伺服器參數都可在 .env 調整)
 goto :envdone
 :hasenv
 rem 已有 .env → 沿用裡面的 ADMIN_PASSWORD,讓 config.json 的 rcon 密碼跟它一致
@@ -45,10 +46,11 @@ echo backend\config.json 已存在,保持不動
 :cfgdone
 
 echo.
-echo ================ 你的伺服器密碼(保存好!) ================
+echo ================ 你的伺服器密碼 ================
 echo   管理密碼 ADMIN_PASSWORD : !ADMINPW!
 echo   進服密碼 SERVER_PASSWORD: !JOINPW!
-echo   (之後想改:編輯專案根目錄的 .env,再雙擊 restart.bat)
+echo   (以上為預設值。要開放給外網玩,請編輯專案根目錄的 .env
+echo    換成不好猜的密碼,再雙擊 restart.bat 套用)
 echo =============================================================
 exit /b 0
 

@@ -111,6 +111,8 @@ Open/close time windows and shutdown countdown messages live here (auto-generate
 | `hooks.onClose.announce` | Pre-shutdown broadcasts: `{ "at": 600, "message": "Closing in 10 minutes" }` — edit just this array |
 | `api.token` | API password used by the website backend (randomly generated) |
 
+> Default passwords are `654321` (admin) and `123456` (join) — change them in `.env` before exposing the server to the internet.
+
 Apply with `docker compose restart scheduler` (or simply `windows\restart.bat`).
 
 ### `schedule.windows` in full (opening-hours table)
