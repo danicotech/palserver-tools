@@ -78,8 +78,6 @@ export function PlayerQuery({
 
   return (
     <div>
-      {/* 小地圖:全玩家最後位置 + 公會據點;點頭像帶入搜尋跳到該玩家 */}
-      <PlayerMap data={data} onPlayerClick={(p) => setQ(p.name)} />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <input
           value={q}
@@ -119,7 +117,9 @@ export function PlayerQuery({
           </button>
         )}
       </div>
-      <div className="space-y-6">
+      {/* 地圖放在搜尋/篩選之後;點頭像帶入搜尋跳到該玩家 */}
+      <PlayerMap data={data} online={online} onPlayerClick={(p) => setQ(p.name)} />
+      <div className="mt-4 space-y-6">
         {matched.map((p) => (
           <PlayerCard
             key={`${p.uid}-${palFilter ?? ""}`}
