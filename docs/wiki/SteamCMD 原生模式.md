@@ -9,23 +9,23 @@
 
 | 動作 | 雙擊 |
 |---|---|
-| 第一次安裝(自動下載 SteamCMD+伺服器) | `native\windows\install.bat` |
-| 啟動 | `native\windows\start.bat` |
-| 停止 | `native\windows\stop.bat` |
-| 更新(遊戲改版後) | `native\windows\update.bat` |
+| 第一次安裝(自動下載 SteamCMD+伺服器) | `windows\native\install.bat` |
+| 啟動 | `windows\native\start.bat` |
+| 停止 | `windows\native\stop.bat` |
+| 更新(遊戲改版後) | `windows\native\update.bat` |
 
 ## Linux
 
 ```bash
-cd native/linux
-./install.sh && ./start.sh     # 停止 ./stop.sh;更新 ./update.sh
+cd linux/native
+bash install.sh && bash start.sh     # 停止 bash stop.sh;更新 bash update.sh
 ```
 
 ## 路徑
 
-- 伺服器本體:`native/server/`
-- 設定檔:`native/server/Pal/Saved/Config/WindowsServer(或 LinuxServer)/PalWorldSettings.ini` —— 首次啟動自動建立,**原生模式直接編輯它**,改完重開
-- 存檔:`native/server/Pal/Saved/SaveGames/0/<GUID>/`
+- 伺服器本體:`windows/native/server/`
+- 設定檔:`windows/native/server/Pal/Saved/Config/WindowsServer(或 LinuxServer)/PalWorldSettings.ini` —— 首次啟動自動建立,**原生模式直接編輯它**,改完重開
+- 存檔:`windows/native/server/Pal/Saved/SaveGames/0/<GUID>/`
 
 ## 常見問題
 

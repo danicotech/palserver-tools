@@ -23,8 +23,8 @@
    - Linux:`curl -fsSL https://get.docker.com | sh`
 2. **本プロジェクトをダウンロード**:GitHub の緑の `Code` ボタン → `Download ZIP` → 展開(または `git clone`)
 3. **起動**
-   - Windows:**`start.bat`** をダブルクリック
-   - Linux/macOS:`./start.sh`
+   - Windows:**`windows\start.bat`** をダブルクリック
+   - Linux/macOS:`bash linux/start.sh`
 
 初回起動時に**全設定と 2 つのランダムパスワードを自動生成**(コンソールに表示されるのでメモしてください)。その後イメージを取得し 4 つのサービスを起動します:
 
@@ -37,16 +37,16 @@
 
 | 操作 | Windows | Linux/macOS |
 |---|---|---|
-| すべて起動 | `start.bat` | `./start.sh` |
-| 再起動(新設定を適用) | `restart.bat` | `./restart.sh` |
-| すべて停止 | `stop.bat` | `./stop.sh` |
-| 状態/ログ確認 | `status.bat` | `./status.sh` |
+| すべて起動 | `windows\start.bat` | `bash linux/start.sh` |
+| 再起動(新設定を適用) | `windows\restart.bat` | `bash linux/restart.sh` |
+| すべて停止 | `windows\stop.bat` | `bash linux/stop.sh` |
+| 状態/ログ確認 | `windows\status.bat` | `bash linux/status.sh` |
 
 単一の実行ファイル派は [Go](https://go.dev/dl/) を入れて `cd tools/launcher && go build -o ../../palserver.exe .` — `palserver.exe` をダブルクリックすると番号メニュー(起動/再起動/停止/状態/サイトのみ更新)が出ます。
 
 ## 🎛️ サーバー設定はファイル 1 つ:`.env`
 
-Palworld の**すべて**のパラメータ(サーバー名、人数、パスワード、経験値/捕獲/ダメージ倍率、孵化時間、PvP…約 50 項目)はプロジェクト直下の `.env` に集約。各項目は [`.example.env`](.example.env) に英語コメント付きで解説しています。保存後 `restart.bat` で反映:
+Palworld の**すべて**のパラメータ(サーバー名、人数、パスワード、経験値/捕獲/ダメージ倍率、孵化時間、PvP…約 50 項目)はプロジェクト直下の `.env` に集約。各項目は [`.example.env`](.example.env) に英語コメント付きで解説しています。保存後 `windows\restart.bat` で反映:
 
 ```env
 SERVER_NAME=My Palworld Server
@@ -69,11 +69,11 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<ワールドGUID>/   ← フォル�
     └── Players/*.sav    (プレイヤーごと)
 ```
 
-1. 両方のサーバーを停止(`stop.bat`)
+1. 両方のサーバーを停止(`windows\stop.bat`)
 2. 元の場所:Windows 専用サーバーは `PalServer\Pal\Saved\SaveGames\0\<GUID>`;Linux/Docker も同じ階層
 3. `<GUID>` フォルダを丸ごと上記パスへコピー
 4. Linux ホスト:`sudo chown -R 1000:1000 backend/palworld-data`
-5. `start.bat` → サイト右上の 🔄 で再読込
+5. `windows\start.bat` → サイト右上の 🔄 で再読込
 
 > ⚠️ `PalWorldSettings.ini` を直接編集しないでください — 毎回 `.env` から再生成されます。
 
@@ -87,7 +87,7 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<ワールドGUID>/   ← フォル�
 | `hooks.onClose.announce` | 閉店前放送:`{ "at": 600, "message": "10 分後に閉店します" }` — この配列だけ編集すれば OK |
 | `api.token` | サイトバックエンドが使う API パスワード(自動生成) |
 
-反映:`docker compose restart scheduler`(または `restart.bat`)。
+反映:`docker compose restart scheduler`(または `windows\restart.bat`)。
 
 ### `schedule.windows` 完全ガイド(営業時間テーブル)
 
@@ -128,22 +128,74 @@ pnpm build && cd .. && docker compose up -d --no-deps --build panel
 
 ## 🧱 Docker なし?SteamCMD ネイティブモード
 
-Docker を入れられない環境でも、[`native/`](native/README.md) のスクリプトでゲームサーバーを直接ホストできます:
+Docker を入れられない環境でも、[`windows/native/`](windows/native) のスクリプトでゲームサーバーを直接ホストできます:
 
 1. `native\windows\install.bat` をダブルクリック(SteamCMD とサーバー本体を自動ダウンロード)
-2. `native\windows\start.bat` で起動(Linux:`./install.sh` → `./start.sh`)
-3. 設定は `native/server/Pal/Saved/Config/.../PalWorldSettings.ini` を編集(ネイティブモードでは上書きされません)
+2. `windows\native\start.bat` で起動(Linux:`bash linux/native/install.sh` → `bash linux/start.sh`)
+3. 設定は `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini` を編集(ネイティブモードでは上書きされません)
 
 ネイティブモードはゲームサーバーのインストール/起動/停止/更新をカバー。検索サイトとスケジューラーには引き続き Docker が必要です。
-**セーブは完全互換** — 後でフル構成に移行する場合はワールドフォルダを `backend/palworld-data/` に移すだけ(詳細は [native/README.md](native/README.md))。
+**セーブは完全互換** — 後でフル構成に移行する場合はワールドフォルダを `backend/palworld-data/` に移すだけ(詳細は [docs/原生模式.md](docs/原生模式.md))。
+
+## 🌐 サイトでできること
+
+<http://localhost> を開けばログイン不要で閲覧でき、内容はすべてサーバーのセーブデータから読み取ります。
+
+| タブ | 内容 |
+|---|---|
+| 📊 概要 | オンライン人数、サーバー FPS、ゲーム内日数、全体のパル図鑑達成率、トッププレイヤーと人気パル |
+| 🧑 プレイヤー | **プレイヤーマップ**(全員の最終位置とギルド拠点、座標付き)、各プレイヤーのレベル・ステ振り・所持パル |
+| 🐾 パル | サーバー内の全パル検索。属性・パッシブ・仕事適性・個体値で絞り込み |
+| 🥚 繁殖 | 最短ルート、配合計算、逆引き、繁殖ツリー、**突然変異繁殖**(下記) |
+| 🏷️ パッシブ | パッシブの複合検索(AND/OR)で所持者を特定 |
+| 📖 図鑑 | 全体と個人の達成率、未捕獲の一覧 |
+| 👑 ボス | タワーボスとフィールドボスの討伐状況 |
+| 🏆 ランキング | 各種ランキング |
+| 🕐 稼働分析 | プレイヤーのオンライン時間帯 |
+
+右上の **🔄 更新ボタン** で手動と自動更新(5 秒 / 15 / 30 / 60 秒 / 5 分 / 10 分)を切り替えられます。
+Grafana と同じくその場更新なので、画面が組み直されずマップのマーカーは滑らかに移動します。
+
+## 🧬 繁殖:4 つの調べ方
+
+繁殖タブ上部の 4 枚のカード:
+
+- **🪜 最短ルート** —— 初代と目標を選ぶと、各世代が `A ＋ B ＝ C` で並びます。
+  目標を選んだ時点で**どのパルを初代にできるか**と必要世代数が提示されます。
+- **🥚 配合計算** —— 2 体選んで子を確認。複数組を同時に。
+- **🔄 逆引き** —— あるパルの親の組み合わせ、または親としての子。
+- **🌳 繁殖ツリー** —— ノードを展開して伸ばす。未所持はグレー表示。
+
+### 通常 / 突然変異 の切り替え
+
+最短ルート内で各ステップの手段を切り替えられます:
+
+| モード | 内容 |
+|---|---|
+| **通常繁殖のみ** | 配合表のみ。確実に生まれます |
+| **通常＋突然変異** | 両方使用。世代数を優先 |
+| **突然変異のみ** | 全ステップが突然変異卵 |
+
+後者 2 つでは **⚙ 設定**(ケーキ、施設、リョクヨウリュウ/ベビーシッター加成)が増えます。
+各ステップは「配合表(確実)」か「突然変異＋確率」で示され、
+**卵 1 個あたりの確率・平均必要数・所要時間**に換算されます。
+「最少世代」と「成功率重視」も切り替え可能で、後者は必要卵数が最小になるルートを選びます。
+
+> 突然変異の確率の求め方と検証: [Wiki: 突然変異繁殖](../../wiki/網站-變異配種)。
+
+### パッシブ絞り込み
+
+最短ルートで **🏷️ パッシブ** と **✨ アクティブスキル** を最大 4 つまで選べます。
+所持パル(またはサーバー全体)を組み合わせ、それらを目標に受け継がせるルートを探索します。
+両親がそれぞれ一部だけ持っていても構いません(1:3 や 2:2)。子は和集合を継承します。
 
 ## ❓ FAQ
 
 | 症状 | 対処 |
 |---|---|
 | サイトにプレイヤーが出ない | セーブの置き場所違い(引っ越し章参照)、または未起動;配置後にサイトの 🔄 |
-| スケジューラーが開店しない | `.env` の `TZ` と `config.json` の `schedule.windows` を確認;`status.bat` でログ |
-| パスワードを忘れた | ルートの `.env` に平文で書いてあります;変更後 `restart.bat` |
+| スケジューラーが開店しない | `.env` の `TZ` と `config.json` の `schedule.windows` を確認;`windows\status.bat` でログ |
+| パスワードを忘れた | ルートの `.env` に平文で書いてあります;変更後 `windows\restart.bat` |
 | ポート競合 | compose の ports 左側(80 / 8211 / 9000)を変更 |
 
 ## ライセンスとクレジット

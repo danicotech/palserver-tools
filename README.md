@@ -23,8 +23,8 @@
    - Linux:`curl -fsSL https://get.docker.com | sh`
 2. **下載本專案**:點 GitHub 綠色 `Code` 按鈕 → `Download ZIP` → 解壓縮(或 `git clone`)
 3. **啟動**
-   - Windows:雙擊 **`start.bat`**
-   - Linux/macOS:`./start.sh`
+   - Windows:雙擊 **`windows\start.bat`**
+   - Linux/macOS:`bash linux/start.sh`
 
 第一次啟動會**自動產生所有設定與兩組隨機密碼**(顯示在視窗裡,請抄下來),然後自動下載映像並開好四個服務。完成後:
 
@@ -37,16 +37,16 @@
 
 | 動作 | Windows | Linux/macOS |
 |---|---|---|
-| 啟動全部 | `start.bat` | `./start.sh` |
-| 重啟(套用新設定) | `restart.bat` | `./restart.sh` |
-| 停止全部 | `stop.bat` | `./stop.sh` |
-| 看狀態/日誌 | `status.bat` | `./status.sh` |
+| 啟動全部 | `windows\start.bat` | `bash linux/start.sh` |
+| 重啟(套用新設定) | `windows\restart.bat` | `bash linux/restart.sh` |
+| 停止全部 | `windows\stop.bat` | `bash linux/stop.sh` |
+| 看狀態/日誌 | `windows\status.bat` | `bash linux/status.sh` |
 
 偏好單一執行檔?裝好 [Go](https://go.dev/dl/) 後 `cd tools/launcher && go build -o ../../palserver.exe .`,雙擊 `palserver.exe` 會有數字選單(啟動/重啟/停止/狀態/只更新網站)。
 
 ## 🎛️ 調整伺服器參數:只改一個檔 `.env`
 
-**所有** Palworld 參數(名稱、人數、密碼、經驗/捕捉/傷害倍率、孵蛋時間、PvP…約 50 項)都集中在專案根目錄的 `.env`,每一項在 [`.example.env`](.example.env) 都有英文註解說明。改完存檔 → 雙擊 `restart.bat` 即套用:
+**所有** Palworld 參數(名稱、人數、密碼、經驗/捕捉/傷害倍率、孵蛋時間、PvP…約 50 項)都集中在專案根目錄的 `.env`,每一項在 [`.example.env`](.example.env) 都有英文註解說明。改完存檔 → 雙擊 `windows\restart.bat` 即套用:
 
 ```env
 SERVER_NAME=My Palworld Server
@@ -69,11 +69,11 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<你的世界GUID>/   ← 整個資�
     └── Players/*.sav    (每位玩家)
 ```
 
-1. 兩邊伺服器都先停止(`stop.bat`)
+1. 兩邊伺服器都先停止(`windows\stop.bat`)
 2. 原存檔位置:Windows 專服 `PalServer\Pal\Saved\SaveGames\0\<GUID>`;Linux/Docker 同層級
 3. 複製整個 `<GUID>` 資料夾到上面路徑
 4. Linux 主機:`sudo chown -R 1000:1000 backend/palworld-data`
-5. `start.bat` → 網站右上 🔄 重新載入
+5. `windows\start.bat` → 網站右上 🔄 重新載入
 
 > ⚠️ 不要直接改 `PalWorldSettings.ini` —— 每次開機會由 `.env` 重新產生。
 
@@ -87,7 +87,7 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<你的世界GUID>/   ← 整個資�
 | `hooks.onClose.announce` | 關服前廣播:`{ "at": 600, "message": "10 分鐘後關服" }`,想改時間/文案只改這個陣列 |
 | `api.token` | 網站後台呼叫排程器的密碼(自動隨機產生) |
 
-改完:`docker compose restart scheduler`(或直接 `restart.bat`)。
+改完:`docker compose restart scheduler`(或直接 `windows\restart.bat`)。
 
 ### `schedule.windows` 完整說明(開服時段表)
 
@@ -128,22 +128,74 @@ pnpm build && cd .. && docker compose up -d --no-deps --build panel
 
 ## 🧱 沒有 Docker?SteamCMD 原生模式
 
-不能裝 Docker 的電腦,也能用 [`native/`](native/README.md) 資料夾的腳本直接開遊戲伺服器:
+不能裝 Docker 的電腦,也能用 [`windows/native/`](windows/native) 資料夾的腳本直接開遊戲伺服器:
 
 1. 雙擊 `native\windows\install.bat`(自動下載 SteamCMD + 伺服器本體)
-2. 雙擊 `native\windows\start.bat` 啟動(Linux:`./install.sh` → `./start.sh`)
-3. 設定改 `native/server/Pal/Saved/Config/.../PalWorldSettings.ini`(原生模式不會被覆寫)
+2. 雙擊 `windows\native\start.bat` 啟動(Linux:`bash linux/native/install.sh` → `bash linux/start.sh`)
+3. 設定改 `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini`(原生模式不會被覆寫)
 
 原生模式涵蓋遊戲伺服器的安裝/啟動/停止/更新;查詢網站與自動排程仍需 Docker。
-**兩邊存檔完全互通**,之後想升級整套,把世界資料夾搬到 `backend/palworld-data/` 即可(詳見 [native/README.md](native/README.md))。
+**兩邊存檔完全互通**,之後想升級整套,把世界資料夾搬到 `backend/palworld-data/` 即可(詳見 [docs/原生模式.md](docs/原生模式.md))。
+
+## 🌐 查詢網站有什麼
+
+開站後 <http://localhost>,不用登入就能看,所有資料直接讀伺服器存檔。
+
+| 分頁 | 能做什麼 |
+|---|---|
+| 📊 總覽 | 在線人數、伺服器 FPS、遊戲天數、全服圖鑑收服率、Top 玩家與最熱門帕魯 |
+| 🧑 玩家查詢 | **玩家地圖**(全員最後位置 + 公會據點,附座標)、每位玩家的等級/配點/全部帕魯 |
+| 🐾 帕魯查詢 | 全服帕魯搜尋,可依屬性、詞條、工作適性、個體值篩選排序 |
+| 🥚 配種表 | 最短路徑、配種計算、反查組合、配種樹、**變異配種**(見下) |
+| 🏷️ 詞條查詢 | 用被動技能複合查詢(且/或),看誰身上有你要的詞條 |
+| 📖 圖鑑收服率 | 全服與個人圖鑑進度,缺哪幾隻一目了然 |
+| 👑 首領進度 | 塔主與野外首領的擊破狀況 |
+| 🏆 排行榜 | 各種維度的排名 |
+| 🕐 上線分析 | 玩家上線時段分布 |
+
+右上角的 **🔄 更新鈕** 可切換手動或自動更新(5 秒 / 15 / 30 / 60 秒 / 5 分 / 10 分),
+仿 Grafana 的作法:更新時畫面不會重來,地圖上的玩家會平滑滑到新位置。
+
+## 🧬 配種表:四種找法
+
+進「🥚 配種表」後,上排四張卡片各是一種找法:
+
+- **🪜 最短路徑** —— 選「初代」與「目標」,列出一路配到目標的每一代 `A ＋ B ＝ C`。
+  選好目標就會直接告訴你**有哪些帕魯能當初代**、各要幾代。
+- **🥚 配種計算** —— 隨手選兩隻看生出什麼,可同時開多組。
+- **🔄 反查組合** —— 看某隻帕魯的全部父母組合,或牠能當父母配出什麼。
+- **🌳 帕魯配種樹** —— 樹狀展開,點節點就往下長,缺的帕魯顯示灰階。
+
+### 直系 / 變異 三選一
+
+「🪜 最短路徑」裡可以切換配種來源:
+
+| 模式 | 說明 |
+|---|---|
+| **純粹帕魯配種** | 只走官方配方表,100% 生得出來 |
+| **包含變異可能性** | 直系與突變都能用,優先代數少 |
+| **純粹變異配種** | 全程靠突變蛋 |
+
+選了後兩者會多出一顆 **⚙ 設定鈕**(蛋糕、產蛋設施、梁葉龍/寶寶保母加成),
+每一步都會標示是「直系(必得)」還是「變異 + 機率」,並換算成
+**每顆蛋機率 / 平均要幾顆 / 大概要多久**。還能切「代數最少」或「成功率最高」——
+後者會挑期望蛋數最少的走法,常常多繞一代反而更省。
+
+> 變異機率的算法與驗證方式寫在 [Wiki:變異配種](../../wiki/網站-變異配種)。
+
+### 詞條篩選
+
+在「🪜 最短路徑」按 **🏷️ 詞條** 或 **✨ 主動技能** 可複選(最多 4 個),
+系統會用你(或全服)現有的帕魯排列組合,找出把這些詞條全部帶到目標身上的路線。
+父母各帶一部分也可以(1:3、2:2 都行),子代會繼承雙親詞條的聯集。
 
 ## ❓ 常見問題
 
 | 問題 | 解法 |
 |---|---|
 | 網站沒有玩家資料 | 存檔沒放對位置(見搬家章節),或伺服器還沒開過;放好後按網站 🔄 |
-| 排程沒開服 | 檢查 `.env` 的 `TZ` 與 `config.json` 的 `schedule.windows`;`status.bat` 看日誌 |
-| 忘記密碼 | 打開根目錄 `.env` 就看得到;改完 `restart.bat` |
+| 排程沒開服 | 檢查 `.env` 的 `TZ` 與 `config.json` 的 `schedule.windows`;`windows\status.bat` 看日誌 |
+| 忘記密碼 | 打開根目錄 `.env` 就看得到;改完 `windows\restart.bat` |
 | 埠被占用 | 80/8211/9000 改 compose 的 ports 左半邊 |
 
 ## 授權與致謝

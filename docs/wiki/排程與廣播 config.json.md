@@ -1,6 +1,6 @@
 # ⏰ 排程與廣播:`backend/config.json`
 
-首次啟動自動產生(範本 `config.example.json`);改完執行 `restart.bat`(或 `docker compose restart scheduler`)。
+首次啟動自動產生(範本 `config.example.json`);改完執行 `windows\restart.bat`(或 `docker compose restart scheduler`)。
 
 ## `schedule.windows` 開服時段表(完整規則)
 

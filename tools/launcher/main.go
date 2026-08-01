@@ -28,9 +28,9 @@ func run(name string, args ...string) error {
 // firstRunSetup 呼叫對應平台的 setup 腳本(產生 .env / config.json;已存在則跳過)。
 func firstRunSetup() {
 	if runtime.GOOS == "windows" {
-		_ = run("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", filepath.Join("scripts", "setup.ps1"))
+		_ = run("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", filepath.Join("windows", "setup.ps1"))
 	} else {
-		_ = run("bash", filepath.Join("scripts", "setup.sh"))
+		_ = run("bash", filepath.Join("linux", "setup.sh"))
 	}
 }
 

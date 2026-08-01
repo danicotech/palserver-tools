@@ -23,8 +23,8 @@
    - Linux: `curl -fsSL https://get.docker.com | sh`
 2. **Download this project**: green `Code` button → `Download ZIP` → extract (or `git clone`)
 3. **Launch**
-   - Windows: double-click **`start.bat`**
-   - Linux/macOS: `./start.sh`
+   - Windows: double-click **`windows\start.bat`**
+   - Linux/macOS: `bash linux/start.sh`
 
 The first launch **generates all configuration and two random passwords automatically** (shown in the console — write them down), then pulls the images and starts all four services:
 
@@ -37,16 +37,16 @@ The first launch **generates all configuration and two random passwords automati
 
 | Action | Windows | Linux/macOS |
 |---|---|---|
-| Start everything | `start.bat` | `./start.sh` |
-| Restart (apply new settings) | `restart.bat` | `./restart.sh` |
-| Stop everything | `stop.bat` | `./stop.sh` |
-| Status / logs | `status.bat` | `./status.sh` |
+| Start everything | `windows\start.bat` | `bash linux/start.sh` |
+| Restart (apply new settings) | `windows\restart.bat` | `bash linux/restart.sh` |
+| Stop everything | `windows\stop.bat` | `bash linux/stop.sh` |
+| Status / logs | `windows\status.bat` | `bash linux/status.sh` |
 
 Prefer a single executable? Install [Go](https://go.dev/dl/), then `cd tools/launcher && go build -o ../../palserver.exe .` — double-click `palserver.exe` for a numbered menu (start / restart / stop / status / rebuild website).
 
 ## 🎛️ Tune the server by editing ONE file: `.env`
 
-**Every** Palworld parameter (name, player cap, passwords, EXP/capture/damage rates, egg hatching time, PvP… ~50 options) lives in `.env` at the project root. Each option is documented in English in [`.example.env`](.example.env). Save your changes, then double-click `restart.bat`:
+**Every** Palworld parameter (name, player cap, passwords, EXP/capture/damage rates, egg hatching time, PvP… ~50 options) lives in `.env` at the project root. Each option is documented in English in [`.example.env`](.example.env). Save your changes, then double-click `windows\restart.bat`:
 
 ```env
 SERVER_NAME=My Palworld Server
@@ -69,11 +69,11 @@ backend/palworld-data/Pal/Saved/SaveGames/0/<YourWorldGUID>/   ← drop the whol
     └── Players/*.sav    (one per player)
 ```
 
-1. Stop both servers first (`stop.bat`)
+1. Stop both servers first (`windows\stop.bat`)
 2. Source location: Windows dedicated server `PalServer\Pal\Saved\SaveGames\0\<GUID>`; same layout on Linux/Docker
 3. Copy the whole `<GUID>` folder into the path above
 4. Linux hosts: `sudo chown -R 1000:1000 backend/palworld-data`
-5. `start.bat`, then hit 🔄 in the website header
+5. `windows\start.bat`, then hit 🔄 in the website header
 
 > ⚠️ Never edit `PalWorldSettings.ini` directly — it is regenerated from `.env` on every boot.
 
@@ -87,7 +87,7 @@ Open/close time windows and shutdown countdown messages live here (auto-generate
 | `hooks.onClose.announce` | Pre-shutdown broadcasts: `{ "at": 600, "message": "Closing in 10 minutes" }` — edit just this array |
 | `api.token` | API password used by the website backend (randomly generated) |
 
-Apply with `docker compose restart scheduler` (or simply `restart.bat`).
+Apply with `docker compose restart scheduler` (or simply `windows\restart.bat`).
 
 ### `schedule.windows` in full (opening-hours table)
 
@@ -128,22 +128,79 @@ pnpm build && cd .. && docker compose up -d --no-deps --build panel
 
 ## 🧱 No Docker? SteamCMD native mode
 
-Machines that can't run Docker can still host the game server with the scripts in [`native/`](native/README.md):
+Machines that can't run Docker can still host the game server with the scripts in [`windows/native/`](windows/native):
 
 1. Double-click `native\windows\install.bat` (auto-downloads SteamCMD + the server)
-2. Double-click `native\windows\start.bat` (Linux: `./install.sh` then `./start.sh`)
-3. Edit settings in `native/server/Pal/Saved/Config/.../PalWorldSettings.ini` (never overwritten in native mode)
+2. Double-click `windows\native\start.bat` (Linux: `bash linux/native/install.sh` then `bash linux/start.sh`)
+3. Edit settings in `windows/native/server/Pal/Saved/Config/.../PalWorldSettings.ini` (never overwritten in native mode)
 
 Native mode covers install/start/stop/update of the game server; the lookup website and the scheduler still require Docker.
-**Saves are fully interchangeable** - to upgrade later, move your world folder into `backend/palworld-data/` (see [native/README.md](native/README.md)).
+**Saves are fully interchangeable** - to upgrade later, move your world folder into `backend/palworld-data/` (see [docs/原生模式.md](docs/原生模式.md)).
+
+## 🌐 What the site gives you
+
+Once it is up at <http://localhost>, everything is readable without logging in;
+all of it comes straight from the server's save file.
+
+| Tab | What it does |
+|---|---|
+| 📊 Overview | Players online, server FPS, in-game day, server-wide Paldeck completion, top players and most-owned Pals |
+| 🧑 Players | **Player map** (everyone's last position plus guild bases, with coordinates), each player's level, stat points and full Pal list |
+| 🐾 Pals | Search every Pal on the server, filter and sort by element, passive, work suitability and IVs |
+| 🥚 Breeding | Shortest path, pair calculator, reverse lookup, breeding tree and **mutation breeding** (below) |
+| 🏷️ Passives | Combined passive-skill search (AND/OR) to find who owns what |
+| 📖 Paldeck | Server-wide and per-player completion, with the missing entries listed |
+| 👑 Bosses | Tower and field boss progress |
+| 🏆 Rankings | Leaderboards across several metrics |
+| 🕐 Activity | When players are actually online |
+
+The **🔄 refresh control** in the top right switches between manual and automatic
+refresh (5s / 15s / 30s / 60s / 5m / 10m). Like Grafana, a refresh updates in
+place: the page does not rebuild and map markers glide to their new positions.
+
+## 🧬 Breeding: four ways to search
+
+The four cards at the top of the Breeding tab:
+
+- **🪜 Shortest path** — pick a Gen 0 and a target and get every generation as
+  `A + B = C`. Choosing a target immediately lists which Pals can serve as Gen 0
+  and how many generations each needs.
+- **🥚 Pair calculator** — pick any two Pals to see the child; several pairs at once.
+- **🔄 Reverse lookup** — every parent pair that yields a Pal, or what it can father.
+- **🌳 Breeding tree** — expand node by node; Pals you do not own are greyed out.
+
+### Breeding, mutation, or both
+
+Inside the shortest-path view you can switch the source of each step:
+
+| Mode | Meaning |
+|---|---|
+| **Breeding only** | Recipe table only — guaranteed to hatch |
+| **Breeding + mutation** | Both are allowed, fewer generations preferred |
+| **Mutation only** | Every step is a mutation egg |
+
+The latter two add a **⚙ settings** button (cake, facility, Plesiosaur/Babysitter
+boost). Each step is labelled as either a guaranteed recipe step or a mutation
+with its odds, converted into **per-egg chance, average eggs and real time**.
+A strategy toggle picks either the fewest generations or the best odds — the
+latter minimises expected eggs and often wins by taking one extra generation.
+
+> How the mutation odds are derived and verified: [Wiki: Mutation breeding](../../wiki/網站-變異配種).
+
+### Passive filtering
+
+In the shortest-path view, **🏷️ Passives** and **✨ Active skills** let you pick up
+to four. The solver then searches your (or the whole server's) Pals for a route
+that carries all of them onto the target. Parents may each carry only part of
+them (1:3 or 2:2) — the child inherits the union.
 
 ## ❓ FAQ
 
 | Problem | Fix |
 |---|---|
 | Website shows no players | Save not in the right folder (see migration), or the server never ran; then hit 🔄 |
-| Scheduler didn't open the server | Check `TZ` in `.env` and `schedule.windows` in `config.json`; `status.bat` for logs |
-| Forgot the passwords | They're in plain text in `.env`; change and `restart.bat` |
+| Scheduler didn't open the server | Check `TZ` in `.env` and `schedule.windows` in `config.json`; `windows\status.bat` for logs |
+| Forgot the passwords | They're in plain text in `.env`; change and `windows\restart.bat` |
 | Port already in use | Change the left side of the port mappings (80 / 8211 / 9000) in the compose files |
 
 ## License & credits

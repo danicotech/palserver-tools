@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "%~dp0"
+cd /d "%~dp0.."
 title 帕魯伺服器 - 一鍵啟動
 
 where docker >nul 2>nul
@@ -12,7 +12,7 @@ if errorlevel 1 (
 )
 
 echo [1/3] 檢查設定檔(第一次會自動產生密碼)...
-powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\setup.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "windows\setup.ps1"
 if errorlevel 1 ( echo [X] 設定產生失敗 & pause & exit /b 1 )
 
 echo [2/3] 啟動所有服務(第一次要下載映像,可能需要幾分鐘)...
