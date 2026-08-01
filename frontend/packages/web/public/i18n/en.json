@@ -2465,5 +2465,10 @@
   "每顆蛋 {p}%,平均要 {n} 顆": "{p}% per egg — about {n} eggs on average",
   "查看誰有這隻": "See who owns one",
   "由下往上讀:每一列 A + B 配種,孵蛋後生出上一列;點 👥 看誰有那隻,點 A 換那一代的帕魯、點 B 換夥伴。": "Read bottom-up: each row breeds A + B into the row above. Tap 👥 to see who owns a pal; click A to swap that generation, B to swap the partner.",
-  "突變時中獎 {h}%,每顆蛋 {p}%,平均要 {n} 顆蛋": "{h}% to hit once a mutation occurs; {p}% per egg; about {n} eggs on average"
+  "突變時中獎 {h}%,每顆蛋 {p}%,平均要 {n} 顆蛋": "{h}% to hit once a mutation occurs; {p}% per egg; about {n} eggs on average",
+  "{name} 的 {pal}": "{name}'s {pal}",
+  "中獎": "hit",
+  "個體值": "IVs",
+  "共 {n} 隻": "{n} total",
+  "查看 {name} 的這 {n} 隻": "View {name}'s {n} pals"
 }

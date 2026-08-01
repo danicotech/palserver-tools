@@ -59,6 +59,7 @@ import { MutationSettings } from "./MutationSettings";
 import { loadPaldex, palInfo } from "./paldex";
 import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
+import type { Pal } from "./types";
 import { t, useI18n } from "../i18n";
 
 /** 一次顯示的列數;反查最多會有 1280 列,分批渲染避免一次塞爆 DOM。 */
@@ -519,6 +520,12 @@ function PalCell({
   );
 }
 
+/** 某物種的一隻自有個體(含主人)—— 持有者統計與明細都用它。 */
+export interface OwnedPalRow {
+  pal: Pal;
+  ownerName: string;
+}
+
 /** 「誰有這隻」面板:誰擁有、誰身上帶著這一步要用的詞條。
  *  原本做成滑過就浮出來的浮層,但它會蓋住下面的梯度 —— 改成點「👥 誰有」
  *  才展開,而且是接在該列下方,把內容往下推而不是遮住。 */
@@ -528,6 +535,7 @@ function OwnerPanel({
   desired,
   owners,
   pool,
+  details,
   style,
   onClose,
 }: {
@@ -540,10 +548,14 @@ function OwnerPanel({
   owners: { name: string; n: number }[] | null;
   /** 這個物種、在視角範圍內的自有個體 */
   pool: SaveBreedingPal[];
+  /** 同一物種的完整個體明細(點持有者時彈出用) */
+  details: OwnedPalRow[];
   style?: CSSProperties;
   onClose: () => void;
 }): JSX.Element {
   useI18n();
+  /** 點了哪位持有者 → 彈出他那幾隻的詳細資料 */
+  const [who, setWho] = useState<string | null>(null);
   const info = palInfo(id.toLowerCase());
   const total = owners?.reduce((a, b) => a + b.n, 0) ?? 0;
   const maskOf = (c: SaveBreedingPal) => {
@@ -635,14 +647,137 @@ function OwnerPanel({
           <p className="mb-1 font-bold text-ink-muted">👥 {t("持有者")}</p>
           <div className="flex max-h-28 flex-wrap gap-1 overflow-y-auto">
             {owners.map((o) => (
-              <span key={o.name} className="rounded bg-card px-1.5 py-0.5 ring-1 ring-line">
+              <button
+                key={o.name}
+                type="button"
+                onClick={() => setWho(o.name)}
+                title={t("查看 {name} 的這 {n} 隻", { name: o.name, n: o.n })}
+                className="rounded bg-card px-1.5 py-0.5 ring-1 ring-line transition hover:ring-pal"
+              >
                 <b className="text-ink">{o.name}</b>
                 <span className="text-ink-muted">×{o.n}</span>
-              </span>
+              </button>
             ))}
           </div>
         </>
       )}
+
+      {who && (
+        <PalDetailModal
+          title={t("{name} 的 {pal}", { name: who, pal: info.zh || id })}
+          rows={details.filter((r) => r.ownerName === who)}
+          desired={desired}
+          need={need}
+          onClose={() => setWho(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** 某位玩家的某物種全部個體 —— 點持有者才彈出,列出等級/性別/星級/個體值/詞條。 */
+function PalDetailModal({
+  title,
+  rows,
+  desired,
+  need,
+  onClose,
+}: {
+  title: string;
+  rows: OwnedPalRow[];
+  desired: string[];
+  /** 這一步需要的詞條 bitmask(用來把符合的那幾隻標出來) */
+  need: number;
+  onClose: () => void;
+}): JSX.Element {
+  useI18n();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const needNames = desired.filter((_, i) => need & (1 << i));
+  const covers = (p: Pal) =>
+    needNames.length > 0 && needNames.every((x) => p.passives.includes(x) || p.mastered_skills.includes(x));
+  const sorted = [...rows].sort(
+    (a, b) =>
+      Number(covers(b.pal)) - Number(covers(a.pal)) ||
+      (b.pal.iv_hp + b.pal.iv_attack + b.pal.iv_defense) - (a.pal.iv_hp + a.pal.iv_attack + a.pal.iv_defense) ||
+      b.pal.level - a.pal.level,
+  );
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="max-h-[80dvh] w-full max-w-xl overflow-y-auto rounded-cute bg-card p-3 shadow-cute ring-1 ring-line"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="mb-2 flex items-center gap-2">
+          <b className="min-w-0 flex-1 truncate text-sm text-ink">{title}</b>
+          <span className="shrink-0 text-[11px] text-ink-muted">{t("共 {n} 隻", { n: rows.length })}</span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("關閉")}
+            className="shrink-0 rounded-full px-2 py-0.5 text-ink-muted transition hover:bg-card-soft hover:text-ink"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          {sorted.map((r, i) => {
+            const p = r.pal;
+            const ok = covers(p);
+            return (
+              <div
+                key={`${p.nickname}-${p.level}-${i}`}
+                className={`rounded-xl bg-card-soft p-2 text-[11px] ring-1 ${ok ? "ring-grass/50" : "ring-line"}`}
+              >
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <b className="text-sm text-ink">{p.nickname || p.name_zh}</b>
+                  <span className="text-ink-muted">Lv{p.level}</span>
+                  {p.gender && <span className={p.gender === "Male" ? "text-pal" : "text-berry"}>{p.gender === "Male" ? "♂" : "♀"}</span>}
+                  {p.rank > 1 && <span className="text-sun">{"★".repeat(Math.min(p.rank - 1, 4))}</span>}
+                  {p.is_alpha && <span className="rounded bg-berry/12 px-1.5 py-0.5 font-bold text-berry">α</span>}
+                  {p.is_lucky && <span className="rounded bg-sun/15 px-1.5 py-0.5 font-bold text-sun">✨</span>}
+                  <span className="ml-auto text-ink-muted">
+                    {t("個體值")} <b className="text-ink">{p.iv_hp}</b>/<b className="text-ink">{p.iv_attack}</b>/
+                    <b className="text-ink">{p.iv_defense}</b>
+                  </span>
+                </div>
+                {(p.passives.length > 0 || p.mastered_skills.length > 0) && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {p.passives.map((x) => (
+                      <span
+                        key={x}
+                        className={`rounded px-1.5 py-0.5 font-semibold ${
+                          desired.includes(x) ? "bg-grass/15 text-grass" : "bg-card text-ink-muted ring-1 ring-line"
+                        }`}
+                      >
+                        {x}
+                      </span>
+                    ))}
+                    {p.mastered_skills
+                      .filter((x) => desired.includes(x))
+                      .map((x) => (
+                        <span key={x} className="rounded bg-grass/15 px-1.5 py-0.5 font-semibold text-grass">
+                          ✨{x}
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1186,6 +1321,7 @@ function HybridPathView({
   desired,
   ownedPool,
   ownersOf,
+  detailsOf,
 }: {
   path: HybridPath;
   metaOf: (id: string) => PalMeta | undefined;
@@ -1206,6 +1342,8 @@ function HybridPathView({
   ownedPool: SaveBreedingPal[];
   /** 物種 → 誰有幾隻;回 null = 玩家視角關掉了,不顯示 */
   ownersOf: (id: string) => { name: string; n: number }[] | null;
+  /** 物種 → 個體明細(點持有者彈窗用) */
+  detailsOf: (id: string) => OwnedPalRow[];
 }) {
   const has = (id: string) => (ownedSet ? ownedSet.has(id.toLowerCase()) : undefined);
   /** 使用者為某一步挑的夥伴(換路線時重置)。 */
@@ -1415,7 +1553,7 @@ function HybridPathView({
                               })}
                             >
                               <img src={MUTATION_ICON} alt="" className="size-3.5" />
-                              {t("每顆蛋")} {(info.overall * 100).toFixed(2)}%
+                              {t("中獎")} {(hitRateOf(info, cake) * 100).toFixed(1)}%
                             </span>
                           )}
                           {own && <span className={on ? "text-white/85" : "text-grass"}>✓</span>}
@@ -1456,9 +1594,16 @@ function HybridPathView({
                         {o.kind === "breed" ? (
                           <span className={on ? "text-white/85" : "text-grass"}>{t("直系")} 100%</span>
                         ) : (
-                          <span className={`flex items-center gap-0.5 ${on ? "text-white/85" : "text-berry"}`}>
+                          <span
+                            className={`flex items-center gap-0.5 ${on ? "text-white/85" : "text-berry"}`}
+                            title={t("突變時中獎 {h}%,每顆蛋 {p}%,平均要 {n} 顆蛋", {
+                              h: (o.chance * 100).toFixed(1),
+                              p: (o.perEgg * 100).toFixed(2),
+                              n: Math.round(1 / o.perEgg),
+                            })}
+                          >
                             <img src={MUTATION_ICON} alt="" className="size-3.5" />
-                            {(o.chance * 100).toFixed(1)}%
+                            {t("中獎")} {(o.chance * 100).toFixed(1)}%
                           </span>
                         )}
                         {own && <span className={on ? "text-white/85" : "text-grass"}>✓</span>}
@@ -1543,6 +1688,7 @@ function HybridPathView({
                       desired={desired}
                       owners={ownersOf(open.id)}
                       pool={poolOf(open.id)}
+                      details={detailsOf(open.id)}
                       style={rowWidth(gen)}
                       onClose={() => setOpenOwner(null)}
                     />
@@ -1811,28 +1957,34 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
   /** 純直系梯度上哪一格正在看持有者(key = `${代}:${a|b}`) */
   const [pathOwner, setPathOwner] = useState<string | null>(null);
 
-  /** 物種 → 這個視角下誰擁有、各幾隻(多→少)。「全部帕魯種類」時不看擁有者。 */
-  const ownersBySpecies = useMemo<Map<string, { name: string; n: number }[]> | null>(() => {
+  /** 物種 → 這個視角下的個體(含主人)。持有者統計與明細都從這份推導,數字一定對得上。 */
+  const palsBySpecies = useMemo<Map<string, OwnedPalRow[]> | null>(() => {
     if (!dataset || persp === "any" || persp === "off") return null;
-    const acc = new Map<string, Map<string, number>>();
+    const out = new Map<string, OwnedPalRow[]>();
     for (const { pal, owner } of dataset.allPals) {
       if (persp !== "all" && owner.uid !== persp) continue;
       const sp = normalizeSpecies(pal.species);
-      let byOwner = acc.get(sp);
-      if (!byOwner) {
-        byOwner = new Map();
-        acc.set(sp, byOwner);
-      }
-      byOwner.set(owner.name, (byOwner.get(owner.name) ?? 0) + 1);
+      const list = out.get(sp);
+      if (list) list.push({ pal, ownerName: owner.name });
+      else out.set(sp, [{ pal, ownerName: owner.name }]);
     }
+    return out;
+  }, [dataset, persp]);
+
+  /** 物種 → 誰擁有、各幾隻(多→少)。 */
+  const ownersBySpecies = useMemo<Map<string, { name: string; n: number }[]> | null>(() => {
+    if (!palsBySpecies) return null;
     const out = new Map<string, { name: string; n: number }[]>();
-    for (const [sp, byOwner] of acc)
+    for (const [sp, rows] of palsBySpecies) {
+      const byOwner = new Map<string, number>();
+      for (const r of rows) byOwner.set(r.ownerName, (byOwner.get(r.ownerName) ?? 0) + 1);
       out.set(
         sp,
         [...byOwner].map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)),
       );
+    }
     return out;
-  }, [dataset, persp]);
+  }, [palsBySpecies]);
 
   /** 自動起點的來源池:any = 全部物種;否則 = 擁有的物種。 */
   const autoPool = useMemo<Set<string> | null>(() => {
@@ -2969,7 +3121,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                     n: Math.round(info.expectedEggs),
                                   })}
                                 >
-                                  {t("每顆蛋")} {(info.overall * 100).toFixed(2)}%
+                                  {t("中獎")} {(hitRateOf(info, cake) * 100).toFixed(1)}%
                                 </span>
                               )}
                               {own && <span className="text-grass">✓</span>}
@@ -3063,6 +3215,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                 desired={desired}
                 ownedPool={ownedForTraits}
                 ownersOf={(id) => ownersBySpecies?.get(id.toLowerCase()) ?? (ownersBySpecies ? [] : null)}
+                detailsOf={(id) => palsBySpecies?.get(id.toLowerCase()) ?? []}
               />
             ) : desired.length > 0 ? (
               <Card className="text-center">
@@ -3268,6 +3421,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                     pool={ownedForTraits.filter(
                                       (c) => normalizeSpecies(c.characterId) === open.id.toLowerCase(),
                                     )}
+                                    details={palsBySpecies?.get(open.id.toLowerCase()) ?? []}
                                     style={rowStyle}
                                     onClose={() => setPathOwner(null)}
                                   />
