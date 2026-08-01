@@ -59,7 +59,9 @@ import { MutationSettings } from "./MutationSettings";
 import { loadPaldex, palInfo } from "./paldex";
 import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
-import type { Pal } from "./types";
+import type { Pal, Player } from "./types";
+import { PalTile } from "./PalTile";
+import { PalDetailModal } from "./PalDetailModal";
 import { t, useI18n } from "../i18n";
 
 /** 一次顯示的列數;反查最多會有 1280 列,分批渲染避免一次塞爆 DOM。 */
@@ -460,6 +462,7 @@ function PalCell({
   big,
   compact,
   onHover,
+  sub,
 }: {
   id: string;
   meta?: PalMeta;
@@ -477,6 +480,8 @@ function PalCell({
   compact?: boolean;
   /** 滑入/滑出:開關「誰有這隻」的浮動說明(傳 null = 關) */
   onHover?: (rect: DOMRect | null) => void;
+  /** 名稱下方的小字 —— 這一格自己的註解(要帶哪些詞條、是誰的、累積到幾個) */
+  sub?: ReactNode;
 }): JSX.Element {
   const info = palInfo(id);
   const Tag = onClick ? "button" : "div";
@@ -500,8 +505,11 @@ function PalCell({
           className={`size-9 shrink-0 rounded-full bg-card-soft ring-1 ring-line sm:size-10 ${owned === false ? "opacity-70 grayscale" : ""}`}
         />
       )}
-      <span className={`min-w-14 flex-1 truncate font-semibold text-ink ${big ? "text-base sm:text-lg" : "text-sm sm:text-base"}`}>
-        {info.zh || id}
+      <span className="flex min-w-14 flex-1 flex-col justify-center">
+        <span className={`truncate font-semibold text-ink ${big ? "text-base sm:text-lg" : "text-sm sm:text-base"}`}>
+          {info.zh || id}
+        </span>
+        {sub && <span className="flex flex-wrap items-center gap-0.5 text-[10px] leading-tight">{sub}</span>}
       </span>
       {hint}
       {!compact && (
@@ -523,7 +531,7 @@ function PalCell({
 /** 某物種的一隻自有個體(含主人)—— 持有者統計與明細都用它。 */
 export interface OwnedPalRow {
   pal: Pal;
-  ownerName: string;
+  owner: Player;
 }
 
 /** 「誰有這隻」面板:誰擁有、誰身上帶著這一步要用的詞條。
@@ -663,9 +671,9 @@ function OwnerPanel({
       )}
 
       {who && (
-        <PalDetailModal
+        <OwnerPalsModal
           title={t("{name} 的 {pal}", { name: who, pal: info.zh || id })}
-          rows={details.filter((r) => r.ownerName === who)}
+          rows={details.filter((r) => r.owner.name === who)}
           desired={desired}
           need={need}
           onClose={() => setWho(null)}
@@ -675,8 +683,10 @@ function OwnerPanel({
   );
 }
 
-/** 某位玩家的某物種全部個體 —— 點持有者才彈出,列出等級/性別/星級/個體值/詞條。 */
-function PalDetailModal({
+/** 某位玩家的某物種全部個體 —— 點持有者才彈出。
+ *  卡片與詳情都直接用帕魯查詢那兩個現成元件(PalTile / PalDetailModal),
+ *  頭像、屬性、星級、工作適性、詞條的呈現全站一致。 */
+function OwnerPalsModal({
   title,
   rows,
   desired,
@@ -686,99 +696,82 @@ function PalDetailModal({
   title: string;
   rows: OwnedPalRow[];
   desired: string[];
-  /** 這一步需要的詞條 bitmask(用來把符合的那幾隻標出來) */
+  /** 這一步需要的詞條 bitmask(符合的排前面並標出來) */
   need: number;
   onClose: () => void;
 }): JSX.Element {
   useI18n();
+  const [detail, setDetail] = useState<OwnedPalRow | null>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (detail) setDetail(null);
+        else onClose();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, detail]);
+
   const needNames = desired.filter((_, i) => need & (1 << i));
   const covers = (p: Pal) =>
     needNames.length > 0 && needNames.every((x) => p.passives.includes(x) || p.mastered_skills.includes(x));
   const sorted = [...rows].sort(
     (a, b) =>
       Number(covers(b.pal)) - Number(covers(a.pal)) ||
-      (b.pal.iv_hp + b.pal.iv_attack + b.pal.iv_defense) - (a.pal.iv_hp + a.pal.iv_attack + a.pal.iv_defense) ||
+      b.pal.iv_hp + b.pal.iv_attack + b.pal.iv_defense - (a.pal.iv_hp + a.pal.iv_attack + a.pal.iv_defense) ||
       b.pal.level - a.pal.level,
   );
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
-      role="presentation"
-    >
+    <>
       <div
-        className="max-h-[80dvh] w-full max-w-xl overflow-y-auto rounded-cute bg-card p-3 shadow-cute ring-1 ring-line"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        onClick={onClose}
+        role="presentation"
       >
-        <div className="mb-2 flex items-center gap-2">
-          <b className="min-w-0 flex-1 truncate text-sm text-ink">{title}</b>
-          <span className="shrink-0 text-[11px] text-ink-muted">{t("共 {n} 隻", { n: rows.length })}</span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("關閉")}
-            className="shrink-0 rounded-full px-2 py-0.5 text-ink-muted transition hover:bg-card-soft hover:text-ink"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          {sorted.map((r, i) => {
-            const p = r.pal;
-            const ok = covers(p);
-            return (
+        <div
+          className="max-h-[85dvh] w-full max-w-xl overflow-y-auto rounded-cute bg-card p-4 shadow-cute ring-1 ring-line"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="mb-3 flex items-center gap-2">
+            <b className="min-w-0 flex-1 truncate text-ink">{title}</b>
+            <span className="shrink-0 text-xs text-ink-muted">{t("共 {n} 隻", { n: rows.length })}</span>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("關閉")}
+              className="shrink-0 rounded-full px-2 py-0.5 text-ink-muted transition hover:bg-card-soft hover:text-ink"
+            >
+              ✕
+            </button>
+          </div>
+          {needNames.length > 0 && (
+            <p className="mb-2 flex flex-wrap items-center gap-1 text-[11px] text-ink-muted">
+              {t("這一步要帶")}
+              {needNames.map((x) => (
+                <span key={x} className="rounded bg-pal/12 px-1.5 py-0.5 font-bold text-pal">
+                  {x}
+                </span>
+              ))}
+              · {t("符合的排在前面並加綠框")}
+            </p>
+          )}
+          <div className="flex flex-col gap-2">
+            {sorted.map((r, i) => (
               <div
-                key={`${p.nickname}-${p.level}-${i}`}
-                className={`rounded-xl bg-card-soft p-2 text-[11px] ring-1 ${ok ? "ring-grass/50" : "ring-line"}`}
+                key={`${r.pal.nickname}-${r.pal.level}-${i}`}
+                className={covers(r.pal) ? "rounded-cute ring-2 ring-grass" : ""}
               >
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <b className="text-sm text-ink">{p.nickname || p.name_zh}</b>
-                  <span className="text-ink-muted">Lv{p.level}</span>
-                  {p.gender && <span className={p.gender === "Male" ? "text-pal" : "text-berry"}>{p.gender === "Male" ? "♂" : "♀"}</span>}
-                  {p.rank > 1 && <span className="text-sun">{"★".repeat(Math.min(p.rank - 1, 4))}</span>}
-                  {p.is_alpha && <span className="rounded bg-berry/12 px-1.5 py-0.5 font-bold text-berry">α</span>}
-                  {p.is_lucky && <span className="rounded bg-sun/15 px-1.5 py-0.5 font-bold text-sun">✨</span>}
-                  <span className="ml-auto text-ink-muted">
-                    {t("個體值")} <b className="text-ink">{p.iv_hp}</b>/<b className="text-ink">{p.iv_attack}</b>/
-                    <b className="text-ink">{p.iv_defense}</b>
-                  </span>
-                </div>
-                {(p.passives.length > 0 || p.mastered_skills.length > 0) && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {p.passives.map((x) => (
-                      <span
-                        key={x}
-                        className={`rounded px-1.5 py-0.5 font-semibold ${
-                          desired.includes(x) ? "bg-grass/15 text-grass" : "bg-card text-ink-muted ring-1 ring-line"
-                        }`}
-                      >
-                        {x}
-                      </span>
-                    ))}
-                    {p.mastered_skills
-                      .filter((x) => desired.includes(x))
-                      .map((x) => (
-                        <span key={x} className="rounded bg-grass/15 px-1.5 py-0.5 font-semibold text-grass">
-                          ✨{x}
-                        </span>
-                      ))}
-                  </div>
-                )}
+                <PalTile pal={r.pal} owner={r.owner.name} onClick={() => setDetail(r)} />
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+      {detail && <PalDetailModal pal={detail.pal} owner={detail.owner} onClose={() => setDetail(null)} />}
+    </>
   );
 }
 
@@ -1389,6 +1382,28 @@ function HybridPathView({
   /** 哪一列的哪一格正在看持有者(key = `${列}:${a|b}`);一次只開一個 */
   const [openOwner, setOpenOwner] = useState<string | null>(null);
   const poolOf = (id: string) => ownedPool.filter((c) => normalizeSpecies(c.characterId) === id.toLowerCase());
+  /** 掛在帕魯格子底下的小字:要帶哪些詞條(誰的),或已經累積到幾個。
+   *  資訊貼著它所描述的那一格,才不會被讀成在講整列或旁邊那隻。 */
+  const traitSub = (mask: number, pal?: SaveBreedingPal) =>
+    mask > 0 ? (
+      <>
+        {pal && <span className="shrink-0 font-semibold text-ink-muted">{pal.ownerName || "?"}</span>}
+        {traitNames(mask).map((x) => (
+          <span key={x} className="shrink-0 rounded bg-pal/12 px-1 py-px font-bold text-pal">
+            {x}
+          </span>
+        ))}
+      </>
+    ) : undefined;
+  const countSub = (mask: number) => (
+    <span
+      className={`shrink-0 rounded px-1 py-px font-bold ${
+        mask === (1 << desired.length) - 1 ? "bg-grass/15 text-grass" : "bg-ink-muted/12 text-ink-muted"
+      }`}
+    >
+      {t("詞條")} {traitNames(mask).length}/{desired.length}
+    </span>
+  );
   return (
     <Card className="overflow-hidden">
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
@@ -1460,6 +1475,13 @@ function HybridPathView({
                 id={s.from}
                 meta={metaOf(s.from)}
                 owned={has(s.from)}
+                sub={
+                  traitAware
+                    ? stepIdx === 0
+                      ? traitSub(s.fromNeed ?? 0, carrierFor(s.from, s.fromNeed ?? 0))
+                      : countSub(s.fromNeed ?? 0)
+                    : undefined
+                }
                 active={stepIdx === 0 && openStart}
                 title={stepIdx === 0 ? t("點擊更換初代(會重新計算整條路線)") : undefined}
                 onClick={
@@ -1481,6 +1503,7 @@ function HybridPathView({
                   id={s.partner}
                   meta={metaOf(s.partner)}
                   owned={has(s.partner)}
+                  sub={traitAware ? traitSub(needMask, carrierFor(s.partner, needMask)) : undefined}
                   active={openStep === stepIdx}
                   title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
                   onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
@@ -1494,7 +1517,13 @@ function HybridPathView({
               )}
               {/* = C:這一列配出來的結果,讓人一眼看出下一代是誰 */}
               <span className="shrink-0 text-lg font-bold text-pal sm:text-xl">=</span>
-              <PalCell id={s.child} meta={metaOf(s.child)} owned={has(s.child)} compact />
+              <PalCell
+                id={s.child}
+                meta={metaOf(s.child)}
+                owned={has(s.child)}
+                sub={traitAware ? countSub(s.childNeed ?? 0) : undefined}
+                compact
+              />
               <span
                 className={`ml-auto w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold ring-1 sm:w-16 sm:text-[11px] ${
                   s.kind === "mutation" ? "bg-berry/15 text-berry ring-berry/40" : "bg-pal/15 text-pal ring-pal/40"
@@ -1613,55 +1642,6 @@ function HybridPathView({
                 </div>
               </div>
             )}
-            {traitAware && (() => {
-              // 一行結論:這一列誰要帶什麼進來、生出來會累積到幾個。
-              // 「誰有這隻/誰身上帶著這些詞條」點下方的 👥 才展開,不佔版面也不遮畫面。
-              const fromMask = stepIdx === 0 ? (s.fromNeed ?? 0) : 0;
-              const childMask = s.childNeed ?? 0;
-              const fromPal = fromMask ? carrierFor(s.from, fromMask) : undefined;
-              const partnerPal = needMask ? carrierFor(s.partner, needMask) : undefined;
-              const part = (id: string, mask: number, pal?: SaveBreedingPal) => (
-                <span className="flex min-w-0 flex-wrap items-center gap-1">
-                  <span className="shrink-0">
-                    {palInfo(id.toLowerCase()).zh || id}
-                    {pal && (
-                      <>
-                        (<b className="text-ink">{pal.ownerName || "?"}</b>)
-                      </>
-                    )}
-                  </span>
-                  {traitNames(mask).map((x) => (
-                    <span key={x} className="shrink-0 rounded bg-pal/12 px-1.5 py-0.5 text-[10px] font-bold text-pal">
-                      {x}
-                    </span>
-                  ))}
-                </span>
-              );
-              return (
-                <div
-                  className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-[11px] text-ink-muted"
-                  style={rowWidth(gen)}
-                >
-                  <span className="shrink-0 rounded bg-card-soft px-1.5 py-0.5 font-bold ring-1 ring-line">
-                    {t("要帶")}
-                  </span>
-                  {fromMask > 0 && (
-                    <>
-                      {part(s.from, fromMask, fromPal)}
-                      <span className="shrink-0 font-bold">＋</span>
-                    </>
-                  )}
-                  {needMask > 0 ? part(s.partner, needMask, partnerPal) : <span className="shrink-0">{t("這一步不必補詞條")}</span>}
-                  <span className="shrink-0 font-bold text-pal">⇒</span>
-                  <span className="shrink-0">
-                    {palInfo(s.child.toLowerCase()).zh || s.child}{" "}
-                    <b className={childMask === (1 << desired.length) - 1 ? "text-grass" : "text-ink"}>
-                      {traitNames(childMask).length}/{desired.length}
-                    </b>
-                  </span>
-                </div>
-              );
-            })()}
             {/* 誰有這隻:只有「你要自己準備」的那幾格需要查(最底列的 A、每一列的 B) */}
             {(() => {
               const slots: { key: string; id: string; need: number }[] = [];
@@ -1965,8 +1945,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       if (persp !== "all" && owner.uid !== persp) continue;
       const sp = normalizeSpecies(pal.species);
       const list = out.get(sp);
-      if (list) list.push({ pal, ownerName: owner.name });
-      else out.set(sp, [{ pal, ownerName: owner.name }]);
+      if (list) list.push({ pal, owner });
+      else out.set(sp, [{ pal, owner }]);
     }
     return out;
   }, [dataset, persp]);
@@ -1977,7 +1957,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
     const out = new Map<string, { name: string; n: number }[]>();
     for (const [sp, rows] of palsBySpecies) {
       const byOwner = new Map<string, number>();
-      for (const r of rows) byOwner.set(r.ownerName, (byOwner.get(r.ownerName) ?? 0) + 1);
+      for (const r of rows) byOwner.set(r.owner.name, (byOwner.get(r.owner.name) ?? 0) + 1);
       out.set(
         sp,
         [...byOwner].map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)),

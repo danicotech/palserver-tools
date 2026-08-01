@@ -2470,5 +2470,6 @@
   "中獎": "hit",
   "個體值": "IVs",
   "共 {n} 隻": "{n} total",
-  "查看 {name} 的這 {n} 隻": "View {name}'s {n} pals"
+  "查看 {name} 的這 {n} 隻": "View {name}'s {n} pals",
+  "符合的排在前面並加綠框": "matching ones are listed first with a green outline"
 }
