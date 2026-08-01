@@ -1,0 +1,120 @@
+@echo off
+chcp 65001 >nul
+setlocal
+cd /d "%~dp0..\.."
+title 帕魯全套服務(SteamCMD 版,不用 Docker)
+
+rem 一次帶起「遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站」,完全不需要 Docker。
+rem   palsave    : Python 解析存檔(玩家/帕魯/公會資料的唯一來源)
+rem   scheduler  : Go 排程器,同時提供 http://localhost:9000 的查詢網站與 API
+rem   PalServer  : 由排程器依 backend\config.json 的時段表自動開關
+rem 一律單行 + goto,避免多行 if(...) 區塊在非 CRLF 換行時被 cmd 拆爛。
+
+set "SERVER_DIR=%CD%\windows\native\server"
+set "PANEL_DIR=%CD%\frontend\packages\web\dist"
+set "CONFIG_PATH=%CD%\backend\config.json"
+set "SAVE_ROOT=%SERVER_DIR%"
+set "PRESENCE_PATH=%CD%\backend\data\presence.json"
+set "ROSTER_PATH=%CD%\backend\data\roster.json"
+rem Docker 版的預設位址是 compose 內網名稱,本機直跑要指回 127.0.0.1
+set "PALSAVE_URL=http://127.0.0.1:8213"
+set "REST_HOST=127.0.0.1"
+set "RCON_HOST=127.0.0.1"
+
+echo [1/5] 檢查伺服器本體...
+if not exist "%SERVER_DIR%\PalServer.exe" goto :noserver
+
+echo [2/5] 檢查 Python(存檔解析用)...
+where python >nul 2>nul
+if errorlevel 1 goto :nopython
+python -c "import pyooz, palworld_save_tools" >nul 2>nul
+if not errorlevel 1 goto :haspy
+echo     安裝解析套件(只有第一次需要)...
+python -m pip install --quiet --disable-pip-version-check -r "backend\tools\palsave\requirements.txt"
+if errorlevel 1 goto :pipfail
+:haspy
+
+echo [3/5] 檢查查詢網站(dist)...
+if exist "%PANEL_DIR%\index.html" goto :hasdist
+where pnpm >nul 2>nul
+if errorlevel 1 goto :nodist
+echo     第一次要先建置網站(需要幾分鐘)...
+pushd frontend
+call pnpm install --no-frozen-lockfile
+call pnpm build
+popd
+if not exist "%PANEL_DIR%\index.html" goto :nodist
+:hasdist
+
+echo [4/5] 檢查排程器執行檔...
+if exist "backend\palscheduler.exe" goto :hasbin
+where go >nul 2>nul
+if errorlevel 1 goto :nogo
+echo     編譯排程器(只有第一次需要)...
+pushd backend
+go build -o palscheduler.exe ./cmd/scheduler
+popd
+if not exist "backend\palscheduler.exe" goto :gofail
+:hasbin
+
+if not exist "backend\config.json" goto :noconfig
+if not exist "backend\data" mkdir "backend\data"
+
+echo [5/5] 啟動存檔解析與排程器...
+start "palsave" /min cmd /c "cd /d "%CD%\backend\tools\palsave" && set SAVE_ROOT=%SAVE_ROOT%&& set PORT=8213&& python server.py"
+timeout /t 2 /nobreak >nul
+start "palscheduler" /min cmd /c "cd /d "%CD%\backend" && palscheduler.exe serve"
+timeout /t 3 /nobreak >nul
+
+echo.
+echo 完成!(遊戲伺服器由排程器依時段表自動開關)
+echo   查詢網站:http://localhost:9000
+echo   遊戲連線:你的IP:8211
+echo.
+echo 要全部關掉:雙擊 windows\native\stop-all.bat
+start http://localhost:9000
+pause
+exit /b 0
+
+:noserver
+echo [X] 還沒安裝伺服器本體,請先雙擊 windows\native\install.bat
+pause
+exit /b 1
+
+:nopython
+echo [X] 找不到 Python。查詢網站的玩家/帕魯資料需要它來解析存檔。
+echo     安裝(勾選 Add python.exe to PATH):https://www.python.org/downloads/
+echo     或用 winget:winget install -e --id Python.Python.3.12
+pause
+exit /b 1
+
+:pipfail
+echo [X] 解析套件安裝失敗。手動執行:
+echo     python -m pip install -r backend\tools\palsave\requirements.txt
+pause
+exit /b 1
+
+:nodist
+echo [X] 查詢網站尚未建置,而且找不到 pnpm 無法自動建。
+echo     裝好 Node.js(https://nodejs.org/)後執行:
+echo       corepack enable
+echo       cd frontend ^&^& pnpm install ^&^& pnpm build
+pause
+exit /b 1
+
+:nogo
+echo [X] 找不到排程器執行檔,也沒有 Go 可以編譯。
+echo     裝 Go(https://go.dev/dl/)後重跑本檔,或改用 Docker 版。
+pause
+exit /b 1
+
+:gofail
+echo [X] 排程器編譯失敗,請截圖上方訊息求助。
+pause
+exit /b 1
+
+:noconfig
+echo [X] 找不到 backend\config.json。先跑一次 windows\setup.ps1 產生設定:
+echo     powershell -ExecutionPolicy Bypass -File windows\setup.ps1
+pause
+exit /b 1

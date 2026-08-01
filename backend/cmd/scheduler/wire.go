@@ -18,7 +18,7 @@ import (
 func InitializeApp() (*app.App, error) {
 	wire.Build(
 		provideConfig,
-		provideDocker,
+		provideServerController,
 		scheduler.New,
 		api.New,
 		app.New,

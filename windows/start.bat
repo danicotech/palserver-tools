@@ -5,6 +5,8 @@ cd /d "%~dp0.."
 title 帕魯伺服器 - 一鍵啟動
 
 rem 一律單行 + goto:多行 if(...) 區塊只要換行不是 CRLF 就會被 cmd 拆爛。
+rem 流程:有 Docker 就跑 Docker 版(四個容器);
+rem       沒有 Docker 就自動改跑 SteamCMD 版全套(遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站)。
 
 where docker >nul 2>nul
 if errorlevel 1 goto :nodocker
@@ -25,8 +27,8 @@ set /a _wait=0
 docker info >nul 2>nul
 if not errorlevel 1 goto :dockerup
 set /a _wait+=1
-if %_wait% GEQ 60 goto :dockerdead
-echo     等待 Docker 引擎啟動中... (%_wait%/60)
+if %_wait% GEQ 40 goto :dockerdead
+echo     等待 Docker 引擎啟動中... (%_wait%/40)
 timeout /t 3 /nobreak >nul
 goto :waitdocker
 
@@ -52,19 +54,38 @@ pause
 exit /b 0
 
 :nodocker
-echo [X] 找不到 Docker!請先安裝 Docker Desktop:
+echo.
+echo 這台電腦沒有 Docker。
+echo 沒關係 —— 改用「SteamCMD 版」一樣可以跑完整服務:
+echo   遊戲伺服器 + 排程開關服 + 存檔解析 + 查詢網站(只是不透過容器)。
+echo.
+choice /c YN /n /m "要現在改用 SteamCMD 版嗎?(Y=好 / N=我要先裝 Docker) "
+if errorlevel 2 goto :installdocker
+echo.
+call "%~dp0native\start-all.bat"
+exit /b %errorlevel%
+
+:installdocker
+echo.
+echo 請安裝 Docker Desktop 後再重跑本檔:
 echo     https://www.docker.com/products/docker-desktop/
-echo     安裝完要把 Docker Desktop 打開,工作列出現鯨魚圖示才算啟動。
+echo     安裝完要把它打開,工作列出現鯨魚圖示才算啟動。
 pause
 exit /b 1
 
 :dockerdead
 echo.
-echo [X] 等了 3 分鐘,Docker 引擎還是沒起來。請手動處理後重跑本檔:
-echo     1. 從開始功能表打開「Docker Desktop」,等到工作列鯨魚圖示不再轉動
-echo     2. 第一次安裝可能要求啟用 WSL 2 並重新開機,依畫面指示做完再開一次
-echo     3. 若 Docker Desktop 卡在 Starting,右鍵鯨魚圖示 → Restart
-echo     4. 都不行就重開機,再打開 Docker Desktop
+echo [X] 等了 2 分鐘,Docker 引擎還是沒起來。
+echo     可以先手動處理(打開 Docker Desktop、等鯨魚圖示不再轉動、必要時啟用 WSL 2 並重開機),
+echo     或者直接改用不需要 Docker 的 SteamCMD 版。
+echo.
+choice /c YN /n /m "要改用 SteamCMD 版嗎?(Y=好 / N=我自己處理 Docker) "
+if errorlevel 2 goto :giveup
+call "%~dp0native\start-all.bat"
+exit /b %errorlevel%
+
+:giveup
+echo 好的,處理完 Docker 後重跑本檔即可。
 pause
 exit /b 1
 

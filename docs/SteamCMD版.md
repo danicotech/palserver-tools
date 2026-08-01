@@ -26,6 +26,57 @@
   (第一次啟動會自動從 `DefaultPalWorldSettings.ini` 複製;SteamCMD 版直接改這個檔,改完重開伺服器)
 - **存檔**:`windows\native\server\Pal\Saved\SaveGames\0\<世界GUID>\`
 
+## 🚀 不用 Docker 也能跑「完整服務」
+
+`start-all` 會一次帶起四項服務,和 Docker 版看到的網站完全一樣:
+
+| 服務 | 由誰跑 | 說明 |
+|---|---|---|
+| 遊戲伺服器 | SteamCMD 裝的 `PalServer` | 由排程器依時段表**自動開關**(不透過 Docker,直接管行程) |
+| 排程器 | `backend/palscheduler` | 開關服、關服倒數廣播、RCON / 官方 REST |
+| 存檔解析 | `python server.py` | 玩家 / 帕魯 / 公會資料的來源 |
+| 查詢網站 | 排程器直接提供 | 同源提供靜態檔 + API,不需要 nginx |
+
+```bat
+:: Windows
+windows\native\start-all.bat        :: 全部啟動 → http://localhost:9000
+windows\native\stop-all.bat         :: 全部停止
+```
+
+```bash
+# Linux / macOS
+bash linux/native/start-all.sh       # 全部啟動 → http://localhost:9000
+bash linux/native/stop-all.sh        # 全部停止
+```
+
+> 直接雙擊 `windows\start.bat`(或 `bash linux/start.sh`)也可以 ——
+> 偵測不到 Docker 時它會問你要不要改用 SteamCMD 版,答 Y 就走這條路。
+
+### 需要先裝什麼
+
+| 需求 | 用途 | 沒有的話 |
+|---|---|---|
+| **Python 3.10+** | 解析存檔(玩家/帕魯資料) | 網站起得來,但沒有玩家與帕魯資料 |
+| **Go 1.21+** | 編譯排程器(只有第一次) | 無法開關服與提供網站 |
+| **Node.js + pnpm** | 建置查詢網站(只有第一次) | 沒有網站 |
+
+腳本會自動檢查、自動安裝 Python 套件、自動建置網站與編譯排程器;缺哪一個都會明確告訴你去哪裝。
+`pyooz` 與 `palworld-save-tools` 都有現成的 Windows / Linux wheel,不需要編譯器。
+
+### 和 Docker 版的差別
+
+只差在「誰來跑這些服務」:
+
+| | Docker 版 | SteamCMD 版 |
+|---|---|---|
+| 網址 | `http://localhost`(nginx) | `http://localhost:9000`(排程器直接提供) |
+| 開關伺服器 | Docker Engine API | 直接管本機行程(`procctl`) |
+| 要裝的東西 | 只要 Docker Desktop | Python + Go + Node(首次) |
+| 存檔位置 | `backend/palworld-data/` | `windows\native\server\` |
+
+唯讀端點(玩家、帕魯、狀態、頭像名冊)在同源時免 token,
+控制端點(開關服、RCON、踢人…)一律仍需 token —— 與 Docker 版的 nginx 白名單完全一致。
+
 ## Linux
 
 ```bash

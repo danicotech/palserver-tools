@@ -17,7 +17,7 @@ func InitializeApp() (*app.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	serverController := provideDocker(cfg)
+	serverController := provideServerController(cfg)
 	sch := scheduler.New(cfg, serverController)
 	apiServer := api.New(cfg, sch)
 	application := app.New(sch, apiServer)

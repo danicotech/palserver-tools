@@ -101,7 +101,9 @@ windows\start.bat
 ## 沒有 Docker?用 SteamCMD 版
 
 `windows\native\` 裡是 **SteamCMD 版** —— 不需要 Docker,用 SteamCMD 直接把伺服器裝在本機,
-但**只有遊戲伺服器**,沒有查詢網站與自動排程。詳見 [docs/SteamCMD版.md](../docs/SteamCMD版.md)。
+而且用 `windows\native\start-all.bat` 可以帶起**完整服務**(遊戲伺服器 + 排程開關服 + 存檔解析 + 查詢網站),
+網站在 <http://localhost:9000>。首次需要 Python / Go / Node(腳本會檢查並提示)。
+詳見 [docs/SteamCMD版.md](../docs/SteamCMD版.md)。
 
 ## 常見狀況
 

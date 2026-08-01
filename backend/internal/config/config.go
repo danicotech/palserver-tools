@@ -194,10 +194,29 @@ func Load(path string) (*Config, error) {
 	if err := json.Unmarshal(raw, &c); err != nil {
 		return nil, fmt.Errorf("解析 config.json 失敗: %w", err)
 	}
+	applyEnvOverrides(&c)
 	if err := c.validate(); err != nil {
 		return nil, err
 	}
 	return &c, nil
+}
+
+// applyEnvOverrides 讓「同一份 config.json」也能用在 SteamCMD 版：
+// Docker 版的預設值是 compose 內網名稱（palsave、palworld），本機直跑時
+// 用環境變數指到 127.0.0.1 即可，不必另外維護一份設定檔。
+func applyEnvOverrides(c *Config) {
+	if v := strings.TrimSpace(os.Getenv("PALSAVE_URL")); v != "" {
+		c.PalSave.URL = v
+	}
+	if v := strings.TrimSpace(os.Getenv("REST_HOST")); v != "" {
+		c.REST.Host = v
+	}
+	if v := strings.TrimSpace(os.Getenv("RCON_HOST")); v != "" {
+		c.RCON.Host = v
+	}
+	if v := strings.TrimSpace(os.Getenv("API_LISTEN")); v != "" {
+		c.API.Listen = v
+	}
 }
 
 func (c *Config) validate() error {

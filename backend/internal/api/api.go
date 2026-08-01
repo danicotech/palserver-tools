@@ -31,6 +31,7 @@ type Server struct {
 	roster      *roster.Store     // 玩家頭像共用名冊（公開）
 	palSaveURL  string            // 存檔解析 sidecar base URL；未啟用時為空
 	palSaveHTTP *http.Client
+	panelDir    string // SteamCMD 版：本程式同時提供查詢網站的靜態檔目錄；Docker 版為空
 	engine      *gin.Engine
 }
 
@@ -71,6 +72,12 @@ func New(cfg *config.Config, sch *scheduler.Scheduler) *Server {
 	engine.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
+
+	// SteamCMD 版（沒有 Docker、沒有 nginx）：由本程式直接提供查詢網站的靜態檔。
+	// PANEL_DIR 指向 Vite build 出來的 dist；沒設就完全不啟用（Docker 版走 nginx）。
+	if dir := strings.TrimSpace(os.Getenv("PANEL_DIR")); dir != "" {
+		s.registerPanel(engine, dir)
+	}
 
 	// Swagger / OpenAPI 文件（免 token）：/openapi 規格、/openapi/view 互動介面
 	s.registerDocs()
@@ -250,6 +257,12 @@ func (s *Server) auth(c *gin.Context) {
 	}
 	if got == "" {
 		got = c.Query("token")
+	}
+	// SteamCMD 版：網站由本程式同源提供，唯讀端點免 token（等同 Docker 版由
+	// nginx 代為注入 token 的效果）；控制類端點不在白名單內，仍需 token。
+	if got == "" && s.panelPublicRead(c) {
+		c.Next()
+		return
 	}
 	if subtle.ConstantTimeCompare([]byte(got), []byte(s.cfg.Token)) != 1 {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
