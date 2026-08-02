@@ -1,6 +1,7 @@
 // palscheduler API 用戶端（前後端分離）。
 // 連線資訊（後端 base URL + token）存在 localStorage，於連線畫面設定。
-// 開發時若未設定 base URL，會退回讀取 public/pals_fixture.json 當離線素材。
+// 開發時（且僅限開發時）若未設定 base URL，會退回讀取 public/pals_fixture.json 當離線素材。
+// 該檔不進版控（.gitignore），需要時自行從自己的伺服器匯出一份放進 public/。
 
 import type { PalsResponse, Player } from "./types";
 import { t } from "../i18n";
@@ -60,11 +61,15 @@ async function request<T>(path: string): Promise<T> {
     if (e instanceof ApiError) throw e; // 401 等直接往上丟
     // 網路錯誤（如 dev 模式沒有代理）→ 退回素材
   }
-  if (path.startsWith("/api/pals")) {
-    const res = await fetch("/pals_fixture.json");
-    if (res.ok) return (await res.json()) as T;
+  // 離線素材只在本機開發時使用（import.meta.env.DEV）。
+  // 正式建置絕不讀它 —— 否則後端還沒起來時，畫面會顯示素材裡的玩家，
+  // 讓人以為是自己伺服器的資料（而且那份素材若含真實玩家，等於外流）。
+  const isDev = (import.meta as { env?: { DEV?: boolean } }).env?.DEV === true;
+  if (isDev && path.startsWith("/api/pals")) {
+    const res = await fetch("/pals_fixture.json").catch(() => null);
+    if (res?.ok) return (await res.json()) as T;
   }
-  throw new ApiError(0, t("無法取得資料（後端未連線且無離線素材）"));
+  throw new ApiError(0, t("無法取得資料（後端未連線）"));
 }
 
 /** 探測後端是否可連線（/healthz 免 token）。 */

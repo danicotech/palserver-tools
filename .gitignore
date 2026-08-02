@@ -44,3 +44,6 @@ windows/native/server/
 windows/native/steamcmd/
 linux/native/server/
 linux/native/steamcmd/
+
+# 離線開發素材：從真實伺服器匯出的玩家/帕魯資料，絕對不可進版控
+frontend/packages/web/public/pals_fixture.json
