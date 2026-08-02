@@ -7,7 +7,17 @@ import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { FiMaximize, FiMinimize } from "react-icons/fi";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
-import { MAP_IMAGE, IMAGE_BOUNDS, TREE_MAP_IMAGE, TREE_IMAGE_BOUNDS, escapeHtml } from "../mapLayers";
+import {
+  MAP_IMAGE,
+  IMAGE_BOUNDS,
+  TREE_MAP_IMAGE,
+  TREE_IMAGE_BOUNDS,
+  MAP_TILES,
+  MAP_TILES_MAXNATIVE,
+  TILE_CRS,
+  hasMapTiles,
+  escapeHtml,
+} from "../mapLayers";
 import { usePlayerAvatar, playerInitial } from "./playerAvatar";
 import type { Player, Guild } from "./types";
 import type { Dataset } from "./data";
@@ -116,11 +126,30 @@ export function PlayerMap({
     else if (webkit) webkit.call(el);
   };
 
+  // 有沒有部署高解析圖磚。CRS 必須在建立地圖時就決定,所以要先探測完才能建圖
+  // (同源 HEAD,很快;沒有圖磚就退回原本的單張底圖,畫面照常能用)。
+  const [tiles, setTiles] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void hasMapTiles().then((ok) => alive && setTiles(ok));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || mapRef.current) return;
-    const map = L.map(el, { crs: L.CRS.Simple, attributionControl: false, zoomSnap: 0.25, maxZoom: 4 });
-    map.setView(IMAGE_BOUNDS.getCenter(), -2);
+    if (!el || mapRef.current || tiles === null) return;
+    const map = L.map(el, {
+      crs: tiles ? TILE_CRS : L.CRS.Simple,
+      attributionControl: false,
+      // 圖磚模式用連續縮放:fitBounds 才會剛好貼合容器,不會被量化後留一圈空白。
+      // 對畫質沒有損失 —— 非整數層級時 Leaflet 取較深的圖磚往下縮,縮小是銳利的。
+      zoomSnap: 0,
+      // 圖磚模式下 zoom 就是圖磚層級,允許超出原生兩級(拉伸 z6,仍比單張底圖清楚)
+      maxZoom: tiles ? MAP_TILES_MAXNATIVE + 2 : 4,
+    });
+    map.setView(IMAGE_BOUNDS.getCenter(), tiles ? 2 : -2);
     el.style.background = "transparent";
     markersRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
@@ -144,7 +173,7 @@ export function PlayerMap({
       mapRef.current = null;
       markersRef.current = null;
     };
-  }, []);
+  }, [tiles]);
 
   // 底圖切換(主世界/世界樹)
   useEffect(() => {
@@ -152,7 +181,22 @@ export function PlayerMap({
     if (!map) return;
     const bounds = world === "tree" ? TREE_IMAGE_BOUNDS : IMAGE_BOUNDS;
     boundsRef.current = bounds;
-    const overlay = L.imageOverlay(world === "tree" ? TREE_MAP_IMAGE : MAP_IMAGE, bounds).addTo(map);
+    // 主世界:有圖磚就用金字塔(放大不糊),沒有就退回單張底圖。
+    // 世界樹目前只有單張圖,維持 imageOverlay。
+    const overlay =
+      world === "main" && tiles
+        ? L.tileLayer(MAP_TILES, {
+            tileSize: 256,
+            minZoom: 0,
+            // 超過原生層級就拉伸最深那層,不會變成空白圖磚
+            maxNativeZoom: MAP_TILES_MAXNATIVE,
+            maxZoom: MAP_TILES_MAXNATIVE + 2,
+            bounds,
+            noWrap: true,
+            keepBuffer: 4,
+            className: "pmap-tile",
+          }).addTo(map)
+        : L.imageOverlay(world === "tree" ? TREE_MAP_IMAGE : MAP_IMAGE, bounds).addTo(map);
     overlay.bringToBack();
     map.setMaxBounds(bounds.pad(0.3));
     if (map.getSize().y > 0) {
@@ -162,7 +206,7 @@ export function PlayerMap({
     return () => {
       map.removeLayer(overlay);
     };
-  }, [world]);
+  }, [world, tiles]);
 
   // 換世界時整批重來:兩個世界的座標系不同,沿用舊 marker 會滑到錯的位置
   useEffect(() => {

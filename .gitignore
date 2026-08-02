@@ -47,3 +47,7 @@ linux/native/steamcmd/
 
 # 離線開發素材：從真實伺服器匯出的玩家/帕魯資料，絕對不可進版控
 frontend/packages/web/public/pals_fixture.json
+
+# 高解析地圖圖磚(5461 檔 / 約 108 MB)。不進版控:
+# 沒有它會自動退回單張 palworld-full-map.jpg,要啟用就跑 tools/fetch-map-tiles.mjs。
+frontend/packages/web/public/map-tiles/

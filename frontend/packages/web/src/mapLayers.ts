@@ -15,6 +15,52 @@ export const MAP_IMAGE = "/palworld-full-map.jpg";
 /** 世界 X∈[-1099400,349400]、Y∈[-724400,724400] 經 savToMap 換算後的地圖座標邊界。 */
 export const IMAGE_BOUNDS = L.latLngBounds([-2125.3, -1922.44], [1031.13, 1233.99]);
 
+// ---- 高解析底圖(圖磚金字塔)----
+//
+// MAP_IMAGE 是單張 4096×4096 的 JPEG:整張放進畫面很清楚,但放大到底就糊掉
+// (最高縮放時等於把 4096 拉伸十幾倍)。圖磚版是 z0-z6 的金字塔,
+// z6 為 64×64 張 256px = 等效 16384×16384,放大四倍仍然銳利。
+//
+// 兩者框取範圍完全相同(逐像素比對過,內容外框一致、平均像素差 0.3/255),
+// 所以共用同一組 IMAGE_BOUNDS,座標與玩家標記都不必改。
+//
+// 圖磚檔數多(5461 張)、體積大(約 108 MB),不進版控 ——
+// 沒有圖磚的部署會自動退回單張 MAP_IMAGE(見 PlayerMap 的偵測),
+// 要啟用就跑 tools/fetch-map-tiles.mjs 把它抓下來。
+export const MAP_TILES = "/map-tiles/{z}/{x}/{y}.png";
+/** 圖磚金字塔的最深層級(再往上放大就是拉伸 z6 的內容)。 */
+export const MAP_TILES_MAXNATIVE = 6;
+/** 探測用:有這張就代表圖磚已就緒。 */
+export const MAP_TILES_PROBE = "/map-tiles/0/0/0.png";
+
+/**
+ * 讓「整張地圖」對應到圖磚金字塔的 CRS。
+ *
+ * 預設的 CRS.Simple 是 scale(z)=2^z、pixel=(lng,-lat),圖磚要的是
+ * 「z 層有 2^z × 2^z 張 256px 圖磚鋪滿整張地圖」。這裡把地圖邊界線性映射到
+ * [0, 256·2^z],Leaflet 算出來的圖磚座標才會剛好是 /{z}/{x}/{y}。
+ */
+const SPAN = IMAGE_BOUNDS.getEast() - IMAGE_BOUNDS.getWest(); // 地圖邊長(正方形)
+export const TILE_CRS = L.extend({}, L.CRS.Simple, {
+  transformation: new L.Transformation(
+    1 / SPAN,
+    -IMAGE_BOUNDS.getWest() / SPAN,
+    -1 / SPAN,
+    IMAGE_BOUNDS.getNorth() / SPAN,
+  ),
+  scale: (zoom: number) => 256 * Math.pow(2, zoom),
+  zoom: (scale: number) => Math.log(scale / 256) / Math.LN2,
+});
+
+/** 圖磚是否已部署(結果快取,只探一次)。 */
+let tilesReady: Promise<boolean> | null = null;
+export function hasMapTiles(): Promise<boolean> {
+  tilesReady ??= fetch(MAP_TILES_PROBE, { method: "HEAD" })
+    .then((r) => r.ok)
+    .catch(() => false);
+  return tilesReady;
+}
+
 export const TREE_MAP_IMAGE = "/worldtree-map.webp";
 export const TREE_IMAGE_BOUNDS = L.latLngBounds([-1000, -1000], [1000, 1000]);
 
