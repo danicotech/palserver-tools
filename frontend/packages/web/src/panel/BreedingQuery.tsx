@@ -447,9 +447,13 @@ function PerspSelect({
 // ---------------------------------------------------------------------------
 
 /** 金字塔一層兩側各縮多少 %(依總層數調整;頂端保留 ≥70% 寬,名稱不被擠掉)。 */
-function pyramidShrink(depth: number): number {
-  return Math.min(5, 15 / Math.max(1, depth));
-}
+/** 每一列都用滿寬。
+ *
+ *  以前做成金字塔造型(每深一代往內縮一點),層次感是有,但代價是
+ *  越底層的列越窄 —— 偏偏詞條最多、資訊量最大的就是那幾列,
+ *  結果被動詞條被擠到換行、帕魯名也容易被壓縮。造型不值得用可讀性換。
+ *  代數的層次改由背景深淺與「第 N 代」徽章表達,那兩個本來就有。 */
+const FULL_ROW = { width: "100%", marginInline: "auto" as const };
 
 /** 路徑列裡的一格帕魯(A 與 B 共用,資訊完全對稱:頭像/名稱/屬性/擁有)。 */
 function PalCell({
@@ -541,7 +545,7 @@ function PalCell({
           </span>
           {nameAfter}
         </span>
-        {sub && <span className="flex flex-wrap items-center gap-0.5 text-[10px] leading-tight">{sub}</span>}
+        {sub && <span className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[10px] leading-tight">{sub}</span>}
       </span>
       {hint}
       {!compact && (
@@ -1130,8 +1134,7 @@ function TraitSolutionView({
   };
   visit(root);
   const d = steps.length;
-  const shrink = pyramidShrink(d);
-  const rowWidth = (gen: number) => ({ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" as const });
+  const rowWidth = (_gen: number) => FULL_ROW;
 
   /** 套用使用者改選後的節點(只換 source 個體,物種/詞條貢獻不變)。 */
   const effective = (n: BreedingNode, slot: string): BreedingNode => {
@@ -1457,8 +1460,7 @@ function HybridPathView({
     setChosenPal({});
   }, [path]);
   const d = path.steps.length;
-  const shrink = pyramidShrink(d);
-  const rowWidth = (gen: number) => ({ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" as const });
+  const rowWidth = (_gen: number) => FULL_ROW;
   const totalTime = humanDuration(eggsToSeconds(path.expectedEggs, cake, farm, boosted));
 
   /** 詞條交給解算器當硬條件:每一步都已標明「誰必須帶什麼進來」(bitmask),
@@ -1527,7 +1529,7 @@ function HybridPathView({
           </span>
         )}
         {traitNames(mask).map((x) => (
-          <span key={x} className="shrink-0 rounded bg-pal/12 px-1 py-px font-bold text-pal">
+          <span key={x} className="shrink-0 rounded bg-pal/12 px-1 py-px leading-tight font-bold text-pal">
             {x}
           </span>
         ))}
@@ -2784,7 +2786,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
       </div>
 
       {/* 桌機:主內容在左、選帕魯網格固定在「右」側欄;手機:網格垂直排在內容後面 */}
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(300px,26rem)] lg:items-start">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,21rem)] lg:items-start">
       <div className="min-w-0 space-y-3 lg:order-1">
 
       {/* ---------------- 配種計算(正查):可新增多組父母 ---------------- */}
@@ -3520,7 +3522,6 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
               {(() => {
                 const route = activeRoute!;
                 const d = chain.distance;
-                const shrink = pyramidShrink(d);
                 const has = (id: string) => ownedSet?.has(id.toLowerCase()) ?? false;
                 /** 這一步排序後的夥伴(擁有優先)與目前選中的 B。 */
                 const partnersOfStep = (g: number) =>
@@ -3544,7 +3545,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                       .map(({ sp, gen }) => (
                         <div key={gen}>
                           {/* 一列卡片 = A + B(A 可換該代帕魯、B 可換夥伴);頂端目標列只有結果 */}
-                          <div style={{ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" }}>
+                          <div style={FULL_ROW}>
                             <PyramidTier
                               id={sp}
                               gen={gen}
@@ -3620,7 +3621,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
 
                           {/* 誰有這隻:最底列的 A 與每一列的 B 才需要自己準備 */}
                           {gen < d && (() => {
-                            const rowStyle = { width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" };
+                            const rowStyle = FULL_ROW;
                             const slots = [
                               ...(gen === 0 ? [{ key: `${gen}:a`, id: sp }] : []),
                               { key: `${gen}:b`, id: chosenOf(gen).partner },
@@ -3652,7 +3653,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                           {gen < d && openSteps.has(gen) && (
                             <div
                               className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-pal/50"
-                              style={{ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" }}
+                              style={FULL_ROW}
                             >
                               {partnersOfStep(gen).length > 8 && (
                                 <input
@@ -3710,7 +3711,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                           {openTier === gen && (
                             <div
                               className="mt-1.5 rounded-xl bg-card-soft/80 p-2 ring-1 ring-sun/50"
-                              style={{ width: `calc(100% - ${2 * gen * shrink}%)`, marginInline: "auto" }}
+                              style={FULL_ROW}
                             >
                               {gen === 0 && (
                                 <p className="mb-1.5 px-1 text-xs font-semibold text-ink-muted">
