@@ -75,6 +75,8 @@ await Promise.all(
 );
 
 console.log(`\n完成:新下載 ${done}、跳過 ${skipped}、失敗 ${failed}、共 ${(bytes / 1048576).toFixed(1)} MB`);
+console.log("\n建議接著跑:python tools/optimize-map-tiles.py");
+console.log("  轉成 WebP 後只剩約 1/7(108 MB → 16 MB),載入快很多、畫質看不出差別。");
 if (failed) {
   console.log("有失敗的圖磚,重跑本腳本會只補這些(已下載的會跳過)。");
   process.exitCode = 1;

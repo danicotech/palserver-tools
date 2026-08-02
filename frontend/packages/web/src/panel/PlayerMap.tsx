@@ -12,10 +12,10 @@ import {
   IMAGE_BOUNDS,
   TREE_MAP_IMAGE,
   TREE_IMAGE_BOUNDS,
-  MAP_TILES,
+  mapTilesUrl,
   MAP_TILES_MAXNATIVE,
   TILE_CRS,
-  hasMapTiles,
+  detectMapTiles,
   escapeHtml,
 } from "../mapLayers";
 import { usePlayerAvatar, playerInitial } from "./playerAvatar";
@@ -128,10 +128,10 @@ export function PlayerMap({
 
   // 有沒有部署高解析圖磚。CRS 必須在建立地圖時就決定,所以要先探測完才能建圖
   // (同源 HEAD,很快;沒有圖磚就退回原本的單張底圖,畫面照常能用)。
-  const [tiles, setTiles] = useState<boolean | null>(null);
+  const [tiles, setTiles] = useState<"webp" | "png" | null | undefined>(undefined);
   useEffect(() => {
     let alive = true;
-    void hasMapTiles().then((ok) => alive && setTiles(ok));
+    void detectMapTiles().then((ext) => alive && setTiles(ext));
     return () => {
       alive = false;
     };
@@ -139,7 +139,7 @@ export function PlayerMap({
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || mapRef.current || tiles === null) return;
+    if (!el || mapRef.current || tiles === undefined) return;
     const map = L.map(el, {
       crs: tiles ? TILE_CRS : L.CRS.Simple,
       attributionControl: false,
@@ -150,7 +150,9 @@ export function PlayerMap({
       maxZoom: tiles ? MAP_TILES_MAXNATIVE + 2 : 4,
     });
     map.setView(IMAGE_BOUNDS.getCenter(), tiles ? 2 : -2);
-    el.style.background = "transparent";
+    // 地圖四周的底色。用接近海面的深藍,底圖沒鋪滿容器時看起來是連續的海,
+    // 而不是白色/卡片色的一塊空白。
+    el.style.background = "#0d161e";
     markersRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
     // 容器高度由版面決定,首輪可能是 0:用 ResizeObserver 校正 fit 與最小縮放。
@@ -185,7 +187,7 @@ export function PlayerMap({
     // 世界樹目前只有單張圖,維持 imageOverlay。
     const overlay =
       world === "main" && tiles
-        ? L.tileLayer(MAP_TILES, {
+        ? L.tileLayer(mapTilesUrl(tiles), {
             tileSize: 256,
             minZoom: 0,
             // 超過原生層級就拉伸最深那層,不會變成空白圖磚

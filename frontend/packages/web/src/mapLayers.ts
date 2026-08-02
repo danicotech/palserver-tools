@@ -27,11 +27,9 @@ export const IMAGE_BOUNDS = L.latLngBounds([-2125.3, -1922.44], [1031.13, 1233.9
 // 圖磚檔數多(5461 張)、體積大(約 108 MB),不進版控 ——
 // 沒有圖磚的部署會自動退回單張 MAP_IMAGE(見 PlayerMap 的偵測),
 // 要啟用就跑 tools/fetch-map-tiles.mjs 把它抓下來。
-export const MAP_TILES = "/map-tiles/{z}/{x}/{y}.png";
+export const mapTilesUrl = (ext: "webp" | "png"): string => `/map-tiles/{z}/{x}/{y}.${ext}`;
 /** 圖磚金字塔的最深層級(再往上放大就是拉伸 z6 的內容)。 */
 export const MAP_TILES_MAXNATIVE = 6;
-/** 探測用:有這張就代表圖磚已就緒。 */
-export const MAP_TILES_PROBE = "/map-tiles/0/0/0.png";
 
 /**
  * 讓「整張地圖」對應到圖磚金字塔的 CRS。
@@ -52,12 +50,23 @@ export const TILE_CRS = L.extend({}, L.CRS.Simple, {
   zoom: (scale: number) => Math.log(scale / 256) / Math.LN2,
 });
 
-/** 圖磚是否已部署(結果快取,只探一次)。 */
-let tilesReady: Promise<boolean> | null = null;
-export function hasMapTiles(): Promise<boolean> {
-  tilesReady ??= fetch(MAP_TILES_PROBE, { method: "HEAD" })
-    .then((r) => r.ok)
-    .catch(() => false);
+/**
+ * 探測圖磚以哪種格式部署。webp 優先(體積約為 png 的 1/7,見 tools/optimize-map-tiles.py),
+ * 沒有就用 png,兩種都沒有回 null —— 呼叫端退回單張底圖。結果快取,只探一次。
+ */
+let tilesReady: Promise<"webp" | "png" | null> | null = null;
+export function detectMapTiles(): Promise<"webp" | "png" | null> {
+  tilesReady ??= (async () => {
+    for (const ext of ["webp", "png"] as const) {
+      try {
+        const r = await fetch(`/map-tiles/0/0/0.${ext}`, { method: "HEAD" });
+        if (r.ok) return ext;
+      } catch {
+        /* 連不到就當作沒有,往下試 */
+      }
+    }
+    return null;
+  })();
   return tilesReady;
 }
 
