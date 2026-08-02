@@ -2505,5 +2505,7 @@
   "被動詞條": "Passive Skills",
   "全螢幕檢視地圖": "View map fullscreen",
   "離開全螢幕": "Exit fullscreen",
-  "查看誰有這隻 {name}": "See who owns {name}"
+  "查看誰有這隻 {name}": "See who owns {name}",
+  "自動挑的(點 👥 可以換人)": "Auto-picked (tap the people icon to change)",
+  "你指定的": "Your choice"
 }

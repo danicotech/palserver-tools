@@ -58,6 +58,7 @@ import {
 import { MutationSettings } from "./MutationSettings";
 import { loadPaldex, palInfo } from "./paldex";
 import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
+import { ivSum } from "./data";
 import type { Dataset } from "./data";
 import type { Pal, Player } from "./types";
 import { PalTile } from "./PalTile";
@@ -2091,12 +2092,32 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
    *  沒有這份狀態時,點了持有者面板裡的帕魯卡片等於什麼都沒發生 ——
    *  OwnerPalsModal 的 onChoose 是選用的,沒傳就 no-op(視窗也不會關)。 */
   const [pathChosen, setPathChosen] = useState<Record<string, OwnedPalRow>>({});
-  /** 掛在格子底下的小字:目前用的是誰的那一隻。 */
-  const chosenSub = (key: string): ReactNode => {
-    const row = pathChosen[key];
-    if (!row) return undefined;
+  /** 這一格實際要用的那一隻:自己指定過就用指定的,否則自動挑一隻。
+   *  自動挑的標準是「個體值總和 → 等級」,也就是同物種裡最堪用的那隻;
+   *  有人有就先幫忙填上,使用者不必為了看一眼是誰的而多點兩層。 */
+  const rowAt = (key: string, species: string): { row: OwnedPalRow; auto: boolean } | undefined => {
+    const picked = pathChosen[key];
+    if (picked) return { row: picked, auto: false };
+    const rows = palsBySpecies?.get(species.toLowerCase()) ?? [];
+    if (!rows.length) return undefined;
+    const best = [...rows].sort(
+      (a, b) => ivSum(b.pal) - ivSum(a.pal) || b.pal.level - a.pal.level,
+    )[0];
+    return { row: best, auto: true };
+  };
+  /** 掛在格子底下的小字:目前用的是誰的那一隻。
+   *  自動挑的用灰階、自己選的用綠色 —— 讓人分得出「系統幫你填的」和「你決定的」。 */
+  const chosenSub = (key: string, species: string): ReactNode => {
+    const hit = rowAt(key, species);
+    if (!hit) return undefined;
+    const { row, auto } = hit;
     return (
-      <span className="flex shrink-0 items-center gap-0.5 rounded bg-grass/15 px-1 py-px font-semibold text-grass">
+      <span
+        className={`flex shrink-0 items-center gap-0.5 rounded px-1 py-px font-semibold ${
+          auto ? "bg-card-soft text-ink-muted" : "bg-grass/15 text-grass"
+        }`}
+        title={auto ? t("自動挑的(點 👥 可以換人)") : t("你指定的")}
+      >
         <FiUser size={10} aria-hidden="true" />
         {row.owner.name}
         {row.pal.nickname ? `「${row.pal.nickname}」` : ""}
@@ -3515,7 +3536,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                 gen < d - 1 && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
                               }
                               active={openTier === gen}
-                              sub={gen === 0 ? chosenSub(`${gen}:a`) : undefined}
+                              sub={gen === 0 ? chosenSub(`${gen}:a`, sp) : undefined}
                               /* 只有初代那一列的 A 要自己準備,其餘代都是配出來的 */
                               nameAfter={
                                 gen === 0 ? (
@@ -3542,7 +3563,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                           meta={metaOf(chosen.partner)}
                                           owned={ownedSet ? has(chosen.partner) : undefined}
                                           active={openSteps.has(gen)}
-                                          sub={chosenSub(`${gen}:b`)}
+                                          sub={chosenSub(`${gen}:b`, chosen.partner)}
                                           nameAfter={
                                             <OwnerToggle
                                               id={chosen.partner}
@@ -3593,7 +3614,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                     enabled={palsBySpecies !== null}
                                     scopeOwner={scopeOwnerName}
                                     details={palsBySpecies?.get(open.id.toLowerCase()) ?? []}
-                                    chosen={pathChosen[open.key]}
+                                    chosen={rowAt(open.key, open.id)?.row}
                                     onChoose={(row) => setPathChosen((prev) => ({ ...prev, [open.key]: row }))}
                                     style={rowStyle}
                                     onClose={() => setPathOwner(null)}
