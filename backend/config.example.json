@@ -18,7 +18,8 @@
   "palsave": {
     "_comment": "存檔解析 sidecar（tools/palsave）。提供 /api/pals 玩家帕魯資料查詢。url 省略預設 compose 內網位址。",
     "enabled": true,
-    "url": "http://palsave:8213"
+    "url": "http://palsave:8213",
+    "refreshMinutes": 10
   },
   "runtime": {
     "killGraceSeconds": 30,

@@ -50,6 +50,22 @@ func (r RESTConfig) IsEnabled() bool { return r.Enabled == nil || *r.Enabled }
 type PalSaveConfig struct {
 	Enabled *bool  `json:"enabled,omitempty"` // 省略視為 true
 	URL     string `json:"url,omitempty"`     // 省略預設 http://palsave:8213（compose 內網）
+	// RefreshMinutes 是「背景定時預熱存檔快取」的間隔（分鐘）。
+	// 解析大存檔要十幾秒，先在背景解好，訪客開網站就不必等。
+	// 省略＝10 分鐘；設 0 關閉（改回每次請求都即時代理）。
+	RefreshMinutes *int `json:"refreshMinutes,omitempty"`
+}
+
+// RefreshInterval 回報預熱間隔；0 代表停用。
+func (p PalSaveConfig) RefreshInterval() time.Duration {
+	m := 10
+	if p.RefreshMinutes != nil {
+		m = *p.RefreshMinutes
+	}
+	if m <= 0 {
+		return 0
+	}
+	return time.Duration(m) * time.Minute
 }
 
 // IsEnabled 回報存檔解析整合是否啟用（未設定時預設啟用）。

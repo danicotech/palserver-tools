@@ -14,6 +14,7 @@ export PANEL_DIR="$ROOT/frontend/packages/web/dist"
 export CONFIG_PATH="$ROOT/backend/config.json"
 export PRESENCE_PATH="$ROOT/backend/data/presence.json"
 export ROSTER_PATH="$ROOT/backend/data/roster.json"
+export PALS_CACHE_PATH="$ROOT/backend/data/pals-cache.json"
 # Docker 版的預設位址是 compose 內網名稱,本機直跑要指回 127.0.0.1
 export PALSAVE_URL="http://127.0.0.1:8213"
 export REST_HOST="127.0.0.1"

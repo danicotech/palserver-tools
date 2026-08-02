@@ -108,6 +108,7 @@ services:
       TZ: "${TZ:-Asia/Taipei}" # 讓排程時間對齊台灣時區
       CONFIG_PATH: "/app/config.json"
       PRESENCE_PATH: "/app/data/presence.json" # 玩家上線時數統計的存放位置
+      PALS_CACHE_PATH: "/app/data/pals-cache.json" # 存檔解析結果的預熱快取(重啟後立即可用)
       PRESENCE_INTERVAL_SECONDS: "60" # 每 60 秒取樣一次在線名單
     ports:
       - "9000:9000" # 外部控制 API（記得改 token、必要時設防火牆）

@@ -147,6 +147,15 @@ RCON/REST 都拿不到帕魯資料；帕魯存在 `Level.sav` 裡，需解析存
 - `palsave` 服務唯讀掛入 `palworld-data`，自動依 `DedicatedServerName` 找目前世界。
 - 未啟用（`palsave.enabled=false`）回 `503`，sidecar 呼叫失敗回 `502`。
 
+**背景定時預熱**：解析一份大存檔要十幾秒，若等到有人打開網站才去解，第一位訪客就得乾等。
+scheduler 內建排程，每 `palsave.refreshMinutes` 分鐘（預設 `10`，設 `0` 關閉）主動抓一份完整結果留著，
+不帶查詢參數的 `GET /api/pals` 直接回這份快取，回應標頭附上 `X-Pals-Cached-At`（該份資料的產生時間）。
+
+- 快取同時落地到 `PALS_CACHE_PATH`（預設 `/app/data/pals-cache.json`），重啟後立刻有資料可回。
+- 抓取失敗只記 log 並沿用上一份，不會把畫面清空。
+- 該檔含全服玩家資料，只放在**伺服器端**的 `backend/data/`（已 gitignore）；
+  **絕對不要**放進 `frontend/packages/web/public/` —— 那個目錄會被原樣複製進 `dist/`，等於公開成可直接下載的靜態檔。
+
 ```bash
 curl -s "$BASE/api/pals?q=超濃狗" -H "X-Auth-Token: $TOKEN"
 ```

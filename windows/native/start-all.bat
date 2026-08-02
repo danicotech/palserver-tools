@@ -18,6 +18,7 @@ set "CONFIG_PATH=%CD%\backend\config.json"
 set "SAVE_ROOT=%SERVER_DIR%"
 set "PRESENCE_PATH=%CD%\backend\data\presence.json"
 set "ROSTER_PATH=%CD%\backend\data\roster.json"
+set "PALS_CACHE_PATH=%CD%\backend\data\pals-cache.json"
 rem Docker 版的預設位址是 compose 內網名稱,本機直跑要指回 127.0.0.1
 set "PALSAVE_URL=http://127.0.0.1:8213"
 set "REST_HOST=127.0.0.1"

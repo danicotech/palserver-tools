@@ -31,7 +31,8 @@ type Server struct {
 	roster      *roster.Store     // 玩家頭像共用名冊（公開）
 	palSaveURL  string            // 存檔解析 sidecar base URL；未啟用時為空
 	palSaveHTTP *http.Client
-	panelDir    string // SteamCMD 版：本程式同時提供查詢網站的靜態檔目錄；Docker 版為空
+	pals        *palsCache // 存檔資料的背景預熱快取；未啟用時為 nil
+	panelDir    string     // SteamCMD 版：本程式同時提供查詢網站的靜態檔目錄；Docker 版為空
 	engine      *gin.Engine
 }
 
@@ -61,6 +62,15 @@ func New(cfg *config.Config, sch *scheduler.Scheduler) *Server {
 	if cfg.PalSave.IsEnabled() {
 		s.palSaveURL = strings.TrimRight(cfg.PalSave.URL, "/")
 		s.palSaveHTTP = &http.Client{Timeout: 60 * time.Second} // 解析大存檔可能較久
+		// 背景定時預熱：解析很慢，先解好放著，訪客就不用等。
+		// 快取只落地在伺服器端（backend/data/），不會進 frontend 的 public/。
+		if d := cfg.PalSave.RefreshInterval(); d > 0 {
+			file := os.Getenv("PALS_CACHE_PATH")
+			if file == "" {
+				file = "/app/data/pals-cache.json"
+			}
+			s.pals = newPalsCache(s.palSaveURL, file, d)
+		}
 	}
 	// 玩家頭像共用名冊（無外部相依，一律啟用）
 	rosterPath := os.Getenv("ROSTER_PATH")
@@ -171,7 +181,18 @@ func (s *Server) handleSetRoster(c *gin.Context) {
 }
 
 // handlePals 回傳玩家的完整帕魯資料。?q=<名稱或存檔UID> 只查符合的玩家。
-func (s *Server) handlePals(c *gin.Context) { s.proxyPalSave(c, "/pals") }
+// 沒帶查詢條件時優先回背景預熱好的快取（訪客不必等十幾秒的解析）；
+// 帶了條件、或快取還沒建立，就走即時代理。
+func (s *Server) handlePals(c *gin.Context) {
+	if s.pals != nil && c.Query("uuid") == "" && c.Query("q") == "" {
+		if body, at := s.pals.Get(); len(body) > 0 {
+			c.Header("X-Pals-Cached-At", at.UTC().Format(time.RFC3339))
+			c.Data(http.StatusOK, "application/json; charset=utf-8", body)
+			return
+		}
+	}
+	s.proxyPalSave(c, "/pals")
+}
 
 // handlePalsPlayers 回傳玩家清單摘要（含 UID，不含每隻帕魯），方便先取得 UID。
 func (s *Server) handlePalsPlayers(c *gin.Context) { s.proxyPalSave(c, "/players") }
@@ -212,6 +233,9 @@ func (s *Server) Run(stop <-chan struct{}) error {
 	}
 	if s.presence != nil {
 		go s.presence.Run(stop) // 上線追蹤輪詢
+	}
+	if s.pals != nil {
+		go s.pals.Run(stop) // 存檔資料背景預熱
 	}
 	srv := &http.Server{Addr: s.cfg.Listen, Handler: s.engine}
 	go func() {
