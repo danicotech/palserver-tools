@@ -61,7 +61,7 @@ import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
 import type { Pal, Player } from "./types";
 import { PalTile } from "./PalTile";
-import { FiUsers, FiX } from "react-icons/fi";
+import { FiUser, FiUsers, FiX } from "react-icons/fi";
 import { t, useI18n } from "../i18n";
 
 /** 一次顯示的列數;反查最多會有 1280 列,分批渲染避免一次塞爆 DOM。 */
@@ -710,6 +710,9 @@ function OwnerPanel({
             ((row) => {
               onChoose(row);
               setWho(null);
+              // 選完就把整個抽屜收起來:目的已經達成(那一格已標上是誰的),
+              // 還開著只是擋住下面的梯度,使用者還得多按一次收合。
+              onClose();
             })
           }
           onClose={() => setWho(null)}
@@ -910,6 +913,7 @@ function PyramidTier({
   resultOwned,
   onHover,
   nameAfter,
+  sub,
 }: {
   id: string;
   gen: number;
@@ -932,6 +936,8 @@ function PyramidTier({
   onHover?: (rect: DOMRect | null) => void;
   /** 接在 A 格名稱右邊的東西(例:👥 看誰有這隻) */
   nameAfter?: ReactNode;
+  /** A 格名稱下方的小字(例:目前用誰的那一隻) */
+  sub?: ReactNode;
 }): JSX.Element {
   const mix = 4 + Math.round((depth === 0 ? 1 : gen / depth) * 12);
   const badge = role === "target" ? `🎯 ${t("目標")}` : role === "start" ? `🏁 ${t("初代")}` : t("第 {n} 代", { n: gen });
@@ -953,6 +959,7 @@ function PyramidTier({
         title={onClick ? t("點擊替換這一代") : undefined}
         big={role === "target"}
         nameAfter={nameAfter}
+        sub={sub}
       />
       {/* B:夥伴(同一張卡片內,獨立點擊;顯示資訊與 A 相同) */}
       {partner && (
@@ -1636,7 +1643,6 @@ function HybridPathView({
                     <span className="shrink-0 text-[11px] font-semibold text-ink-muted">▾{startPool.size}</span>
                   ) : undefined
                 }
-                compact
               />
               <span className="shrink-0 text-lg font-bold text-ink-muted sm:text-xl">+</span>
               {/* B(夥伴);直系步驟沒指定夥伴時顯示提示 */}
@@ -1657,7 +1663,6 @@ function HybridPathView({
                   title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
                   onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
                   hint={opts.length > 1 ? <span className="shrink-0 text-[11px] font-semibold text-ink-muted">▾{opts.length}</span> : undefined}
-                  compact
                 />
               ) : (
                 <span className="min-w-0 flex-1 basis-0 truncate rounded-xl bg-card-soft px-2 py-1.5 text-[13px] text-ink-muted ring-1 ring-line">
@@ -2082,6 +2087,22 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
 
   /** 純直系梯度上哪一格正在看持有者(key = `${代}:${a|b}`) */
   const [pathOwner, setPathOwner] = useState<string | null>(null);
+  /** 這一格指定用誰的那一隻(key = `${代}:${a|b}`)。
+   *  沒有這份狀態時,點了持有者面板裡的帕魯卡片等於什麼都沒發生 ——
+   *  OwnerPalsModal 的 onChoose 是選用的,沒傳就 no-op(視窗也不會關)。 */
+  const [pathChosen, setPathChosen] = useState<Record<string, OwnedPalRow>>({});
+  /** 掛在格子底下的小字:目前用的是誰的那一隻。 */
+  const chosenSub = (key: string): ReactNode => {
+    const row = pathChosen[key];
+    if (!row) return undefined;
+    return (
+      <span className="flex shrink-0 items-center gap-0.5 rounded bg-grass/15 px-1 py-px font-semibold text-grass">
+        <FiUser size={10} aria-hidden="true" />
+        {row.owner.name}
+        {row.pal.nickname ? `「${row.pal.nickname}」` : ""}
+      </span>
+    );
+  };
 
   /** 視角鎖定某位玩家時的名字(全服/全物種為 undefined)—— 用來讓「沒有人有」講對話。 */
   const scopeOwnerName = useMemo(
@@ -3494,6 +3515,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                 gen < d - 1 && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
                               }
                               active={openTier === gen}
+                              sub={gen === 0 ? chosenSub(`${gen}:a`) : undefined}
                               /* 只有初代那一列的 A 要自己準備,其餘代都是配出來的 */
                               nameAfter={
                                 gen === 0 ? (
@@ -3520,6 +3542,7 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                           meta={metaOf(chosen.partner)}
                                           owned={ownedSet ? has(chosen.partner) : undefined}
                                           active={openSteps.has(gen)}
+                                          sub={chosenSub(`${gen}:b`)}
                                           nameAfter={
                                             <OwnerToggle
                                               id={chosen.partner}
@@ -3570,6 +3593,8 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                     enabled={palsBySpecies !== null}
                                     scopeOwner={scopeOwnerName}
                                     details={palsBySpecies?.get(open.id.toLowerCase()) ?? []}
+                                    chosen={pathChosen[open.key]}
+                                    onChoose={(row) => setPathChosen((prev) => ({ ...prev, [open.key]: row }))}
                                     style={rowStyle}
                                     onClose={() => setPathOwner(null)}
                                   />
