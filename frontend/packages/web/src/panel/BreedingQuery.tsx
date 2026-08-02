@@ -61,6 +61,7 @@ import { BreedingTreeView, ElementDot, EL_COLORS } from "./BreedingTreeView";
 import type { Dataset } from "./data";
 import type { Pal, Player } from "./types";
 import { PalTile } from "./PalTile";
+import { FiUsers, FiX } from "react-icons/fi";
 import { t, useI18n } from "../i18n";
 
 /** 一次顯示的列數;反查最多會有 1280 列,分批渲染避免一次塞爆 DOM。 */
@@ -614,13 +615,15 @@ function OwnerPanel({
   const total = usable.length;
 
   return (
-    <div className="mt-1 rounded-xl bg-card-soft/80 p-2 text-[11px] ring-1 ring-pal/40" style={style}>
-      <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-        {info.iconUrl && <img src={info.iconUrl} alt="" className="size-6 shrink-0 rounded-full bg-card ring-1 ring-line" />}
+    /* 版面:原本整塊 11px、膠囊只有 21px 高,資訊密但難讀也難按。
+       改成 12px 起跳、標題 14px,所有可點的東西都拉到 28px 以上。 */
+    <div className="mt-1.5 rounded-xl bg-card-soft/80 p-3 text-xs ring-1 ring-pal/40" style={style}>
+      <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+        {info.iconUrl && <img src={info.iconUrl} alt="" className="size-8 shrink-0 rounded-full bg-card ring-1 ring-line" />}
         <span className="min-w-0 flex-1">
-          <b className="text-ink">{info.zh || id}</b>
+          <b className="text-sm text-ink">{info.zh || id}</b>
           {enabled && (
-            <span className="ml-1 text-ink-muted">
+            <span className="ml-1.5 text-ink-muted">
               {owners.length
                 ? scopeOwner
                   ? t("{total} 隻", { total })
@@ -649,14 +652,14 @@ function OwnerPanel({
           type="button"
           onClick={onClose}
           aria-label={t("收合")}
-          className="shrink-0 rounded-full px-1.5 text-ink-muted transition hover:text-ink"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-ink-muted transition hover:bg-card hover:text-ink sm:size-7"
         >
-          ✕
+          <FiX size={16} aria-hidden="true" />
         </button>
       </div>
 
       {chosen && (
-        <p className="mb-1 text-ink-muted">
+        <p className="mb-2 rounded-lg bg-grass/10 px-2.5 py-1.5 text-ink-muted ring-1 ring-grass/30">
           {t("目前用")} <b className="text-ink">{chosen.owner.name}</b>
           {chosen.pal.nickname ? `「${chosen.pal.nickname}」` : ""} Lv{chosen.pal.level}
         </p>
@@ -664,22 +667,32 @@ function OwnerPanel({
 
       {enabled && owners.length > 0 && (
         <>
-          <p className="mb-1 font-bold text-ink-muted">
-            {needNames.length > 0 ? `🏷️ ${t("誰有帶得動的這隻(點名字挑一隻)")}` : `👥 ${t("持有者")}`}
+          <p className="mb-1.5 flex items-center gap-1.5 font-bold text-ink-muted">
+            {needNames.length > 0 ? (
+              <>🏷️ {t("誰有帶得動的這隻(點名字挑一隻)")}</>
+            ) : (
+              <>
+                <FiUsers size={14} aria-hidden="true" />
+                {t("持有者")}
+              </>
+            )}
           </p>
-          <div className="flex max-h-28 flex-wrap gap-1 overflow-y-auto">
+          <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto">
             {owners.map((o) => (
               <button
                 key={o.name}
                 type="button"
                 onClick={() => setWho(o.name)}
                 title={t("查看 {name} 的這 {n} 隻", { name: o.name, n: o.n })}
-                className={`rounded bg-card px-1.5 py-0.5 ring-1 transition hover:ring-pal ${
-                  chosen?.owner.name === o.name ? "ring-grass" : "ring-line"
+                className={`flex min-h-9 items-center gap-1.5 rounded-lg bg-card px-3 py-1.5 ring-1 transition hover:bg-pal/10 hover:ring-pal sm:min-h-8 sm:px-2.5 ${
+                  chosen?.owner.name === o.name ? "ring-2 ring-grass" : "ring-line"
                 }`}
               >
                 <b className="text-ink">{o.name}</b>
-                <span className="text-ink-muted">×{o.n}</span>
+                {/* 數量做成獨立徽章:掃視「誰有比較多」時比 ×3 這種行內小字好認 */}
+                <span className="rounded-full bg-card-soft px-1.5 py-px text-[11px] font-bold tabular-nums text-ink-muted">
+                  {o.n}
+                </span>
               </button>
             ))}
           </div>
@@ -860,11 +873,18 @@ function OwnerToggle({ id, on, onClick }: { id: string; on: boolean; onClick: ()
       }}
       title={t("查看誰有這隻 {name}", { name })}
       aria-label={t("查看誰有這隻 {name}", { name })}
-      className={`shrink-0 cursor-pointer rounded-full px-1 py-0.5 text-[10px] leading-tight font-semibold ring-1 transition ${
-        on ? "bg-pal text-white ring-pal" : "bg-card-soft text-ink-muted ring-line hover:ring-pal hover:text-ink"
+      /* 尺寸 28px:WCAG 2.2 的最小點擊目標是 24×24,原本 22×17 的表情符號按鈕
+         又小又難按。改用 Feather 的 FiUsers(全站同一套圖示),視覺上也比
+         emoji 一致 —— emoji 在不同系統長得不一樣,大小也不受控。 */
+      /* 手機用手指、桌機用滑鼠,需求不同:行動裝置給 32px(接近 HIG 建議的舒適下限),
+         桌機縮回 28px 免得把配種列撐開。 */
+      className={`flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full ring-1 transition sm:size-7 ${
+        on
+          ? "bg-pal text-white ring-pal"
+          : "bg-card-soft text-ink-muted ring-line hover:bg-pal/10 hover:text-pal hover:ring-pal"
       }`}
     >
-      👥
+      <FiUsers size={15} aria-hidden="true" />
     </span>
   );
 }
