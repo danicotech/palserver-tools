@@ -1490,18 +1490,42 @@ function HybridPathView({
   /** 玩家自己指定的那一隻(key 同上);沒指定就用解算器挑的 */
   const [chosenPal, setChosenPal] = useState<Record<string, OwnedPalRow>>({});
   const poolOf = (id: string) => ownedPool.filter((c) => normalizeSpecies(c.characterId) === id.toLowerCase());
-  /** 這一格實際要用誰的那一隻:玩家指定過就用指定的,否則用自動挑的。 */
-  const carrierAt = (slot: string, species: string, mask: number): { ownerName: string } | undefined => {
+  /** 這一格實際要用誰的那一隻。
+   *  順序:玩家指定過的 → 解算器依詞條挑的 → 同物種裡最堪用的那一隻。
+   *
+   *  第三段是後來補的:沒開詞條篩選時 mask 是 0,carrierFor 直接回 undefined,
+   *  結果整條路線一個持有者都不顯示 —— 但資料明明就在手上。既然有人有,
+   *  就先幫忙填一隻(個體值總和 → 等級),使用者要換再點 👥。 */
+  const carrierAt = (
+    slot: string,
+    species: string,
+    mask: number,
+  ): { ownerName: string; auto: boolean } | undefined => {
     const own = chosenPal[slot];
-    if (own) return { ownerName: own.owner.name };
-    return carrierFor(species, mask);
+    if (own) return { ownerName: own.owner.name, auto: false };
+    const byTrait = carrierFor(species, mask);
+    if (byTrait) return { ownerName: byTrait.ownerName, auto: true };
+    const rows = detailsOf(species);
+    if (!rows.length) return undefined;
+    const best = [...rows].sort((a, b) => ivSum(b.pal) - ivSum(a.pal) || b.pal.level - a.pal.level)[0];
+    return { ownerName: best.owner.name, auto: true };
   };
   /** 掛在帕魯格子底下的小字:要帶哪些詞條(誰的),或已經累積到幾個。
    *  資訊貼著它所描述的那一格,才不會被讀成在講整列或旁邊那隻。 */
-  const traitSub = (mask: number, pal?: { ownerName: string }) =>
+  const traitSub = (mask: number, pal?: { ownerName: string; auto: boolean }) =>
     mask > 0 || pal ? (
       <>
-        {pal && <span className="shrink-0 font-semibold text-ink-muted">{pal.ownerName || "?"}</span>}
+        {pal && (
+          <span
+            className={`flex shrink-0 items-center gap-0.5 rounded px-1 py-px font-semibold ${
+              pal.auto ? "bg-card-soft text-ink-muted" : "bg-grass/15 text-grass"
+            }`}
+            title={pal.auto ? t("自動挑的(點 👥 可以換人)") : t("你指定的")}
+          >
+            <FiUser size={10} aria-hidden="true" />
+            {pal.ownerName || "?"}
+          </span>
+        )}
         {traitNames(mask).map((x) => (
           <span key={x} className="shrink-0 rounded bg-pal/12 px-1 py-px font-bold text-pal">
             {x}
