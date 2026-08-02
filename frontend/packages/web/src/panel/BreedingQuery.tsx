@@ -462,6 +462,7 @@ function PalCell({
   compact,
   onHover,
   sub,
+  nameAfter,
 }: {
   id: string;
   meta?: PalMeta;
@@ -481,19 +482,40 @@ function PalCell({
   onHover?: (rect: DOMRect | null) => void;
   /** 名稱下方的小字 —— 這一格自己的註解(要帶哪些詞條、是誰的、累積到幾個) */
   sub?: ReactNode;
+  /** 緊接在名稱右邊的東西(例:👥 看誰有這隻)。 */
+  nameAfter?: ReactNode;
 }): JSX.Element {
   const info = palInfo(id);
-  const Tag = onClick ? "button" : "div";
+  // 外層一律用 div 而不是 button:nameAfter 裡面會放另一顆可點的東西,
+  // button 裡不能再放 button(HTML 不合法,而且點內層會連外層一起觸發)。
+  // 可點時補上 role/tabIndex/鍵盤操作,保留原本的無障礙行為。
   return (
-    <Tag
-      type={onClick ? "button" : undefined}
+    <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              onClick();
+            }
+          : undefined
+      }
       onClick={onClick}
       title={title}
       onMouseEnter={onHover ? (e) => onHover(e.currentTarget.getBoundingClientRect()) : undefined}
       onMouseLeave={onHover ? () => onHover(null) : undefined}
       onFocus={onHover ? (e) => onHover(e.currentTarget.getBoundingClientRect()) : undefined}
       onBlur={onHover ? () => onHover(null) : undefined}
-      className={`flex min-w-24 flex-1 basis-24 items-center gap-2 rounded-xl px-1.5 py-1 text-left sm:gap-2.5 ${
+      className={`flex flex-1 items-center gap-2 rounded-xl px-1.5 py-1 text-left sm:gap-2.5 ${
+        // 名稱旁多了 👥 之後,原本的 24 基準會把名字擠成「火…」。
+        // 給一個「放得下三個字 + 👥」的下限,窄的時候讓整列換行(名字完整分兩行看),
+        // 而不是硬擠在一行然後兩邊都被截掉。
+        // basis-auto 而不是固定基準:讓格子依內容撐開,內容才不會溢出去
+        // (👥 會被屬性圓標壓在上面);真的塞不下時外層 flex-wrap 會換行。
+        nameAfter ? "min-w-44 basis-auto" : "min-w-24 basis-24"
+      } ${
         onClick ? "cursor-pointer transition hover:bg-pal/10" : ""
       } ${active ? "ring-2 ring-sun" : ""}`}
     >
@@ -505,8 +527,17 @@ function PalCell({
         />
       )}
       <span className="flex min-w-14 flex-1 flex-col justify-center">
-        <span className={`truncate font-semibold text-ink ${big ? "text-base sm:text-lg" : "text-sm sm:text-base"}`}>
-          {info.zh || id}
+        <span className="flex min-w-0 items-center gap-1">
+          {/* 有 👥 時名稱不截斷:寧可讓整列換行,也不要出現「吹‥」這種看不懂的東西。
+              帕魯名都很短(2-5 個字),不截斷不會爆版。 */}
+          <span
+            className={`font-semibold text-ink ${nameAfter ? "whitespace-nowrap" : "truncate"} ${
+              big ? "text-base sm:text-lg" : "text-sm sm:text-base"
+            }`}
+          >
+            {info.zh || id}
+          </span>
+          {nameAfter}
         </span>
         {sub && <span className="flex flex-wrap items-center gap-0.5 text-[10px] leading-tight">{sub}</span>}
       </span>
@@ -523,7 +554,7 @@ function PalCell({
           {owned ? "✓" : t("缺")}
         </span>
       )}
-    </Tag>
+    </div>
   );
 }
 
@@ -805,20 +836,36 @@ function hitRateOf(info: StartCandidate, cake: CakeKind): number {
   return Math.min(1, info.overall / Math.pow(MUTATION_RATE[cake], info.mutationSteps));
 }
 
-/** 一顆「👥 誰有」小鈕:點開該帕魯的持有者面板。 */
+/** 一顆「👥 誰有」小鈕:點開該帕魯的持有者面板。
+ *
+ *  放在帕魯名稱右邊(卡片內),所以不再重複顯示帕魯名 —— 旁邊就是了。
+ *  卡片本身也可以點(換夥伴/換初代),因此這裡必須擋掉冒泡,
+ *  不然點「看誰有」會順便把換夥伴的選單也打開。 */
 function OwnerToggle({ id, on, onClick }: { id: string; on: boolean; onClick: () => void }): JSX.Element {
   useI18n();
+  const name = palInfo(id.toLowerCase()).zh || id;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={t("查看誰有這隻")}
-      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ring-1 transition ${
-        on ? "bg-pal text-white ring-pal" : "bg-card-soft text-ink-muted ring-line hover:ring-pal"
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
+      title={t("查看誰有這隻 {name}", { name })}
+      aria-label={t("查看誰有這隻 {name}", { name })}
+      className={`shrink-0 cursor-pointer rounded-full px-1 py-0.5 text-[10px] leading-tight font-semibold ring-1 transition ${
+        on ? "bg-pal text-white ring-pal" : "bg-card-soft text-ink-muted ring-line hover:ring-pal hover:text-ink"
       }`}
     >
-      👥 {palInfo(id.toLowerCase()).zh || id}
-    </button>
+      👥
+    </span>
   );
 }
 
@@ -842,6 +889,7 @@ function PyramidTier({
   resultMeta,
   resultOwned,
   onHover,
+  nameAfter,
 }: {
   id: string;
   gen: number;
@@ -862,6 +910,8 @@ function PyramidTier({
   resultOwned?: boolean;
   /** 滑入/滑出 A 格:開關「誰有這隻」的浮動說明 */
   onHover?: (rect: DOMRect | null) => void;
+  /** 接在 A 格名稱右邊的東西(例:👥 看誰有這隻) */
+  nameAfter?: ReactNode;
 }): JSX.Element {
   const mix = 4 + Math.round((depth === 0 ? 1 : gen / depth) * 12);
   const badge = role === "target" ? `🎯 ${t("目標")}` : role === "start" ? `🏁 ${t("初代")}` : t("第 {n} 代", { n: gen });
@@ -882,6 +932,7 @@ function PyramidTier({
         active={active}
         title={onClick ? t("點擊替換這一代") : undefined}
         big={role === "target"}
+        nameAfter={nameAfter}
       />
       {/* B:夥伴(同一張卡片內,獨立點擊;顯示資訊與 A 相同) */}
       {partner && (
@@ -1545,6 +1596,15 @@ function HybridPathView({
                       : undefined
                 }
                 active={stepIdx === 0 && openStart}
+                nameAfter={
+                  stepIdx === 0 ? (
+                    <OwnerToggle
+                      id={s.from}
+                      on={openOwner === `${stepIdx}:a`}
+                      onClick={() => setOpenOwner(openOwner === `${stepIdx}:a` ? null : `${stepIdx}:a`)}
+                    />
+                  ) : undefined
+                }
                 title={stepIdx === 0 ? t("點擊更換初代(會重新計算整條路線)") : undefined}
                 onClick={
                   stepIdx === 0
@@ -1567,6 +1627,13 @@ function HybridPathView({
                   owned={has(s.partner)}
                   sub={traitSub(needMask, carrierAt(`${stepIdx}:b`, s.partner, needMask))}
                   active={openStep === stepIdx}
+                  nameAfter={
+                    <OwnerToggle
+                      id={s.partner}
+                      on={openOwner === `${stepIdx}:b`}
+                      onClick={() => setOpenOwner(openOwner === `${stepIdx}:b` ? null : `${stepIdx}:b`)}
+                    />
+                  }
                   title={t("點擊更換夥伴(會顯示各夥伴的成功機率)")}
                   onClick={() => setOpenStep(openStep === stepIdx ? null : stepIdx)}
                   hint={opts.length > 1 ? <span className="shrink-0 text-[11px] font-semibold text-ink-muted">▾{opts.length}</span> : undefined}
@@ -1714,18 +1781,10 @@ function HybridPathView({
               if (s.partner) slots.push({ key: `${stepIdx}:b`, id: s.partner, need: needMask });
               const open = slots.find((x) => x.key === openOwner);
               if (!slots.length) return null;
+              if (!open) return null;
+              // 觸發鈕已經移進卡片裡的帕魯名稱旁邊,這裡只負責展開後的面板。
               return (
                 <>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5 px-1" style={rowWidth(gen)}>
-                    {slots.map((x) => (
-                      <OwnerToggle
-                        key={x.key}
-                        id={x.id}
-                        on={openOwner === x.key}
-                        onClick={() => setOpenOwner(openOwner === x.key ? null : x.key)}
-                      />
-                    ))}
-                  </div>
                   {open && (
                     <OwnerPanel
                       id={open.id}
@@ -3415,6 +3474,16 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                 gen < d - 1 && ownedSet ? ownedSet.has(route.species[gen + 1].toLowerCase()) : undefined
                               }
                               active={openTier === gen}
+                              /* 只有初代那一列的 A 要自己準備,其餘代都是配出來的 */
+                              nameAfter={
+                                gen === 0 ? (
+                                  <OwnerToggle
+                                    id={sp}
+                                    on={pathOwner === `${gen}:a`}
+                                    onClick={() => setPathOwner(pathOwner === `${gen}:a` ? null : `${gen}:a`)}
+                                  />
+                                ) : undefined
+                              }
                               onClick={() => {
                                 setOpenTier(openTier === gen ? null : gen);
                                 setOpenSteps(new Set());
@@ -3431,6 +3500,13 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                                           meta={metaOf(chosen.partner)}
                                           owned={ownedSet ? has(chosen.partner) : undefined}
                                           active={openSteps.has(gen)}
+                                          nameAfter={
+                                            <OwnerToggle
+                                              id={chosen.partner}
+                                              on={pathOwner === `${gen}:b`}
+                                              onClick={() => setPathOwner(pathOwner === `${gen}:b` ? null : `${gen}:b`)}
+                                            />
+                                          }
                                           title={t("點擊更換夥伴")}
                                           onClick={() => {
                                             setOpenTier(null);
@@ -3462,18 +3538,10 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                               { key: `${gen}:b`, id: chosenOf(gen).partner },
                             ];
                             const open = slots.find((x) => x.key === pathOwner);
+                            if (!open) return null;
+                            // 觸發鈕已移進卡片(帕魯名稱右邊),這裡只留展開後的面板。
                             return (
                               <>
-                                <div className="mt-1 flex flex-wrap items-center gap-1.5 px-1" style={rowStyle}>
-                                  {slots.map((x) => (
-                                    <OwnerToggle
-                                      key={x.key}
-                                      id={x.id}
-                                      on={pathOwner === x.key}
-                                      onClick={() => setPathOwner(pathOwner === x.key ? null : x.key)}
-                                    />
-                                  ))}
-                                </div>
                                 {open && (
                                   <OwnerPanel
                                     id={open.id}

@@ -2504,5 +2504,6 @@
   "搜尋伺服器玩家…": "Search server players…",
   "被動詞條": "Passive Skills",
   "全螢幕檢視地圖": "View map fullscreen",
-  "離開全螢幕": "Exit fullscreen"
+  "離開全螢幕": "Exit fullscreen",
+  "查看誰有這隻 {name}": "See who owns {name}"
 }
