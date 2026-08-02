@@ -2487,5 +2487,11 @@
   "{total} 隻": "{total} pals",
   "這個伺服器還沒有玩家資料": "No player data on this server yet",
   "全新的伺服器要等第一位玩家進去玩過、而且遊戲寫過一次存檔之後（預設每 30 秒自動存檔），這裡才會有東西。": "A brand-new server stays empty until the first player has joined and the game has written a save (autosave runs every 30 seconds by default).",
-  "伺服器已經有人玩過卻還是空的，多半是存檔位置設定不對。": "If people have already played and this is still empty, the save location is probably misconfigured."
+  "伺服器已經有人玩過卻還是空的，多半是存檔位置設定不對。": "If people have already played and this is still empty, the save location is probably misconfigured.",
+  "有任何問題或建議,歡迎到": "Questions or suggestions? Reach us on",
+  "Discord 群組": "Discord",
+  "反應,或到": ", or open a",
+  "GitHub Issue": "GitHub issue",
+  "提出。": ".",
+  "作者會針對回饋進行確認與改善。": "The author reviews all feedback and works on improvements."
 }

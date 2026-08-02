@@ -225,6 +225,8 @@ export function PanelApp(): JSX.Element {
             {tab === "online" && <OnlineAnalysis data={data} />}
           </>
         )}
+
+        <SiteFooter />
       </div>
 
       {selectedPal && (
@@ -241,6 +243,33 @@ export function PanelApp(): JSX.Element {
   );
 }
 
+
+const DISCORD_URL = "https://discord.gg/kfNCn8yTNJ";
+const ISSUES_URL = "https://github.com/daniel840711/palserver-tools/issues";
+
+/** 頁尾:回報管道。
+ *
+ *  放在所有分頁下方(而不是只放在首頁),因為使用者通常是「在某一頁遇到問題」
+ *  的當下才想回報 —— 那時候要他先切回首頁找連結,多半就不會回報了。 */
+function SiteFooter(): JSX.Element {
+  const link = "font-medium text-pal underline underline-offset-2 hover:opacity-80";
+  return (
+    <footer className="mt-10 border-t border-line pt-5 pb-2 text-center text-sm leading-relaxed text-ink-muted">
+      <p>
+        {t("有任何問題或建議,歡迎到")}{" "}
+        <a className={link} href={DISCORD_URL} target="_blank" rel="noreferrer">
+          {t("Discord 群組")}
+        </a>{" "}
+        {t("反應,或到")}{" "}
+        <a className={link} href={ISSUES_URL} target="_blank" rel="noreferrer">
+          {t("GitHub Issue")}
+        </a>{" "}
+        {t("提出。")}
+      </p>
+      <p className="mt-1">{t("作者會針對回饋進行確認與改善。")}</p>
+    </footer>
+  );
+}
 
 /** 載入文字特效:逐字波浪起伏 + 尾巴三點一個個浮現,循環播放(尊重減少動態偏好)。 */
 function LoadingWave({ text }: { text: string }): JSX.Element {
