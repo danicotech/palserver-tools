@@ -531,7 +531,6 @@
   "共 {cores} 核 · 佔總算力 {pct}%": "{cores} cores · {pct}% of total",
   "共 {n}": "{n} total",
   "共 {n} 代": "{n} generations",
-  "共 {n} 位玩家 · 目前在線": "{n} players · currently online",
   "共 {n} 條,依夥伴彈性排序,列前 {m} 條": "{n} total, sorted by partner flexibility; first {m} listed",
   "共 {n} 條最短路線,依夥伴選擇彈性排序,僅顯示前 {m} 條:": "{n} shortest routes in total, sorted by partner flexibility; showing the first {m}:",
   "共 {n} 條最短路線,依夥伴選擇彈性排序:": "{n} shortest routes in total, sorted by partner flexibility:",

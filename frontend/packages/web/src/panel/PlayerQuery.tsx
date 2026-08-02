@@ -80,8 +80,6 @@ export function PlayerQuery({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, sort, onlineFirst, onlineOnly, data.players, online, dexByPlayer]);
 
-  const onlineCount = data.players.filter(isOnline).length;
-
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -110,9 +108,10 @@ export function PlayerQuery({
           {t("只看在線")}
         </label>
       </div>
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
-        <span>{t("共 {n} 位玩家 · 目前在線", { n: matched.length })} <span className="font-semibold text-grass">{onlineCount}</span> {t("人")}</span>
-        {palFilter && (
+      {/* 人數統計改由標題列與總覽呈現,這裡不再重複一行。
+          留下的只有「已篩選帕魯」提示 —— 有篩選時才佔位置。 */}
+      {palFilter && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <button
             onClick={() => setPalFilter(undefined)}
             title={t("清除帕魯篩選，顯示各玩家全部帕魯")}
@@ -121,8 +120,8 @@ export function PlayerQuery({
             {t("已篩選帕魯：{name}", { name: palFilter })}
             <span className="text-sm leading-none">✕</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
       {/* 地圖放在搜尋/篩選之後;點頭像帶入搜尋跳到該玩家 */}
       <PlayerMap data={data} online={online} live={live} onPlayerClick={(p) => setQ(p.name)} />
       <div className="mt-4 space-y-6">
