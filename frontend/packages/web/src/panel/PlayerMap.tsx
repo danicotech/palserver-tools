@@ -50,6 +50,7 @@ export function PlayerMap({
   const [q, setQ] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null); // 全螢幕的對象:連同上方篩選列一起放大
+  const mapBoxRef = useRef<HTMLDivElement>(null); // 地圖容器的外框(用來把它對齊到整數像素)
   const [isFull, setIsFull] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const boundsRef = useRef<L.LatLngBounds>(IMAGE_BOUNDS);
@@ -104,6 +105,7 @@ export function PlayerMap({
       window.setTimeout(() => {
         const m = mapRef.current;
         if (!m) return;
+        snapToPixel();
         m.invalidateSize();
         m.setMinZoom(m.getBoundsZoom(boundsRef.current) - 1);
         m.fitBounds(boundsRef.current);
@@ -137,15 +139,37 @@ export function PlayerMap({
     };
   }, []);
 
+  /**
+   * 把地圖容器對齊到整數像素。
+   *
+   * 上方篩選列的高度是內容撐出來的,常常是小數(實測 56.875px),地圖容器因此
+   * 落在半像素位置。圖磚本身是整數對齊的,但整個容器偏移半像素後,瀏覽器得把
+   * 每一張圖磚重新取樣 —— 邊緣取樣被裁在各自的範圍內,交界處算出來的顏色就和
+   * 連續影像不同,畫面上看到的就是一格一格的網格線。
+   * 把小數部分用 transform 補回去(位移不到 1px,肉眼看不出來)即可根治。
+   */
+  const snapToPixel = () => {
+    const box = mapBoxRef.current;
+    if (!box) return;
+    box.style.transform = "none"; // 先歸零才量得到真正的位置
+    const r = box.getBoundingClientRect();
+    const dx = r.left - Math.round(r.left);
+    const dy = r.top - Math.round(r.top);
+    box.style.transform = dx || dy ? `translate(${-dx}px, ${-dy}px)` : "none";
+  };
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el || mapRef.current || tiles === undefined) return;
     const map = L.map(el, {
       crs: tiles ? TILE_CRS : L.CRS.Simple,
       attributionControl: false,
-      // 圖磚模式用連續縮放:fitBounds 才會剛好貼合容器,不會被量化後留一圈空白。
-      // 對畫質沒有損失 —— 非整數層級時 Leaflet 取較深的圖磚往下縮,縮小是銳利的。
-      zoomSnap: 0,
+      // 只允許整數縮放層級。分數縮放時瀏覽器要把圖磚縮到非整數倍,
+      // 每張圖磚的邊緣取樣被裁在自己的範圍內,交界處算出來的顏色就和連續影像不同 ——
+      // 畫面上看到的就是一格一格的網格線(實測交界與鄰近像素差最多 3.7/255)。
+      // 整數層級時圖磚 1:1 貼上,完全沒有重新取樣,也就沒有接縫。
+      // 代價是 fitBounds 後容器會留一圈邊,但底色已是接近海面的 #0d161e,不突兀。
+      zoomSnap: 1,
       // 圖磚模式下 zoom 就是圖磚層級,允許超出原生兩級(拉伸 z6,仍比單張底圖清楚)
       maxZoom: tiles ? MAP_TILES_MAXNATIVE + 2 : 4,
     });
@@ -158,6 +182,7 @@ export function PlayerMap({
     // 容器高度由版面決定,首輪可能是 0:用 ResizeObserver 校正 fit 與最小縮放。
     let fitted = false;
     const applySize = () => {
+      snapToPixel();
       map.invalidateSize();
       if (map.getSize().y === 0) return;
       map.setMinZoom(map.getBoundsZoom(boundsRef.current) - 1);
@@ -406,7 +431,7 @@ export function PlayerMap({
           而 React 只要重繪就會用自己的 className 整個覆蓋掉,把那些 class 洗掉。
           少了 .leaflet-container,Leaflet 的 CSS(含 img.leaflet-image-layer 的 max-width:none)
           全部失效,底圖寬度被 preflight 的 img{max-width:100%} 壓成 0 —— 症狀就是「進全螢幕後地圖不見了」。 */}
-      <div className={`relative ${isFull ? "min-h-0 flex-1" : "h-80 sm:h-115"}`}>
+      <div ref={mapBoxRef} className={`relative ${isFull ? "min-h-0 flex-1" : "h-80 sm:h-115"}`}>
         <div ref={containerRef} className="size-full" />
         {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
         <button
