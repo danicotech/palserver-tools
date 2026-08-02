@@ -89,11 +89,21 @@ function OwnerFilter({
 
   return (
     <div className="relative" ref={ref}>
+      {/* 標題要講清楚「這是誰的帕魯」—— 只寫「玩家」會被當成別的意思
+          (這一頁到處都是玩家名字)。選了誰就直接把名字寫在鈕上,不必展開才知道。 */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1 rounded-lg bg-card-soft px-2 py-1.5 ring-1 ring-line hover:ring-pal/50 ${selected.length ? "text-pal" : "text-ink"}`}
+        title={t("只顯示指定伺服器玩家持有的帕魯")}
+        className={`flex max-w-full items-center gap-1 rounded-lg bg-card-soft px-2 py-1.5 ring-1 ring-line hover:ring-pal/50 ${selected.length ? "text-pal" : "text-ink"}`}
       >
-        👤 {t("玩家")}{selected.length > 0 && <span className="rounded-full bg-pal px-1.5 text-xs text-white">{selected.length}</span>}
+        👤
+        <span className="truncate">
+          {selected.length === 0
+            ? t("伺服器玩家:全部")
+            : selected.length === 1
+              ? (options.find((o) => o.uid === selected[0])?.name ?? t("伺服器玩家"))
+              : t("伺服器玩家:{n} 人", { n: selected.length })}
+        </span>
         <span className="text-xs text-ink-muted">▾</span>
       </button>
       {open && (
@@ -101,7 +111,7 @@ function OwnerFilter({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={t("搜尋玩家…")}
+            placeholder={t("搜尋伺服器玩家…")}
             className="mb-2 w-full rounded-lg bg-card-soft px-2 py-1.5 text-base text-ink outline-none ring-1 ring-line focus:ring-2 focus:ring-pal sm:text-sm"
           />
           <div className="mb-1 flex items-center justify-between px-1 text-xs">

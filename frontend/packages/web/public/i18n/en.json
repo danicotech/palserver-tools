@@ -2496,5 +2496,10 @@
   "篩選": "Filters",
   "基本": "Basic",
   "輸入以新增…（可多選）": "Type to add… (multi-select)",
-  "🔍 搜尋帕魯名/暱稱…": "🔍 Search pal name / nickname…"
+  "🔍 搜尋帕魯名/暱稱…": "🔍 Search pal name / nickname…",
+  "伺服器玩家:全部": "Owner: all players",
+  "伺服器玩家": "Server player",
+  "伺服器玩家:{n} 人": "Owners: {n} players",
+  "只顯示指定伺服器玩家持有的帕魯": "Show only pals owned by the selected server players",
+  "搜尋伺服器玩家…": "Search server players…"
 }
