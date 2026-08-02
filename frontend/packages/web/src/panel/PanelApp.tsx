@@ -245,7 +245,7 @@ export function PanelApp(): JSX.Element {
 
 
 const DISCORD_URL = "https://discord.gg/kfNCn8yTNJ";
-const ISSUES_URL = "https://github.com/daniel840711/palserver-tools/issues";
+const ISSUES_URL = "https://github.com/danicotech/palserver-tools/issues";
 
 /** 頁尾:回報管道。
  *

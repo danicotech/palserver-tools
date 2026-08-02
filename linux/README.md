@@ -117,7 +117,7 @@ bash linux/start.sh
 (其他成員直接登入就是原本的角色)。執行前先備份整個世界資料夾。
 
 完整說明(含存檔結構圖與檢查清單)→
-[Wiki:存檔搬家](https://github.com/daniel840711/palserver-tools/wiki/%E5%AD%98%E6%AA%94%E6%90%AC%E5%AE%B6)
+[Wiki:存檔搬家](https://github.com/danicotech/palserver-tools/wiki/%E5%AD%98%E6%AA%94%E6%90%AC%E5%AE%B6)
 
 ## 沒有 Docker?用 SteamCMD 版
 
