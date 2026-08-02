@@ -1,7 +1,8 @@
-// 共用帕魯瀏覽器：完整篩選列（屬性/類型/星級/性別/等級/IV/工作/詞條/暱稱）+ 排序 + 網格。
+// 共用帕魯瀏覽器：搜尋 + 排序常駐一列，其餘條件收在可展開的「篩選」面板
+// （基本/星級/屬性/工作適應性/詞條），下方以「已篩選」膠囊回報目前生效的條件。
 // 供「玩家查詢」與「帕魯查詢的全服搜尋」共用。
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import type { Pal, Player } from "./types";
 import type { OwnedPal } from "./data";
 import { palScore, ivSum } from "./data";
@@ -28,6 +29,36 @@ const SORTS: { key: SortKey; label: string; fn: (p: Pal) => number | string }[] 
 ];
 
 const BATCH = 60; // 每次載入的卡片數（往下捲動再載更多，避免一次渲染上萬張）
+
+/** 篩選面板裡的一組:左邊固定寬度的標題 + 右邊自動換行的選項。
+ *  標題對齊是關鍵 —— 原本每一列的開頭寬度都不一樣,看起來就是一堆散裝控制項。 */
+function FilterRow({ label, children }: { label: string; children: ReactNode }): JSX.Element {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="w-20 shrink-0 pt-2 text-xs font-bold text-ink-muted">{label}</span>
+      {/* 選項另外包一層才會「在右欄內部」換行;直接讓標題與選項同層 flex-wrap 的話,
+          換到第二行的選項會退回容器最左邊,跟標題對齊 —— 工作適應性有 11 個一定會換行。 */}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>
+    </div>
+  );
+}
+
+/** 多選條件的「或者 / 並且」切換（工作適應性與詞條共用同一種外觀）。 */
+function ModeToggle({ mode, onChange }: { mode: "or" | "and"; onChange: (m: "or" | "and") => void }): JSX.Element {
+  return (
+    <div className="ml-1 flex rounded-lg bg-card p-0.5 text-xs ring-1 ring-line">
+      {(["or", "and"] as const).map((m) => (
+        <button
+          key={m}
+          onClick={() => onChange(m)}
+          className={`rounded px-2 py-1 ${mode === m ? "bg-pal text-white" : "text-ink-muted hover:text-ink"}`}
+        >
+          {m === "or" ? t("或者") : t("並且")}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 /** 玩家多選下拉（checkbox）：可搜尋、全選/清除。 */
 function OwnerFilter({
@@ -146,6 +177,12 @@ export function PalBrowser({
   const selCls = (v: string) =>
     `rounded-lg bg-card-soft px-2 py-1.5 text-base ring-1 ring-line sm:text-sm ${v ? "text-pal" : "text-ink"}`;
 
+  // 進階篩選預設收合。原本九個控制項(類型/星級/性別/等級/個體值/詞條/暱稱/玩家…)
+  // 全部攤在同一列,加上屬性、工作適應性各佔一整列,光是篩選區就吃掉半個畫面,
+  // 而且每個控制項長得都一樣,看不出哪些是同一類。改成:平常只留「搜尋 + 排序」,
+  // 要調再展開;目前生效了什麼,靠下方「已篩選」膠囊看(那本來就有,只是被埋住)。
+  const [showFilters, setShowFilters] = useState(false);
+
   const ownerOpts = useMemo(() => {
     const m = new Map<string, { uid: string; name: string; count: number }>();
     for (const o of pals) {
@@ -216,8 +253,6 @@ export function PalBrowser({
     return list;
   }, [pals, sort, dir, q, elements, traits, traitMode, ranks, gender, works, workMode, ivTier, levelMin, kind, namedOnly, owners]);
 
-  const active = q || elements.length || kind || ranks.length || gender || levelMin || ivTier || works.length || traits.length || namedOnly || owners.length;
-
   // 無限捲動：每次顯示 BATCH 張，捲到底載更多；篩選/排序改變時重置。
   const [visible, setVisible] = useState(BATCH);
   useEffect(() => { setVisible(BATCH); }, [shown]);
@@ -234,9 +269,13 @@ export function PalBrowser({
   }, [shown]);
   const shownCount = Math.min(visible, shown.length);
 
-  // 目前生效的篩選 →「已篩選」可移除膠囊(元素/工作/詞條各自已有可點掉的 UI,這裡補齊下拉/勾選類)。
+  // 目前生效的篩選 →「已篩選」可移除膠囊。
+  // 篩選面板收合後,這排膠囊就是唯一看得到「現在篩了什麼」的地方,
+  // 所以每一種條件都必須列進來(以前屬性與詞條靠自己那列的高亮表示,現在那列會被收起來)。
   const activeChips: { key: string; label: string; onClear: () => void }[] = [];
   if (q) activeChips.push({ key: "q", label: `🔍 ${q}`, onClear: () => setQ("") });
+  elements.forEach((e) => activeChips.push({ key: `el${e}`, label: e, onClear: () => toggle(elements, setElements, e) }));
+  traits.forEach((tr) => activeChips.push({ key: `tr${tr}`, label: localizeTrait(tr), onClear: () => setTraits(traits.filter((x) => x !== tr)) }));
   if (kind) activeChips.push({ key: "kind", label: kind === "alpha" ? t("α / 首領") : kind === "lucky" ? t("✦ 稀有") : t("一般"), onClear: () => setKind("") });
   [...ranks].sort((a, b) => b - a).forEach((n) => activeChips.push({ key: `rank${n}`, label: `★${n}`, onClear: () => toggleRank(n) }));
   if (gender) activeChips.push({ key: "gender", label: gender === "Male" ? t("♂ 公") : t("♀ 母"), onClear: () => setGender("") });
@@ -252,145 +291,148 @@ export function PalBrowser({
   return (
     <div>
       <div className="mb-2 space-y-2 text-sm">
+        {/* 常駐列:只留最常用的兩件事 —— 找名字、換排序。其餘收進「篩選」。 */}
         <div className="flex flex-wrap items-center gap-2">
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("搜尋帕魯名/暱稱…")}
-            className="min-w-0 flex-1 rounded-lg bg-card-soft px-3 py-1.5 text-base text-ink outline-none ring-1 ring-line focus:ring-2 focus:ring-pal sm:flex-none sm:text-sm" />
-          {showOwner && ownerOpts.length > 1 && (
-            <OwnerFilter options={ownerOpts} selected={owners} onChange={setOwners} />
-          )}
-          <select value={kind} onChange={(e) => setKind(e.target.value)} className={selCls(kind)}>
-            <option value="">{t("全部類型")}</option>
-            <option value="alpha">{t("α / 首領")}</option>
-            <option value="lucky">{t("✦ 稀有")}</option>
-            <option value="normal">{t("一般")}</option>
-          </select>
-          <span className="flex items-center gap-1 rounded-lg bg-card-soft px-2 py-1 ring-1 ring-line">
-            <span className="text-xs text-ink-muted">{t("星級")}</span>
-            {[5, 4, 3, 2, 1].map((n) => (
-              <button
-                key={n}
-                onClick={() => toggleRank(n)}
-                className={`rounded px-2 py-1.5 text-xs ${ranks.includes(n) ? "bg-pal text-white" : "text-ink-muted hover:text-ink"}`}
-                title={t("{n} 星", { n })}
-              >
-                ★{n}
-              </button>
-            ))}
-          </span>
-          <select value={gender} onChange={(e) => setGender(e.target.value)} className={selCls(gender)}>
-            <option value="">{t("全部性別")}</option>
-            <option value="Male">{t("♂ 公")}</option>
-            <option value="Female">{t("♀ 母")}</option>
-          </select>
-          <select value={levelMin} onChange={(e) => setLevelMin(e.target.value)} className={selCls(levelMin)}>
-            <option value="">{t("全部等級")}</option>
-            {[50, 40, 30, 20, 10].map((n) => (<option key={n} value={n}>Lv ≥ {n}</option>))}
-          </select>
-          <select value={ivTier} onChange={(e) => setIvTier(e.target.value)} className={selCls(ivTier)}>
-            <option value="">{t("全部個體值")}</option>
-            <option value="300">{t("完美 (300)")}</option>
-            <option value="270">{t("總和 ≥ 270")}</option>
-            <option value="240">{t("總和 ≥ 240")}</option>
-            <option value="180">{t("總和 ≥ 180")}</option>
-          </select>
-          <input
-            value={traitInput}
-            onChange={(e) => {
-              const v = e.target.value;
-              // 從 datalist 選到既有詞條 → 直接加入
-              if (traitOpts.some(([name]) => name === v)) addTrait(v);
-              else setTraitInput(v);
-            }}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTrait(traitInput); } }}
-            list="pb-traits"
-            placeholder={t("詞條/技能搜尋…（可多選）")}
-            className={`w-40 max-w-full rounded-lg bg-card-soft px-3 py-1.5 text-base outline-none ring-1 ring-line focus:ring-2 focus:ring-pal sm:text-sm ${traits.length ? "text-pal" : "text-ink"}`}
-          />
-          <datalist id="pb-traits">
-            {traitOpts.map(([name, n]) => (<option key={name} value={name}>{localizeTrait(name)}（{n}）</option>))}
-          </datalist>
-          <label className="flex items-center gap-1 text-ink"><input type="checkbox" checked={namedOnly} onChange={(e) => setNamedOnly(e.target.checked)} />{t("只看有暱稱")}</label>
-        </div>
-
-        {elementOpts.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-sm font-bold text-ink">{t("屬性")}</span>
-            {elementOpts.map((e) => {
-              const on = elements.includes(e);
-              return (
-                <button key={e} onClick={() => toggle(elements, setElements, e)}
-                  className={`rounded-full ring-2 transition ${on ? "ring-pal ring-offset-1" : "opacity-60 ring-transparent hover:opacity-100"}`}>
-                  <ElementBadge el={e} size="lg" />
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {workOpts.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="mr-1 text-sm font-bold text-ink">{t("工作適應性")}</span>
-            {workOpts.map((w) => {
-              const on = works.includes(w);
-              return (
-                <button key={w} onClick={() => toggle(works, setWorks, w)}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold ring-1 transition ${on ? "bg-pal text-white ring-pal" : "bg-card-soft text-ink ring-line hover:ring-pal/50"}`}>
-                  <WorkIcon work={w} size={20} />{localizeWork(w)}
-                </button>
-              );
-            })}
-            {works.length > 1 && (
-              <div className="ml-1 flex rounded-lg bg-card-soft p-0.5 text-xs ring-1 ring-line">
-                <button onClick={() => setWorkMode("or")} className={`rounded px-2 py-0.5 ${workMode === "or" ? "bg-pal text-white" : "text-ink-muted"}`}>{t("或者")}</button>
-                <button onClick={() => setWorkMode("and")} className={`rounded px-2 py-0.5 ${workMode === "and" ? "bg-pal text-white" : "text-ink-muted"}`}>{t("並且")}</button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {traits.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-xs text-ink-muted">{t("詞條/技能")}</span>
-            {traits.map((tr) => (
-              <button
-                key={tr}
-                onClick={() => setTraits(traits.filter((x) => x !== tr))}
-                title={t("移除此詞條")}
-                className="flex items-center gap-1 rounded-full bg-pal px-2.5 py-1 text-xs text-white ring-1 ring-pal hover:bg-pal/80"
-              >
-                {localizeTrait(tr)}<span className="text-white/80">✕</span>
-              </button>
-            ))}
-            {traits.length > 1 && (
-              <div className="ml-1 flex rounded-lg bg-card-soft p-0.5 text-xs ring-1 ring-line">
-                <button onClick={() => setTraitMode("or")} className={`rounded px-2 py-0.5 ${traitMode === "or" ? "bg-pal text-white" : "text-ink-muted"}`}>{t("或者")}</button>
-                <button onClick={() => setTraitMode("and")} className={`rounded px-2 py-0.5 ${traitMode === "and" ? "bg-pal text-white" : "text-ink-muted"}`}>{t("並且")}</button>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2">
-          <span className="text-ink-muted">{t("排序")}</span>
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="rounded-lg bg-card-soft px-2 py-1.5 text-base text-ink ring-1 ring-line sm:text-sm">
-            {SORTS.map((s) => (<option key={s.key} value={s.key}>{t(s.label)}</option>))}
-          </select>
-          <button onClick={() => setDir((d) => (d === "desc" ? "asc" : "desc"))} className="rounded-lg bg-card-soft px-2 py-1.5 text-sm text-ink ring-1 ring-line hover:ring-pal">
-            {dir === "desc" ? t("▼ 降序") : t("▲ 升序")}
-          </button>
-          {/* 清除篩選固定在此列最右，套用篩選時不會把版面往下推 */}
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("🔍 搜尋帕魯名/暱稱…")}
+            className="min-w-48 flex-1 rounded-lg bg-card-soft px-3 py-1.5 text-base text-ink outline-none ring-1 ring-line focus:ring-2 focus:ring-pal sm:text-sm" />
           <button
-            onClick={resetFilters}
-            disabled={!active}
-            className={`ml-auto rounded-lg px-3 py-1.5 text-sm font-medium ring-1 transition ${
-              active
-                ? "bg-berry/20 text-berry ring-berry/40 hover:bg-berry/30"
-                : "invisible ring-transparent"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-expanded={showFilters}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium ring-1 transition ${
+              showFilters || activeChips.length
+                ? "bg-pal/15 text-pal ring-pal/40 hover:bg-pal/25"
+                : "bg-card-soft text-ink ring-line hover:ring-pal/50"
             }`}
           >
-            ✕ {t("清除篩選")}
+            ⚙ {t("篩選")}
+            {/* 收合狀態下也要看得出「有在篩」,不然會以為資料變少是壞掉了 */}
+            {activeChips.length > 0 && (
+              <span className="rounded-full bg-pal px-1.5 text-xs font-bold text-white">{activeChips.length}</span>
+            )}
+            <span className="text-xs text-ink-muted">{showFilters ? "▲" : "▼"}</span>
+          </button>
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}
+            className="rounded-lg bg-card-soft px-2 py-1.5 text-base text-ink ring-1 ring-line sm:text-sm">
+            {SORTS.map((s) => (<option key={s.key} value={s.key}>{t(s.label)}</option>))}
+          </select>
+          <button onClick={() => setDir((d) => (d === "desc" ? "asc" : "desc"))}
+            title={dir === "desc" ? t("▼ 降序") : t("▲ 升序")}
+            className="rounded-lg bg-card-soft px-2.5 py-1.5 text-sm text-ink ring-1 ring-line hover:ring-pal">
+            {dir === "desc" ? "▼" : "▲"}
           </button>
         </div>
+
+        {showFilters && (
+          <div className="space-y-3 rounded-xl bg-card-soft/60 p-3 ring-1 ring-line">
+            <FilterRow label={t("基本")}>
+              <select value={kind} onChange={(e) => setKind(e.target.value)} className={selCls(kind)}>
+                <option value="">{t("全部類型")}</option>
+                <option value="alpha">{t("α / 首領")}</option>
+                <option value="lucky">{t("✦ 稀有")}</option>
+                <option value="normal">{t("一般")}</option>
+              </select>
+              <select value={gender} onChange={(e) => setGender(e.target.value)} className={selCls(gender)}>
+                <option value="">{t("全部性別")}</option>
+                <option value="Male">{t("♂ 公")}</option>
+                <option value="Female">{t("♀ 母")}</option>
+              </select>
+              <select value={levelMin} onChange={(e) => setLevelMin(e.target.value)} className={selCls(levelMin)}>
+                <option value="">{t("全部等級")}</option>
+                {[50, 40, 30, 20, 10].map((n) => (<option key={n} value={n}>Lv ≥ {n}</option>))}
+              </select>
+              <select value={ivTier} onChange={(e) => setIvTier(e.target.value)} className={selCls(ivTier)}>
+                <option value="">{t("全部個體值")}</option>
+                <option value="300">{t("完美 (300)")}</option>
+                <option value="270">{t("總和 ≥ 270")}</option>
+                <option value="240">{t("總和 ≥ 240")}</option>
+                <option value="180">{t("總和 ≥ 180")}</option>
+              </select>
+              <label className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 ring-1 transition ${
+                namedOnly ? "bg-pal/15 text-pal ring-pal/40" : "bg-card-soft text-ink ring-line hover:ring-pal/50"
+              }`}>
+                <input type="checkbox" checked={namedOnly} onChange={(e) => setNamedOnly(e.target.checked)} />
+                {t("只看有暱稱")}
+              </label>
+              {showOwner && ownerOpts.length > 1 && (
+                <OwnerFilter options={ownerOpts} selected={owners} onChange={setOwners} />
+              )}
+            </FilterRow>
+
+            <FilterRow label={t("星級")}>
+              {[5, 4, 3, 2, 1].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => toggleRank(n)}
+                  className={`rounded-lg px-3 py-1.5 text-sm font-medium ring-1 transition ${
+                    ranks.includes(n) ? "bg-pal text-white ring-pal" : "bg-card-soft text-ink-muted ring-line hover:text-ink hover:ring-pal/50"
+                  }`}
+                  title={t("{n} 星", { n })}
+                >
+                  ★{n}
+                </button>
+              ))}
+            </FilterRow>
+
+            {elementOpts.length > 0 && (
+              <FilterRow label={t("屬性")}>
+                {elementOpts.map((e) => {
+                  const on = elements.includes(e);
+                  return (
+                    <button key={e} onClick={() => toggle(elements, setElements, e)}
+                      className={`rounded-full ring-2 transition ${on ? "ring-pal ring-offset-1" : "opacity-60 ring-transparent hover:opacity-100"}`}>
+                      <ElementBadge el={e} size="lg" />
+                    </button>
+                  );
+                })}
+              </FilterRow>
+            )}
+
+            {workOpts.length > 0 && (
+              <FilterRow label={t("工作適應性")}>
+                {workOpts.map((w) => {
+                  const on = works.includes(w);
+                  return (
+                    <button key={w} onClick={() => toggle(works, setWorks, w)}
+                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-bold ring-1 transition ${on ? "bg-pal text-white ring-pal" : "bg-card-soft text-ink ring-line hover:ring-pal/50"}`}>
+                      <WorkIcon work={w} size={18} />{localizeWork(w)}
+                    </button>
+                  );
+                })}
+                {works.length > 1 && <ModeToggle mode={workMode} onChange={setWorkMode} />}
+              </FilterRow>
+            )}
+
+            <FilterRow label={t("詞條/技能")}>
+              <input
+                value={traitInput}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  // 從 datalist 選到既有詞條 → 直接加入
+                  if (traitOpts.some(([name]) => name === v)) addTrait(v);
+                  else setTraitInput(v);
+                }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTrait(traitInput); } }}
+                list="pb-traits"
+                placeholder={t("輸入以新增…（可多選）")}
+                className={`w-48 max-w-full rounded-lg bg-card-soft px-3 py-1.5 text-base outline-none ring-1 ring-line focus:ring-2 focus:ring-pal sm:text-sm ${traits.length ? "text-pal" : "text-ink"}`}
+              />
+              <datalist id="pb-traits">
+                {traitOpts.map(([name, n]) => (<option key={name} value={name}>{localizeTrait(name)}（{n}）</option>))}
+              </datalist>
+              {traits.map((tr) => (
+                <button
+                  key={tr}
+                  onClick={() => setTraits(traits.filter((x) => x !== tr))}
+                  title={t("移除此詞條")}
+                  className="flex items-center gap-1 rounded-full bg-pal px-2.5 py-1 text-xs text-white ring-1 ring-pal hover:bg-pal/80"
+                >
+                  {localizeTrait(tr)}<span className="text-white/80">✕</span>
+                </button>
+              ))}
+              {traits.length > 1 && <ModeToggle mode={traitMode} onChange={setTraitMode} />}
+            </FilterRow>
+          </div>
+        )}
       </div>
 
       {activeChips.length > 0 && (
