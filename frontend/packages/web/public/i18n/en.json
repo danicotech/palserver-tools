@@ -2484,5 +2484,8 @@
   "還沒帶到,後面要補": "not carried yet — a later step brings it in",
   "{name} 沒有帶得動的這隻": "{name} has none that can carry these",
   "{name} 沒有這隻": "{name} doesn't have one",
-  "{total} 隻": "{total} pals"
+  "{total} 隻": "{total} pals",
+  "這個伺服器還沒有玩家資料": "No player data on this server yet",
+  "全新的伺服器要等第一位玩家進去玩過、而且遊戲寫過一次存檔之後（預設每 30 秒自動存檔），這裡才會有東西。": "A brand-new server stays empty until the first player has joined and the game has written a save (autosave runs every 30 seconds by default).",
+  "伺服器已經有人玩過卻還是空的，多半是存檔位置設定不對。": "If people have already played and this is still empty, the save location is probably misconfigured."
 }

@@ -8,6 +8,7 @@ import { PalDetailModal } from "./PalDetailModal";
 import { Dashboard } from "./Dashboard";
 import { RefreshControl } from "./RefreshControl";
 import { ContentSkeleton } from "./Skeleton";
+import { NoDataYet } from "./ui";
 import { PlayerQuery } from "./PlayerQuery";
 import { SpeciesQuery } from "./SpeciesQuery";
 import { TraitQuery } from "./TraitQuery";
@@ -193,7 +194,11 @@ export function PanelApp(): JSX.Element {
             </button>
           </div>
         )}
-        {!error && data && (
+        {/* 全新伺服器：存檔裡一個玩家都沒有。各分頁的統計都假設「至少有一位玩家」
+            （排行榜要取第一名當長條基準…），直接進去會崩。在這裡一次攔下來。
+            「配種表」不吃存檔資料（查的是靜態配方），上面已經先渲染過，不受影響。 */}
+        {!error && data && data.players.length === 0 && tab !== "breeding" && <NoDataYet onRetry={reload} />}
+        {!error && data && data.players.length > 0 && (
           <>
             {tab === "dashboard" && <Dashboard data={data} onPalClick={openPal} onOwnerPlayerClick={jumpToPlayer} />}
             {tab === "player" && (

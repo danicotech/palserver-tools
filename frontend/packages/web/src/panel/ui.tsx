@@ -159,3 +159,32 @@ export function fmtNum(n: number | null | undefined): string {
   if (n == null || Number.isNaN(n)) return "—";
   return n.toLocaleString("en-US");
 }
+
+/** 全新伺服器（存檔裡一個玩家都沒有）時的共用畫面。
+ *
+ *  各分頁的統計幾乎都建立在「至少有一位玩家」之上（排行榜要取第一名當長條基準、
+ *  圖鑑要算達成率…），空資料集會直接讓畫面崩掉。與其在每個分頁各補一次防呆，
+ *  不如在進入分頁前就攔下來，順便把「為什麼是空的」講清楚 ——
+ *  這是全新伺服器的正常狀態，不是故障。 */
+export function NoDataYet({ onRetry }: { onRetry?: () => void }): JSX.Element {
+  return (
+    <div className="rounded-cute bg-card px-6 py-14 text-center ring-1 ring-line">
+      <div className="text-5xl">🥚</div>
+      <p className="mt-4 text-lg font-semibold text-ink">{t("這個伺服器還沒有玩家資料")}</p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
+        {t("全新的伺服器要等第一位玩家進去玩過、而且遊戲寫過一次存檔之後（預設每 30 秒自動存檔），這裡才會有東西。")}
+      </p>
+      <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-ink-muted">
+        {t("伺服器已經有人玩過卻還是空的，多半是存檔位置設定不對。")}
+      </p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-5 rounded-cute bg-pal px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          {t("重新整理")}
+        </button>
+      )}
+    </div>
+  );
+}

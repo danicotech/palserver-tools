@@ -178,7 +178,10 @@ function PlayerRankings({ data, onOpenPlayer }: { data: Dataset; onOpenPlayer: (
   const stats = useMemo(() => playerStats(data), [data]);
   const m = PLAYER_METRICS.find((x) => x.key === metric)!;
   const ranked = useMemo(() => [...stats].sort((a, b) => m.get(b) - m.get(a)), [stats, m]);
-  const top = m.get(ranked[0]) || 1;
+  // 沒有玩家時 ranked[0] 是 undefined，m.get() 會直接讀 undefined.dexOwned 而崩掉
+  // （症狀:點「排行榜」整頁白掉,主控台噴 Cannot read properties of undefined）。
+  // 上層已經攔掉空資料集,這裡再擋一次 —— 元件不該假設呼叫端一定有防呆。
+  const top = (ranked.length > 0 ? m.get(ranked[0]) : 0) || 1;
   const palFilter = METRIC_PAL_FILTER[metric];
   // 每個指標一種顏色(依色票循環),切指標會換色。
   const barColor = RANK_BAR_COLORS[PLAYER_METRICS.findIndex((x) => x.key === metric) % RANK_BAR_COLORS.length];
