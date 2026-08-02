@@ -411,7 +411,11 @@ def build_guilds(wsd):
 
 
 def extract(gvas, maps):
-    chars = gvas.properties["worldSaveData"]["value"]["CharacterSaveParameterMap"]["value"]
+    # 全新世界(伺服器剛裝好、還沒有人進來過)存檔裡根本沒有 CharacterSaveParameterMap。
+    # 以前這裡直接 KeyError → server.py 回 500 → 網站顯示「無法取得資料(後端未連線)」，
+    # 讓人以為是後端壞了。沒有玩家就是沒有玩家，回空結果才是正確語意。
+    world = gvas.properties.get("worldSaveData", {}).get("value", {})
+    chars = world.get("CharacterSaveParameterMap", {}).get("value", [])
     players, pals_by_owner = {}, {}
     total_pals = orphan = 0
     for e in chars:

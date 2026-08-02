@@ -72,11 +72,26 @@ call "%CD%\windows\setup.bat"
 if not exist "backend\config.json" goto :noconfig
 :hascfg
 if not exist "backend\data" mkdir "backend\data"
+if not exist "backend\data\logs" mkdir "backend\data\logs"
+
+rem 官方 DefaultPalWorldSettings.ini 預設 RESTAPIEnabled=False、RCONEnabled=False,
+rem 照抄過去的話排程器完全沒辦法跟伺服器講話(廣播/踢人/關機/在線人數全部失敗)。
+rem 這裡在啟動前補開,順便把空的密碼填上 —— 使用者自己改過的值不會被動到。
+set "ADMINPW="
+set "JOINPW="
+if not exist ".env" goto :nodotenv
+for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="ADMIN_PASSWORD" set "ADMINPW=%%b"
+for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="SERVER_PASSWORD" set "JOINPW=%%b"
+:nodotenv
+python "backend\tools\ensure_server_ini.py" "%SERVER_DIR%" "%ADMINPW%" "%JOINPW%"
 
 echo [5/5] 啟動存檔解析與排程器...
-start "palsave" /min cmd /c "cd /d "%CD%\backend\tools\palsave" && set SAVE_ROOT=%SAVE_ROOT%&& set PORT=8213&& python server.py"
+rem 這兩個視窗是常駐服務,不是殘留的東西 —— 關掉就等於把服務關掉,
+rem 所以標題直接寫清楚,免得使用者以為可以隨手關。
+rem (要真正無視窗需要用 CREATE_NO_WINDOW 起子行程,那是 GUI exe 版的事。)
+start "存檔解析 palsave:8213(關掉=網站查不到玩家)" /min cmd /c "cd /d "%CD%\backend\tools\palsave" && set SAVE_ROOT=%SAVE_ROOT%&& set PORT=8213&& python server.py"
 timeout /t 2 /nobreak >nul
-start "palscheduler" /min cmd /c "cd /d "%CD%\backend" && palscheduler.exe serve"
+start "排程器 palscheduler:9000(關掉=網站與自動開關停擺)" /min cmd /c "cd /d "%CD%\backend" && palscheduler.exe serve"
 timeout /t 3 /nobreak >nul
 
 rem 確認真的起來了 —— 埠被佔用(例如 Docker 版正在跑)時 palscheduler 會直接結束,

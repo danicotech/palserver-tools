@@ -70,16 +70,22 @@ def find_level_sav():
     """找出目前世界的 Level.sav：優先用 GameUserSettings 的 DedicatedServerName，
     否則挑最近修改的一份。"""
     base = os.path.join(SAVE_ROOT, "Pal", "Saved", "SaveGames", "0")
-    gus = os.path.join(SAVE_ROOT, "Pal", "Saved", "Config", "LinuxServer", "GameUserSettings.ini")
+    # Docker 版是 LinuxServer，SteamCMD 版(Windows)是 WindowsServer —— 兩個都要找，
+    # 只寫死 LinuxServer 的話 Windows 會退回「挑最新的 Level.sav」，多開一個世界就會選錯。
+    cfg = os.path.join(SAVE_ROOT, "Pal", "Saved", "Config")
     wid = None
-    try:
-        with open(gus, encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                if line.startswith("DedicatedServerName="):
-                    wid = line.split("=", 1)[1].strip()
-                    break
-    except OSError:
-        pass
+    for host in ("LinuxServer", "WindowsServer"):
+        try:
+            with open(os.path.join(cfg, host, "GameUserSettings.ini"),
+                      encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    if line.startswith("DedicatedServerName="):
+                        wid = line.split("=", 1)[1].strip()
+                        break
+        except OSError:
+            continue
+        if wid:
+            break
     if wid:
         p = os.path.join(base, wid, "Level.sav")
         if os.path.exists(p):
@@ -97,7 +103,13 @@ def find_level_sav():
 
 def get_data():
     """回傳解析結果，依存檔 mtime 快取。"""
-    path = find_level_sav()
+    try:
+        path = find_level_sav()
+    except FileNotFoundError:
+        # 伺服器剛裝好、還沒跑到第一次自動存檔(預設 30 秒)時完全正常。
+        # 回空結果讓網站顯示「還沒有玩家」，而不是丟 500 讓人以為後端掛了。
+        return {"total_pals": 0, "orphan_pals": 0, "players": [],
+                "guilds": [], "source": "", "pending": True}
     mtime = os.path.getmtime(path)
     with _lock:
         if _cache["path"] == path and _cache["mtime"] == mtime:
@@ -140,6 +152,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(500, {"ok": False, "error": str(e)})
             # 公會/據點:非同步慢路徑,失敗或未就緒時為空 list,不影響主資料
             try:
+                if _cache["path"] is None:
+                    raise FileNotFoundError  # 還沒有存檔可解，直接走下面的空 list
                 guilds = get_guilds(_cache["path"], _cache["mtime"])
                 uid2name = {p["uid"]: p["name"] for p in data["players"]}
                 data = {**data, "guilds": [

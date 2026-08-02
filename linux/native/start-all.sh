@@ -73,6 +73,16 @@ fi
 }
 mkdir -p backend/data
 
+# 官方 DefaultPalWorldSettings.ini 預設 RESTAPIEnabled=False、RCONEnabled=False,
+# 照抄過去的話排程器完全沒辦法跟伺服器講話(廣播/踢人/關機/在線人數全部失敗)。
+# 這裡在啟動前補開,順便把空的密碼填上 —— 使用者自己改過的值不會被動到。
+ADMINPW=""; JOINPW=""
+if [ -f .env ]; then
+  ADMINPW=$(sed -n 's/^ADMIN_PASSWORD=//p' .env | head -1)
+  JOINPW=$(sed -n 's/^SERVER_PASSWORD=//p' .env | head -1)
+fi
+python3 backend/tools/ensure_server_ini.py "$SERVER_DIR" "$ADMINPW" "$JOINPW" || true
+
 echo "[5/5] 啟動存檔解析與排程器..."
 mkdir -p backend/data/logs
 ( cd backend/tools/palsave && SAVE_ROOT="$SERVER_DIR" PORT=8213 \
