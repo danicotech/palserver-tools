@@ -75,7 +75,7 @@ echo "      完成"
 echo "[3/7] Python(解析存檔,查詢網站的玩家/帕魯資料靠它)..."
 command -v python3 >/dev/null || sysinstall python3 python3 python
 command -v pip3 >/dev/null || python3 -m ensurepip --upgrade >/dev/null 2>&1 || sysinstall python3-pip python3-pip python-pip
-python3 -c "import pyooz, palworld_save_tools" >/dev/null 2>&1 || {
+python3 -c "import ooz, palworld_save_tools" >/dev/null 2>&1 || {
   echo "      安裝解析套件..."
   python3 -m pip install --quiet --disable-pip-version-check -r backend/tools/palsave/requirements.txt ||
     python3 -m pip install --quiet --break-system-packages -r backend/tools/palsave/requirements.txt

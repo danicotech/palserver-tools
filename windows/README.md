@@ -120,6 +120,11 @@ windows\start.bat
 網站在 <http://localhost:9000>。首次需要 Python / Go / Node(腳本會檢查並提示)。
 詳見 [docs/SteamCMD版.md](../docs/SteamCMD版.md)。
 
+啟動後**只會有一個視窗**,標題是「帕魯服務執行中」——
+存檔解析(palsave)是排程器的子行程(無視窗),遊戲伺服器則完全獨立於主控台。
+關掉那個視窗就等於停止服務;也可以雙擊 `windows\native\stop-all.bat`。
+訊息同時落地在 `backend\data\logs\`。
+
 ## 常見狀況
 
 - **跳出「找不到 Docker」** —— 先安裝並啟動 [Docker Desktop](https://www.docker.com/products/docker-desktop/)。

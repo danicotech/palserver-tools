@@ -36,7 +36,7 @@ command -v python3 >/dev/null || {
   echo "[X] 找不到 python3。Debian/Ubuntu:sudo apt install -y python3 python3-pip"
   exit 1
 }
-python3 -c "import pyooz, palworld_save_tools" >/dev/null 2>&1 || {
+python3 -c "import ooz, palworld_save_tools" >/dev/null 2>&1 || {
   echo "    安裝解析套件(只有第一次需要)..."
   python3 -m pip install --quiet --disable-pip-version-check -r backend/tools/palsave/requirements.txt ||
     python3 -m pip install --quiet --break-system-packages -r backend/tools/palsave/requirements.txt

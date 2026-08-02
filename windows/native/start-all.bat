@@ -30,7 +30,7 @@ if not exist "%SERVER_DIR%\PalServer.exe" goto :noserver
 echo [2/5] 檢查 Python(存檔解析用)...
 where python >nul 2>nul
 if errorlevel 1 goto :nopython
-python -c "import pyooz, palworld_save_tools" >nul 2>nul
+python -c "import ooz, palworld_save_tools" >nul 2>nul
 if not errorlevel 1 goto :haspy
 echo     安裝解析套件(只有第一次需要)...
 python -m pip install --quiet --disable-pip-version-check -r "backend\tools\palsave\requirements.txt"
@@ -85,42 +85,42 @@ for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="SERVER_PA
 :nodotenv
 python "backend\tools\ensure_server_ini.py" "%SERVER_DIR%" "%ADMINPW%" "%JOINPW%"
 
-echo [5/5] 啟動存檔解析與排程器...
-rem 這兩個視窗是常駐服務,不是殘留的東西 —— 關掉就等於把服務關掉,
-rem 所以標題直接寫清楚,免得使用者以為可以隨手關。
-rem (要真正無視窗需要用 CREATE_NO_WINDOW 起子行程,那是 GUI exe 版的事。)
-start "存檔解析 palsave:8213(關掉=網站查不到玩家)" /min cmd /c "cd /d "%CD%\backend\tools\palsave" && set SAVE_ROOT=%SAVE_ROOT%&& set PORT=8213&& python server.py"
-timeout /t 2 /nobreak >nul
-start "排程器 palscheduler:9000(關掉=網站與自動開關停擺)" /min cmd /c "cd /d "%CD%\backend" && palscheduler.exe serve"
-timeout /t 3 /nobreak >nul
-
-rem 確認真的起來了 —— 埠被佔用(例如 Docker 版正在跑)時 palscheduler 會直接結束,
-rem 這時候還印「完成」只會讓人以為好了。
-set /a _hc=0
-:health
+echo [5/5] 啟動服務...
+rem 先確認 9000 沒被佔住 —— 被佔住時排程器會立刻結束,
+rem 直接跑下去只會看到一閃而過的錯誤,不如先講清楚。
 curl -s -o nul -m 2 http://127.0.0.1:9000/healthz
-if not errorlevel 1 goto :healthy
-set /a _hc+=1
-if %_hc% GEQ 10 goto :notup
-timeout /t 2 /nobreak >nul
-goto :health
+if not errorlevel 1 goto :occupied
 
-:healthy
-echo.
-echo 完成!(遊戲伺服器由排程器依時段表自動開關)
+rem 存檔解析(palsave)改由排程器當子行程帶起來 —— Windows 用 CREATE_NO_WINDOW,
+rem 不會再彈一個黑視窗;它的訊息會直接印在下面這個視窗裡,並落地到 logs\palsave.log。
+rem 排程器本身也跑在「這個」視窗,不再另開 —— 從此全套服務只有一個視窗。
+set "PALSAVE_SPAWN=1"
+set "PALSAVE_DIR=%CD%\backend\tools\palsave"
+set "PALSAVE_PORT=8213"
+set "PALSAVE_LOG=%CD%\backend\data\logs\palsave.log"
+rem 瀏覽器由排程器在「真的聽好了」之後自己開,腳本這邊不用瞎等幾秒
+set "PANEL_URL=http://localhost:9000"
+set "PANEL_OPEN_BROWSER=1"
+
 rem 埠與密碼都在 PalWorldSettings.ini 裡,直接讀出來給使用者看,不用自己去翻
 call "%~dp0show-info.bat" "%SERVER_DIR%" 9000
-echo 要全部關掉:雙擊 windows\native\stop-all.bat
-start http://localhost:9000
+title 帕魯服務執行中(關掉這個視窗＝停止服務)
+echo 這個視窗就是服務本身,下面是即時訊息(存檔解析與排程器都在裡面)。
+echo 停止服務:按 Ctrl+C,或雙擊 windows\native\stop-all.bat
+echo ==================================================
+pushd backend
+palscheduler.exe serve
+popd
+echo.
+echo 服務已停止。
 pause
 exit /b 0
 
-:notup
+:occupied
 echo.
-echo [X] 服務沒有起來(http://localhost:9000 沒有回應)。最常見的原因:
-echo     1. Docker 版正在跑,佔住了同一個埠 —— 先跑 windows\stop.bat 把 Docker 版停掉
-echo     2. 排程器啟動失敗 —— 打開剛才那個 palscheduler 視窗看錯誤訊息
-echo     3. 防火牆擋住本機連線
+echo [X] 127.0.0.1:9000 已經有服務在跑了,不重複啟動。可能是:
+echo     1. Docker 版正在跑,佔住同一個埠 —— 先跑 windows\stop.bat 把它停掉
+echo     2. 之前開的 start-all 還在 —— 找找工作列上有沒有另一個「帕魯服務執行中」視窗
 pause
 exit /b 1
 
