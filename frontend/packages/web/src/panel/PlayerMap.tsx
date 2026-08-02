@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { FiMaximize, FiMinimize } from "react-icons/fi";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
 import { MAP_IMAGE, IMAGE_BOUNDS, TREE_MAP_IMAGE, TREE_IMAGE_BOUNDS, escapeHtml } from "../mapLayers";
 import { usePlayerAvatar, playerInitial } from "./playerAvatar";
@@ -38,6 +39,8 @@ export function PlayerMap({
   const [showBases, setShowBases] = useState(true);
   const [q, setQ] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null); // 全螢幕的對象:連同上方篩選列一起放大
+  const [isFull, setIsFull] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const boundsRef = useRef<L.LatLngBounds>(IMAGE_BOUNDS);
   const markersRef = useRef<L.LayerGroup | null>(null);
@@ -80,6 +83,38 @@ export function PlayerMap({
     [data.guilds, guildFilter],
   );
   const baseCount = useMemo(() => shownGuilds.reduce((n, g) => n + g.bases.length, 0), [shownGuilds]);
+
+  // 全螢幕。用瀏覽器原生 Fullscreen API,所以按 ESC 或系統手勢離開時我們也要跟著同步狀態
+  // (不能只靠自己的按鈕記錄,不然離開後按鈕還停在「離開全螢幕」)。
+  useEffect(() => {
+    const onChange = () => {
+      setIsFull(document.fullscreenElement === wrapRef.current);
+      // 容器尺寸變了,Leaflet 必須重算,否則只會在原本大小的區塊裡畫圖。
+      // 順便重新 fit —— 放大之後還停在原本的縮放層級,地圖會縮在角落。
+      window.setTimeout(() => {
+        const m = mapRef.current;
+        if (!m) return;
+        m.invalidateSize();
+        m.setMinZoom(m.getBoundsZoom(boundsRef.current) - 1);
+        m.fitBounds(boundsRef.current);
+      }, 100);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFull = () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+      return;
+    }
+    const el = wrapRef.current;
+    if (!el) return;
+    // Safari 仍只吃有前綴的版本
+    const webkit = (el as HTMLDivElement & { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen;
+    if (el.requestFullscreen) void el.requestFullscreen();
+    else if (webkit) webkit.call(el);
+  };
 
   useEffect(() => {
     const el = containerRef.current;
@@ -250,8 +285,13 @@ export function PlayerMap({
     }`;
 
   return (
-    <div className="mt-4 overflow-hidden rounded-cute bg-card ring-1 ring-line">
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+    <div
+      ref={wrapRef}
+      className={`overflow-hidden bg-card ${
+        isFull ? "flex h-screen w-screen flex-col" : "mt-4 rounded-cute ring-1 ring-line"
+      }`}
+    >
+      <div className="flex shrink-0 flex-wrap items-center gap-2 px-3 py-2">
         <span className="text-sm font-bold text-ink">🗺️ {t("玩家地圖")}</span>
         <span className="text-xs text-ink-muted">
           {t("{n} 位玩家", { n: shownPlayers.length })} · {t("{n} 個據點", { n: baseCount })}
@@ -315,7 +355,19 @@ export function PlayerMap({
           ))}
         </div>
       </div>
-      <div ref={containerRef} className="h-[320px] w-full sm:h-[460px]" />
+      <div className={`relative ${isFull ? "min-h-0 flex-1" : ""}`}>
+        <div ref={containerRef} className={isFull ? "size-full" : "h-[320px] w-full sm:h-[460px]"} />
+        {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
+        <button
+          type="button"
+          onClick={toggleFull}
+          title={isFull ? t("離開全螢幕") : t("全螢幕檢視地圖")}
+          aria-label={isFull ? t("離開全螢幕") : t("全螢幕檢視地圖")}
+          className="absolute bottom-3 right-3 z-1001 flex size-9 items-center justify-center rounded-lg bg-card/90 text-ink shadow-cute ring-1 ring-line backdrop-blur transition hover:bg-card hover:text-pal hover:ring-pal"
+        >
+          {isFull ? <FiMinimize size={18} /> : <FiMaximize size={18} />}
+        </button>
+      </div>
     </div>
   );
 }
