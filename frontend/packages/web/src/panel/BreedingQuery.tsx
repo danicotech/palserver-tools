@@ -2951,7 +2951,9 @@ export function BreedingQuery({ dataset }: { dataset?: Dataset | null }): JSX.El
                   <>
                     {(
                       [
-                        ["passive", "🏷️", t("詞條")],
+                        // 寫「被動詞條」而不是「詞條」—— 才跟右邊的「主動技能」對稱,
+                        // 一眼看得出這兩顆是「被動 vs 主動」而不是兩種不相干的東西。
+                        ["passive", "🏷️", t("被動詞條")],
                         ["skill", "✨", t("主動技能")],
                       ] as ["passive" | "skill", string, string][]
                     ).map(([key, icon, label]) => {
