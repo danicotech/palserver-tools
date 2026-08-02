@@ -355,8 +355,13 @@ export function PlayerMap({
           ))}
         </div>
       </div>
-      <div className={`relative ${isFull ? "min-h-0 flex-1" : ""}`}>
-        <div ref={containerRef} className={isFull ? "size-full" : "h-[320px] w-full sm:h-[460px]"} />
+      {/* 高度變化一律做在「外層」,地圖容器的 className 必須從頭到尾固定不變。
+          原因:L.map() 會直接在這個 DOM 元素上加 leaflet-container / leaflet-touch 等 class,
+          而 React 只要重繪就會用自己的 className 整個覆蓋掉,把那些 class 洗掉。
+          少了 .leaflet-container,Leaflet 的 CSS(含 img.leaflet-image-layer 的 max-width:none)
+          全部失效,底圖寬度被 preflight 的 img{max-width:100%} 壓成 0 —— 症狀就是「進全螢幕後地圖不見了」。 */}
+      <div className={`relative ${isFull ? "min-h-0 flex-1" : "h-80 sm:h-115"}`}>
+        <div ref={containerRef} className="size-full" />
         {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
         <button
           type="button"
