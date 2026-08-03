@@ -301,7 +301,8 @@ html {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background: rgb(255 255 255 / 0.9);
+  /* 深底比白底好:帕魯頭像多半是亮色,白底會糊在一起 */
+  background: rgb(13 22 30);
   box-shadow: 0 0 0 2px rgb(120 120 120 / 0.9), 0 1px 3px rgb(0 0 0 / 0.5);
 }
 .pmap-spawn span.day { box-shadow: 0 0 0 2px #f59e0b, 0 1px 3px rgb(0 0 0 / 0.5); }
@@ -329,3 +330,21 @@ html {
 .leaflet-container .leaflet-bottom.leaflet-right {
   margin-bottom: 46px;
 }
+
+/* NPC / 頭目:圓形頭像框 + 分組色外圈。
+   深底 rgb(13,22,30) 而不是白底 —— 這些頭像多半是亮色人物,白底會糊成一片。 */
+.pmap-poi-face span {
+  background: rgb(13 22 30) !important;
+  border: 2px solid;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
+  overflow: hidden;
+}
+.pmap-poi-face img {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  filter: none;
+}
+/* 帕魯選擇器的頭像也用同一個底色,側欄與地圖上看起來才是同一個東西 */
+.pmap-pal-pick img { background: rgb(13 22 30); border-radius: 9999px; }

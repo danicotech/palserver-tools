@@ -5,7 +5,25 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FiMaximize, FiMinimize, FiMapPin } from "react-icons/fi";
+import {
+  FiMaximize,
+  FiMinimize,
+  FiMapPin,
+  FiRotateCcw,
+  FiChevronLeft,
+  FiChevronRight,
+  FiFilter,
+  FiSearch,
+  FiChevronDown,
+  FiAlertTriangle,
+  FiStar,
+  FiAnchor,
+  FiTriangle,
+  FiUsers,
+  FiBox,
+} from "react-icons/fi";
+import { GiEggClutch } from "react-icons/gi";
+import type { IconType } from "react-icons";
 import {
   loadMapPoints,
   clusterPoints,
@@ -40,6 +58,19 @@ import { t, useI18n } from "../i18n";
 
 type World = "main" | "tree";
 type WhoFilter = "all" | "online" | "offline";
+
+/** 分組圖示:一律用 icon 元件,不用幾何符號或 emoji ——
+ *  符號在不同字型下大小/基線不一,emoji 各平台長得也不一樣。 */
+const GROUP_ICON_CMP: Record<string, IconType> = {
+  location: FiMapPin,
+  enemy: FiAlertTriangle,
+  collect: FiStar,
+  egg: GiEggClutch,
+  fishing: FiAnchor,
+  mineral: FiTriangle,
+  npc: FiUsers,
+  resource: FiBox,
+};
 
 export function PlayerMap({
   data,
@@ -149,6 +180,8 @@ export function PlayerMap({
   const [poi, setPoi] = useState<MapPointsData | null>(null);
   const [onCats, setOnCats] = useState<Set<string>>(new Set());
   const [poiOpen, setPoiOpen] = useState(false);
+  /** 收合起來的分組(預設全開) */
+  const [foldedGroups, setFoldedGroups] = useState<Set<string>>(new Set());
   const poiLayerRef = useRef<L.LayerGroup | null>(null);
   useEffect(() => {
     let alive = true;
@@ -596,7 +629,7 @@ export function PlayerMap({
       }`}
     >
       <div className="flex shrink-0 flex-wrap items-center gap-2 px-3 py-2">
-        <span className="text-sm font-bold text-ink">🗺️ {t("玩家地圖")}</span>
+        <span className="flex items-center gap-1.5 text-sm font-bold text-ink"><FiMapPin size={14} aria-hidden="true" />{t("玩家地圖")}</span>
         <span className="text-xs text-ink-muted">
           {t("{n} 位玩家", { n: shownPlayers.length })} · {t("{n} 個據點", { n: baseCount })}
         </span>
@@ -685,12 +718,43 @@ export function PlayerMap({
           橫幅比地圖還高 —— 側欄才是這種「多分類 + 大地圖」的正確版型。 */}
       <div className={`flex min-h-0 flex-col sm:flex-row ${isFull ? "flex-1" : ""}`}>
       {poi && poiOpen && (
-        <div className={`shrink-0 overflow-y-auto border-t border-line bg-card-soft/60 px-3 py-2 sm:w-72 sm:border-t-0 sm:border-r ${
+        <div className={`flex shrink-0 flex-col border-t border-line bg-card-soft/60 sm:w-72 sm:border-t-0 sm:border-r ${
             isFull ? "max-h-64 sm:max-h-none" : "max-h-64 sm:max-h-170"
           }`}>
+          {/* 工具列固定在最上方 —— 分類很長,擺下面等於要一路捲到底才按得到 */}
+          <div className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setOnCats(new Set());
+                setSpawnPal(null);
+                setPalQ("");
+              }}
+              className="flex items-center gap-1.5 rounded-lg bg-pal px-2.5 py-1.5 font-medium text-white transition hover:opacity-90"
+            >
+              <FiRotateCcw size={13} aria-hidden="true" />
+              {t("重置篩選")}
+            </button>
+            <span className="min-w-0 flex-1 truncate text-ink-muted">
+              {onCats.size > 0
+                ? t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })
+                : t("尚未選擇")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPoiOpen(false)}
+              className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-ink-muted transition hover:bg-card hover:text-ink"
+            >
+              <FiChevronLeft size={13} aria-hidden="true" />
+              {t("隱藏篩選")}
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
           {poi.groups.map((g) => {
             const cats = g.categories.filter((c) => poi.categories[c]);
             const on = cats.filter((c) => onCats.has(c)).length;
+            const folded = foldedGroups.has(g.key);
+            const GroupIcon = GROUP_ICON_CMP[g.key] ?? FiMapPin;
             const toggleGroup = () =>
               setOnCats((prev) => {
                 const next = new Set(prev);
@@ -701,22 +765,45 @@ export function PlayerMap({
             return (
               <div key={g.key} className="mb-2">
                 {/* 組標題自成一列(側欄只有 288px,再左右分欄會把分類擠成兩三個字) */}
-                <button
-                  type="button"
-                  onClick={toggleGroup}
-                  className={`mb-1 flex w-full items-center gap-1.5 rounded px-1 py-1 text-xs font-bold transition hover:bg-card ${
-                    on ? "text-ink" : "text-ink-muted"
-                  }`}
-                  style={on ? { color: GROUP_COLOR[g.key] } : undefined}
-                  title={on === cats.length ? t("全部取消") : t("全部選取")}
-                >
-                  <span aria-hidden="true">{GROUP_ICON[g.key]}</span>
-                  {g.name}
-                  <span className="ml-auto text-[10px] font-medium text-ink-muted">
-                    {on ? `${on}/${cats.length}` : t("全部")}
-                  </span>
-                </button>
-                <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                <div className="mb-1 flex w-full items-center gap-1">
+                  {/* 箭頭只管摺疊,名稱只管全選 —— 兩個動作分開,才不會想收合卻把整組打開 */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFoldedGroups((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(g.key)) next.delete(g.key);
+                        else next.add(g.key);
+                        return next;
+                      })
+                    }
+                    aria-label={folded ? t("展開") : t("收合")}
+                    aria-expanded={!folded}
+                    className="flex size-5 shrink-0 items-center justify-center rounded text-ink-muted transition hover:bg-card hover:text-ink"
+                  >
+                    <FiChevronDown
+                      size={13}
+                      aria-hidden="true"
+                      className={`transition-transform ${folded ? "-rotate-90" : ""}`}
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleGroup}
+                    className={`flex min-w-0 flex-1 items-center gap-1.5 rounded px-1 py-1 text-xs font-bold transition hover:bg-card ${
+                      on ? "text-ink" : "text-ink-muted"
+                    }`}
+                    style={on ? { color: GROUP_COLOR[g.key] } : undefined}
+                    title={on === cats.length ? t("全部取消") : t("全部選取")}
+                  >
+                    <GroupIcon size={13} aria-hidden="true" />
+                    <span className="truncate">{g.name}</span>
+                    <span className="ml-auto shrink-0 text-[10px] font-medium text-ink-muted">
+                      {on ? `${on}/${cats.length}` : t("全部")}
+                    </span>
+                  </button>
+                </div>
+                <div className={`min-w-0 flex-1 flex-wrap gap-1 ${folded ? "hidden" : "flex"}`}>
                   {cats.map((c) => {
                     const info = poi.categories[c];
                     const active = onCats.has(c);
@@ -744,9 +831,7 @@ export function PlayerMap({
                         {catIcon ? (
                           <img src={catIcon} alt="" className="size-4 shrink-0 object-contain" loading="lazy" />
                         ) : (
-                          <span className="w-4 shrink-0 text-center" aria-hidden="true">
-                            {GROUP_ICON[g.key]}
-                          </span>
+                          <GroupIcon size={13} className="shrink-0" aria-hidden="true" />
                         )}
                         <span>{info.label}</span>
                         <span className={`shrink-0 text-[10px] tabular-nums ${active ? "text-white/80" : "text-ink-muted"}`}>
@@ -762,7 +847,8 @@ export function PlayerMap({
           {/* 帕魯位置:選一隻就在地圖上標出牠的生成點 */}
           <div className="mt-3 border-t border-line pt-2">
             <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink-muted">
-              🐾 {t("帕魯位置")}
+              <FiSearch size={13} aria-hidden="true" />
+              {t("帕魯位置")}
               {spawnPal && (
                 <button type="button" onClick={() => setSpawnPal(null)} className="ml-auto text-berry underline">
                   {t("清除")}
@@ -803,37 +889,13 @@ export function PlayerMap({
                       spawnPal === x.id ? "bg-pal/20 ring-pal" : "bg-card ring-line hover:ring-pal/50"
                     }`}
                   >
-                    {x.icon && <img src={x.icon} alt="" className="size-8 object-contain" loading="lazy" />}
+                    {x.icon && <img src={x.icon} alt="" className="pmap-pal-pick size-8 object-contain" loading="lazy" />}
                     <span className="w-full truncate text-center text-[10px] text-ink">{x.zh}</span>
                   </button>
                 ))}
             </div>
           </div>
 
-          <div className="sticky bottom-0 -mx-3 mt-2 flex items-center gap-2 border-t border-line bg-card-soft/95 px-3 py-2 text-xs backdrop-blur">
-            <button
-              type="button"
-              onClick={() => {
-                setOnCats(new Set());
-                setSpawnPal(null);
-                setPalQ("");
-              }}
-              className="flex items-center gap-1 rounded-lg bg-pal px-2.5 py-1.5 font-medium text-white transition hover:opacity-90"
-            >
-              ↺ {t("重置篩選")}
-            </button>
-            <span className="min-w-0 flex-1 truncate text-ink-muted">
-              {onCats.size > 0
-                ? t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })
-                : t("尚未選擇")}
-            </span>
-            <button
-              type="button"
-              onClick={() => setPoiOpen(false)}
-              className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-ink-muted transition hover:bg-card hover:text-ink"
-            >
-              ‹ {t("隱藏篩選")}
-            </button>
           </div>
         </div>
       )}
