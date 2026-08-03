@@ -612,7 +612,7 @@ export function PlayerMap({
                             return next;
                           })
                         }
-                        className={`flex min-h-8 min-w-0 flex-1 items-center gap-1.5 rounded-lg px-2 text-xs ring-1 transition ${
+                        className={`flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-xs ring-1 transition ${
                           active
                             ? "text-white ring-transparent"
                             : "bg-card text-ink ring-line hover:ring-pal/50"
@@ -627,8 +627,8 @@ export function PlayerMap({
                             {GROUP_ICON[g.key]}
                           </span>
                         )}
-                        <span className="truncate">{info.label}</span>
-                        <span className={`ml-auto shrink-0 text-[10px] tabular-nums ${active ? "text-white/80" : "text-ink-muted"}`}>
+                        <span>{info.label}</span>
+                        <span className={`shrink-0 text-[10px] tabular-nums ${active ? "text-white/80" : "text-ink-muted"}`}>
                           {info.count}
                         </span>
                       </button>

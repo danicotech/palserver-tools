@@ -272,3 +272,23 @@ html {
   transform: scale(1.12);
 }
 .pmap-poi-img img { transition: transform 0.12s ease; }
+
+/* 分群數量:擺在標記正上方、不加底色、字小一點 —— 底色會遮住標記圖本身,
+   而數字只是輔助資訊,不該比它描述的東西還搶眼。 */
+.pmap-poi-group span { position: relative; overflow: visible; }
+.pmap-poi-group b {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: -2px;
+  background: none !important;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+  /* 沒有底色就得靠描邊,不然壓在亮色地表上會看不見 */
+  text-shadow:
+    0 0 2px #000, 0 0 2px #000, 0 1px 2px rgb(0 0 0 / 0.9);
+}
