@@ -187,6 +187,21 @@ for (const [groupKey, , cats] of GROUPS) {
         sub = p[f];
         if (name) break;
       }
+      // 組織之塔的名稱藏在 bossType,值長成 EPalBossType::ForestBoss,
+      // 但翻譯表 tower 的鍵沒有前綴 —— 不去掉就查不到,提示的第二行會直接
+      // 印出原始列舉值(「EPalBossType::ForestBoss」)而不是「帕魯保護團體的高塔」。
+      let boss = null;
+      if (typeof p.bossType === "string") {
+        boss = p.bossType.replace(/^EPalBossType::/, "");
+        // 一定要指定 tower 命名空間:GrassBoss 在 npc 表裡是「佐伊」(塔主的名字),
+        // 在 tower 表裡才是「雷恩盜獵集團的高塔」。通用 resolve 會先撞到 npc。
+        const tower = i18n.tower?.[boss] ?? null;
+        if (tower) {
+          name = tower;
+          sub = sub ?? boss;
+          boss = null; // 已經變成可讀名稱,第 7 欄就不用再擺原始值
+        }
+      }
       // 第 4 欄是高度(公尺)。遊戲的 z 是公分,除以 100 才是玩家看到的「Z 38m」。
       // 早期版本省掉了它,但地牢/寶箱在立體地形上常常上下重疊,沒有高度會找錯層。
       const zM = Math.round((loc[2] ?? 0) / 100);
@@ -200,7 +215,7 @@ for (const [groupKey, , cats] of GROUPS) {
         zM,
         sub ?? "",
         name && name !== sub ? name : "",
-        typeof p.lv === "number" ? p.lv : (typeof p.bossType === "string" ? p.bossType : 0),
+        typeof p.lv === "number" ? p.lv : (boss ?? 0),
       ];
     };
     const add = (cat, label, list, requireName = false) => {

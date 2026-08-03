@@ -84,14 +84,16 @@ export function loadMapDetail(): Promise<MapDetail | null> {
 /** 詳細資料的座標鍵。必須和產生腳本的 ckey 一致(四捨五入到整數)。 */
 export const detailKey = (x: number, y: number) => `${Math.round(x)},${Math.round(y)}`;
 
-/** 事件分類的中文名 */
+/** 事件分類的中文名。
+ *  用詞照抄遊戲內/參考站的說法(實測面板顯示「戰鬥, 帕魯巢穴, 大量出現, 商人,
+ *  獎勵事件, 野外事件」),不要自己另外翻 —— 玩家是拿這些字去對照遊戲的。 */
 export const INCIDENT_CATEGORY: Record<string, string> = {
-  battle: "對戰",
+  battle: "戰鬥",
   supply: "補給",
-  wild: "野生帕魯",
-  nest: "巢穴",
+  wild: "野外事件",
+  nest: "帕魯巢穴",
   outbreak: "大量出現",
-  reward: "獎勵",
+  reward: "獎勵事件",
   merchant: "商人",
 };
 
@@ -129,6 +131,11 @@ export function clusterPoints(
   /** 地圖座標 → 螢幕像素的倍率 */
   pixelsPerUnit: number,
   world: 0 | 1,
+  /** 回 true 的點不納入分群。用來套用「已收集 / 未收集」這種篩選 ——
+   *  必須在分群前就排除,分群後才濾會濾不掉:一個群裡混著已收集與未收集,
+   *  只憑代表點無法決定整群的去留(縮小地圖後已收集篩選失效就是這個原因)。
+   *  傳索引而不是先過濾陣列,是因為索引就是收集紀錄的身分,過濾會讓它整批位移。 */
+  skip?: (category: string, index: number) => boolean,
 ): Cluster[] {
   const cell = 44 / Math.max(pixelsPerUnit, 1e-6);
   const grid = new Map<
@@ -139,6 +146,7 @@ export function clusterPoints(
     for (let i = 0; i < points.length; i++) {
       const p = points[i];
       if (p[2] !== world) continue;
+      if (skip?.(category, i)) continue;
       const [x, y] = p;
       if (x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY) continue;
       const key = `${Math.floor(x / cell)}:${Math.floor(y / cell)}`;
@@ -373,6 +381,11 @@ export function iconFor(category: string, sub?: string): string | null {
     return v ? ITEM(`Material_PalEgg_${v}`) : MAPICON("PalEgg_Normal_01");
   }
   if (MARKER[category]) return `/game-data/map-icons/${MARKER[category]}`;
+  // 拆分出來的子類別(FishingSpot_Easy、Salvage_Rank2、RareFishingSpot_Normal…)
+  // 沿用母類別的標記圖。少了這一步,所有釣場與打撈都查不到圖而回傳 null,
+  // 畫面上就只剩沒有圖的小圓點 —— 圖示表裡只有母類別 FishingSpot / Salvage。
+  const base = category.split("_")[0];
+  if (base !== category && MARKER[base]) return `/game-data/map-icons/${MARKER[base]}`;
   return LEGACY_ICON[category] ?? null;
 }
 

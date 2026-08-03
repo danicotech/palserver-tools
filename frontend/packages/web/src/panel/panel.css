@@ -388,12 +388,49 @@ html {
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
   overflow: hidden;
 }
+/* 圓框內的圖原本 26px,在 42px 的標記裡顯得空 —— 釣場密度高,圖太小根本認不出難度 */
 .pmap-poi-ring img {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   filter: none;
 }
 .pmap-poi-rare span {
   background: var(--poi, #64748b) !important;
   border-color: #fff;
+}
+
+/* 圓形核取方塊。原生方框在深色底上很不明顯,而且和篩選列其他圓角元件不搭。
+   用 appearance:none 自己畫,勾選態填分組主色、內圈留白當作勾記。 */
+.pmap-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding: 0 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--card-soft, rgb(30 41 59));
+  box-shadow: inset 0 0 0 1px var(--line, rgb(51 65 85));
+  font-size: 0.75rem;
+  color: var(--ink, #e2e8f0);
+  cursor: pointer;
+  user-select: none;
+}
+.pmap-check input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 2px var(--line, rgb(71 85 105));
+  background: transparent;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.pmap-check input:checked {
+  background: radial-gradient(circle, transparent 34%, var(--pal, #38bdf8) 36%);
+  box-shadow: inset 0 0 0 2px var(--pal, #38bdf8);
+}
+.pmap-check input:focus-visible {
+  outline: 2px solid var(--pal, #38bdf8);
+  outline-offset: 2px;
 }

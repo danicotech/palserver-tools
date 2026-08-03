@@ -119,33 +119,40 @@ function detailFor(
     if (!first) return { extra: "" };
     // 同一個生成點會隨機刷出多種事件,所以標題寫「第一種 +N」
     const more = ids.length > 1 ? ` +${ids.length - 1}` : "";
-    const cat = INCIDENT_CATEGORY[first.c] ?? first.c;
     const lv = first.lv ? `<div>Lv ${first.lv[0]}–${first.lv[1]}</div>` : "";
-    const rest =
-      ids.length > 1
-        ? `<div style="opacity:.7;margin-top:.25em">${ids
-            .slice(1, 6)
-            .map((i) => escapeHtml(d.incidents[i]?.t ?? ""))
-            .filter(Boolean)
-            .join("<br />")}</div>`
-        : "";
-    return { name: `${first.t}${more}`, extra: `<div>${escapeHtml(cat)}</div>${lv}${rest}` };
+    // 列出這個點所有事件的分類並統計 —— 參考站就是這樣呈現的
+    // (「戰鬥×6, 帕魯巢穴×3, 大量出現×3, 商人, 獎勵事件, 野外事件×4」)。
+    // 玩家真正想知道的是「這裡會刷到什麼類型」,而不是十八個事件的名字。
+    const tally = new Map<string, number>();
+    for (const i of ids) {
+      const c = d.incidents[i]?.c;
+      if (!c) continue;
+      const label = INCIDENT_CATEGORY[c] ?? c;
+      tally.set(label, (tally.get(label) ?? 0) + 1);
+    }
+    const kinds = [...tally.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => escapeHtml(k) + (n > 1 ? `×${n}` : ""))
+      .join("、");
+    return {
+      name: `${first.t}${more}`,
+      extra: `<div style="max-width:22em;white-space:normal">${kinds}</div>${lv}`,
+    };
   }
 
   if (category === "Note" && sub) {
     const n = d.notes[sub];
     if (!n) return { extra: "" };
-    const cat = NOTE_CATEGORY[n.c] ?? n.c;
-    const body = n.x ? `<div style="opacity:.7;max-width:22em;white-space:normal">${escapeHtml(n.x)}</div>` : "";
-    return { name: n.t, extra: `<div>${escapeHtml(cat)}</div>${body}` };
+    // 內文不放進提示 —— 一篇手記兩三百字,滑過去就蓋掉半張地圖。
+    // 提示只回答「這是什麼」,要讀全文請點開標記。
+    return { name: n.t, extra: `<div>${escapeHtml(NOTE_CATEGORY[n.c] ?? n.c)}</div>` };
   }
 
   if (sub && d.missions[sub]) {
     const m = d.missions[sub];
     const kind = m.y === "main" ? "主線任務" : "支線任務";
     const exp = m.exp ? ` <span style="opacity:.6">EXP ${m.exp}</span>` : "";
-    const body = m.x ? `<div style="opacity:.7;max-width:22em;white-space:normal">${escapeHtml(m.x)}</div>` : "";
-    return { name: m.t, extra: `<div>${kind}${exp}</div>${body}` };
+    return { name: m.t, extra: `<div>${kind}${exp}</div>` };
   }
 
   if (category === "SkillFruits") {
@@ -219,11 +226,13 @@ export function PlayerMap({
   /** 玩家篩選。值是 "all" / "online" / "offline" / "none",或 "p:<uid>" 指定單一玩家。
    *  範圍與指定玩家共用同一個值,是因為它們互斥 —— 選了某個玩家就不該還套著「只看在線」。 */
   const [pick, setPick] = useState("all");
-  const who: WhoFilter = pick.startsWith("p:") ? "all" : (pick as WhoFilter);
+  /** 顯示與否是獨立的開關,不佔用篩選值 —— 關掉再打開,原本挑的範圍還在。 */
+  const [showPlayers, setShowPlayers] = useState(true);
+  const who: WhoFilter = !showPlayers ? "none" : pick.startsWith("p:") ? "all" : (pick as WhoFilter);
   const onlyUid = pick.startsWith("p:") ? pick.slice(2) : "";
-  /** 據點篩選。"all" / "none"(不顯示)/ 公會 id。 */
+  /** 據點篩選。"all" 或公會 id;顯示與否由 showBases 控制。 */
   const [guildFilter, setGuildFilter] = useState("all");
-  const showBases = guildFilter !== "none";
+  const [showBases, setShowBases] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null); // 全螢幕的對象:連同上方篩選列一起放大
   const mapBoxRef = useRef<HTMLDivElement>(null); // 地圖容器的外框(用來把它對齊到整數像素)
@@ -259,7 +268,7 @@ export function PlayerMap({
       if (who === "online" && !isOnline(p)) return false;
       if (who === "offline" && isOnline(p)) return false;
       // 「不顯示據點」只關據點,不該連帶把玩家也濾掉
-      if (guildFilter !== "all" && guildFilter !== "none" && guildByUid.get(p.uid)?.id !== guildFilter) return false;
+      if (guildFilter !== "all" && guildByUid.get(p.uid)?.id !== guildFilter) return false;
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -268,9 +277,7 @@ export function PlayerMap({
   /** 套用篩選後要畫的據點(依公會)。 */
   const shownGuilds = useMemo(
     () =>
-      guildFilter === "all" || guildFilter === "none"
-        ? data.guilds
-        : data.guilds.filter((g) => g.id === guildFilter),
+      guildFilter === "all" ? data.guilds : data.guilds.filter((g) => g.id === guildFilter),
     [data.guilds, guildFilter],
   );
   // 關掉據點時數字要跟著歸零 —— 標題說有 N 個據點、地圖上卻一個都沒有會很怪
@@ -576,6 +583,14 @@ export function PlayerMap({
         },
         pixelsPerUnit,
         world === "tree" ? 1 : 0,
+        // 「已收集 / 未收集」在分群前就套用。分群後才濾是濾不掉的 ——
+        // 縮小地圖時一個群裡混著已收集與未收集,只看代表點無法決定整群去留。
+        collectView === "all"
+          ? undefined
+          : (category, i) => {
+              if (poi.categories[category]?.group !== "collect") return false;
+              return collected.has(`${category}:${i}`) !== (collectView === "done");
+            },
       );
       clusters.forEach((c) => {
         const cat = c.category ? poi.categories[c.category] : undefined;
@@ -593,7 +608,7 @@ export function PlayerMap({
           const collectable = c.category ? poi.categories[c.category]?.group === "collect" : false;
           const cid = c.category ? `${c.category}:${c.index ?? 0}` : "";
           const done = collectable && collected.has(cid);
-          if (collectable && collectView !== "all" && (collectView === "done") !== done) return;
+          // 這裡不再重複過濾 —— 篩選已經在分群那層做掉了
           // 釣場/打撈做成圓框:稀有的把圓填滿分組色,一般的維持深底 ——
           // 同一個圖示重複幾百次,靠「填不填色」比再換一張圖好分辨。
           const ring = c.category?.startsWith("FishingSpot") || c.category?.startsWith("Salvage_Rank1");
@@ -874,7 +889,6 @@ export function PlayerMap({
           <option value="offline">
             {t("離線玩家")}({located.filter((p) => !isOnline(p)).length})
           </option>
-          <option value="none">{t("不顯示玩家")}</option>
           {/* 個別玩家排在同一份清單裡,選了就只看那一個 */}
           <optgroup label={t("指定玩家")}>
             {[...located]
@@ -898,7 +912,6 @@ export function PlayerMap({
           <option value="all">
             {t("全部公會據點")}({data.guilds.reduce((n, g) => n + g.bases.length, 0)})
           </option>
-          <option value="none">{t("不顯示據點")}</option>
           <optgroup label={t("指定公會")}>
             {[...data.guilds]
               .sort((a, b) => b.bases.length - a.bases.length)
@@ -909,6 +922,18 @@ export function PlayerMap({
               ))}
           </optgroup>
         </select>
+
+        {/* 顯示/隱藏是開關,不是「從一組選項裡挑一個」——
+            放進下拉會被其他選項蓋住,還得展開才知道現在是開還關。
+            拉出來做成圓形核取方塊,狀態一眼可見,一下就能切。 */}
+        <label className="pmap-check">
+          <input type="checkbox" checked={showPlayers} onChange={(e) => setShowPlayers(e.target.checked)} />
+          <span>{t("顯示玩家")}</span>
+        </label>
+        <label className="pmap-check">
+          <input type="checkbox" checked={showBases} onChange={(e) => setShowBases(e.target.checked)} />
+          <span>{t("顯示據點")}</span>
+        </label>
 
         {/* 主世界 / 世界樹:常駐切換 */}
         <div className="ml-auto flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
