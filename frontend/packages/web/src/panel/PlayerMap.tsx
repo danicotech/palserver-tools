@@ -1,7 +1,7 @@
 // 玩家查詢的地圖:全部玩家的最後存檔位置 + 公會據點(Leaflet CRS.Simple)。
 // 底圖常數/樣式與管理端地圖共用(mapLayers + styles.css 的 pmap-*),座標經
 // shared 的 savToMap/savToWorldTreeMap 換算;世界樹座標的實體只出現在世界樹底圖。
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -178,6 +178,13 @@ export function PlayerMap({
   // 頭像跟右上角「設定頭像」連動(名冊更新 → 標記重畫)
   const avatarOf = usePlayerAvatar();
   const [world, setWorld] = useState<World>("main");
+  /** 側欄數量只算「目前這張地圖」上看得到的 —— 資料裡的 count 是兩個世界相加,
+   *  但畫面一次只顯示一個世界,顯示總數會對不上實際看到的標記數。 */
+  const countIn = useCallback(
+    (info: { count: number; worldTree?: number }) =>
+      world === "tree" ? (info.worldTree ?? 0) : info.count - (info.worldTree ?? 0),
+    [world],
+  );
   const [who, setWho] = useState<WhoFilter>("all");
   const [guildFilter, setGuildFilter] = useState("all");
   const [showBases, setShowBases] = useState(true);
@@ -893,7 +900,12 @@ export function PlayerMap({
               {onCats.size > 0 ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-pal/15 px-2 py-1 text-[11px] font-medium text-pal ring-1 ring-pal/30">
                   <FiMapPin size={11} aria-hidden="true" />
-                  {t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })}
+                  {t("{n} 個標記", {
+                    n: [...onCats].reduce((a, c) => {
+                      const info = poi.categories[c];
+                      return a + (info ? countIn(info) : 0);
+                    }, 0),
+                  })}
                 </span>
               ) : (
                 <span className="inline-flex items-center rounded-full bg-card px-2 py-1 text-[11px] text-ink-muted ring-1 ring-line">
@@ -1002,7 +1014,7 @@ export function PlayerMap({
                             active ? "text-white/75" : "text-ink-muted"
                           }`}
                         >
-                          {info.count}
+                          {countIn(info)}
                         </span>
                       </button>
                     );

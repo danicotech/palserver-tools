@@ -59,3 +59,5 @@ frontend/packages/web/public/game-data/map-points.json
 # 地圖標記用的 NPC 頭像(10 張,由 fetch-map-points.mjs 一併取得)
 frontend/packages/web/public/game-data/map-icons/
 frontend/packages/web/public/game-data/pal-spawns.json
+# 標記的名稱與掉落表;跑 node tools/fetch-map-detail.mjs 自行產生。
+frontend/packages/web/public/game-data/map-detail.json
