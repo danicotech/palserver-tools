@@ -183,6 +183,25 @@ export function PlayerMap({
       .sort((a, b) => a.zh.localeCompare(b.zh, "zh-Hant"));
   }, [spawns]);
 
+  const [gotoX, setGotoX] = useState("");
+  const [gotoY, setGotoY] = useState("");
+  const pinRef = useRef<L.Marker | null>(null);
+
+  // 鍵盤快捷鍵:T 切換主世界/世界樹、F 全螢幕。
+  // 在輸入框裡打字時不能觸發,不然打「f」就整個進全螢幕。
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === "t" || e.key === "T") setWorld((w) => (w === "main" ? "tree" : "main"));
+      if (e.key === "f" || e.key === "F") toggleFull();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [tiles, setTiles] = useState<"webp" | "png" | null | undefined>(undefined);
   useEffect(() => {
     let alive = true;
@@ -766,15 +785,30 @@ export function PlayerMap({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-2 text-xs">
-            <button type="button" onClick={() => setOnCats(new Set())} className="text-berry underline underline-offset-2">
-              {t("全部清除")}
+          <div className="sticky bottom-0 -mx-3 mt-2 flex items-center gap-2 border-t border-line bg-card-soft/95 px-3 py-2 text-xs backdrop-blur">
+            <button
+              type="button"
+              onClick={() => {
+                setOnCats(new Set());
+                setSpawnPal(null);
+                setPalQ("");
+              }}
+              className="flex items-center gap-1 rounded-lg bg-pal px-2.5 py-1.5 font-medium text-white transition hover:opacity-90"
+            >
+              ↺ {t("重置篩選")}
             </button>
-            <span className="text-ink-muted">
-              {t("已顯示 {n} 類", { n: onCats.size })}
-              {onCats.size > 0 &&
-                ` · ${t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })}`}
+            <span className="min-w-0 flex-1 truncate text-ink-muted">
+              {onCats.size > 0
+                ? t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })
+                : t("尚未選擇")}
             </span>
+            <button
+              type="button"
+              onClick={() => setPoiOpen(false)}
+              className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-ink-muted transition hover:bg-card hover:text-ink"
+            >
+              ‹ {t("隱藏篩選")}
+            </button>
           </div>
         </div>
       )}
@@ -786,13 +820,90 @@ export function PlayerMap({
           全部失效,底圖寬度被 preflight 的 img{max-width:100%} 壓成 0 —— 症狀就是「進全螢幕後地圖不見了」。 */}
       <div ref={mapBoxRef} className={`relative min-w-0 flex-1 ${isFull ? "min-h-0" : "h-80 sm:h-170"}`}>
         <div ref={containerRef} className="size-full" />
+        {/* 收合時:地圖左上角一顆展開鈕(op.gg 的作法,地圖不會被側欄吃掉寬度) */}
+        {poi && !poiOpen && (
+          <button
+            type="button"
+            onClick={() => setPoiOpen(true)}
+            className="absolute top-3 left-3 z-1001 flex items-center gap-1.5 rounded-lg bg-card/95 px-3 py-2 text-sm font-medium text-ink shadow-cute ring-1 ring-line backdrop-blur transition hover:ring-pal"
+          >
+            › {t("篩選")}
+            {onCats.size > 0 && (
+              <span className="rounded-full bg-pal px-1.5 text-[11px] font-bold text-white">{onCats.size}</span>
+            )}
+          </button>
+        )}
+
+        {/* 選了帕魯 → 右上角圖例,說明點的顏色代表什麼時段 */}
+        {spawnPal && (
+          <div className="absolute top-15 right-3 z-1001 rounded-lg bg-card/95 px-3 py-2 text-xs shadow-cute ring-1 ring-line backdrop-blur">
+            <div className="mb-1 flex items-center gap-1.5 font-bold text-ink">
+              {palInfo(spawnPal.toLowerCase()).iconUrl && (
+                <img src={palInfo(spawnPal.toLowerCase()).iconUrl} alt="" className="size-5 object-contain" />
+              )}
+              {palInfo(spawnPal.toLowerCase()).zh || spawnPal}
+            </div>
+            {([["全天", "#9ca3af"], ["白天", "#f59e0b"], ["夜晚", "#6366f1"]] as [string, string][]).map(([k, c]) => (
+              <div key={k} className="flex items-center gap-1.5 text-ink-muted">
+                <span className="size-2.5 rounded-full" style={{ background: c }} />
+                {t(k)}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 座標定位:輸入 X / Y 直接把鏡頭移過去並放大 */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const map = mapRef.current;
+            const x = Number(gotoX);
+            const y = Number(gotoY);
+            if (!map || !Number.isFinite(x) || !Number.isFinite(y)) return;
+            map.setView([y, x], Math.max(map.getZoom(), map.getMaxZoom() - 2));
+            // 丟一個暫時的定位標記,不然放大後不知道到底指到哪
+            pinRef.current?.remove();
+            pinRef.current = L.marker([y, x], {
+              icon: L.divIcon({ className: "pmap-pin", iconSize: [26, 26], iconAnchor: [13, 13], html: "<span></span>" }),
+            }).addTo(map);
+          }}
+          className="absolute right-3 bottom-3 z-1001 flex items-center gap-1 rounded-lg bg-card/95 px-2 py-1.5 text-xs shadow-cute ring-1 ring-line backdrop-blur"
+        >
+          <span className="font-bold text-ink-muted">X / Y</span>
+          <input
+            value={gotoX}
+            onChange={(e) => setGotoX(e.target.value)}
+            placeholder="X"
+            inputMode="numeric"
+            className="w-16 rounded bg-card-soft px-1.5 py-1 text-ink ring-1 ring-line outline-none focus:ring-pal"
+          />
+          <input
+            value={gotoY}
+            onChange={(e) => setGotoY(e.target.value)}
+            placeholder="Y"
+            inputMode="numeric"
+            className="w-16 rounded bg-card-soft px-1.5 py-1 text-ink ring-1 ring-line outline-none focus:ring-pal"
+          />
+          <button type="submit" aria-label={t("移到此座標")} title={t("移到此座標")}
+            className="flex size-7 items-center justify-center rounded-full bg-pal text-white transition hover:opacity-90">
+            <FiMapPin size={14} />
+          </button>
+        </form>
+
+        {/* 鍵盤提示:與 op.gg 一致,T 換地圖、F 全螢幕 */}
+        <div className="absolute bottom-3 left-3 z-1001 hidden rounded-lg bg-card/90 px-2.5 py-1.5 text-[11px] text-ink-muted shadow-cute ring-1 ring-line backdrop-blur sm:block">
+          <div><kbd className="rounded bg-card-soft px-1 font-mono ring-1 ring-line">T</kbd> {t("帕洛斯群島 · 世界樹")}</div>
+          <div className="mt-0.5"><kbd className="rounded bg-card-soft px-1 font-mono ring-1 ring-line">F</kbd> {t("全螢幕")}</div>
+          <div className="mt-0.5"><kbd className="rounded bg-card-soft px-1 font-mono ring-1 ring-line">Wheel</kbd> {t("放大 · 縮小")}</div>
+        </div>
+
         {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
         <button
           type="button"
           onClick={toggleFull}
           title={isFull ? t("離開全螢幕") : t("全螢幕檢視地圖")}
           aria-label={isFull ? t("離開全螢幕") : t("全螢幕檢視地圖")}
-          className="absolute bottom-3 right-3 z-1001 flex size-9 items-center justify-center rounded-lg bg-card/90 text-ink shadow-cute ring-1 ring-line backdrop-blur transition hover:bg-card hover:text-pal hover:ring-pal"
+          className="absolute top-3 right-3 z-1002 flex size-9 items-center justify-center rounded-lg bg-card/90 text-ink shadow-cute ring-1 ring-line backdrop-blur transition hover:bg-card hover:text-pal hover:ring-pal"
         >
           {isFull ? <FiMinimize size={18} /> : <FiMaximize size={18} />}
         </button>
