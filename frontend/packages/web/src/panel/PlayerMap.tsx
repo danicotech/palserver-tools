@@ -17,6 +17,7 @@ import {
   loadPalSpawns,
   type MapPointsData,
   PAL_IDS,
+  heatColor,
   type PalSpawns,
 } from "./mapPoints";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
@@ -327,6 +328,28 @@ export function PlayerMap({
     const draw = () => {
       layer.clearLayers();
       if (!poi || onCats.size === 0) return;
+
+      // 溫度區域是「一塊範圍」不是點,畫成半透明矩形 + 溫差標籤
+      if (onCats.has("HeatArea")) {
+        for (const [x, y, w, hx, hy, day, night] of poi.areas?.HeatArea ?? []) {
+          if (w !== (world === "tree" ? 1 : 0)) continue;
+          const { color, label } = heatColor(day, night);
+          const rect = L.rectangle(
+            [
+              [y - hy, x - hx],
+              [y + hy, x + hx],
+            ],
+            { color, weight: 2, opacity: 0.85, fillColor: color, fillOpacity: 0.18, interactive: true },
+          );
+          const fmt = (v: number | null) => (v == null ? "—" : v > 0 ? `+${v}` : `${v}`);
+          rect.bindTooltip(
+            `<div style="font-weight:800">${escapeHtml(t(label))}</div>` +
+              `<div>${t("白天")} ${fmt(day)} · ${t("夜晚")} ${fmt(night)}</div>`,
+            { direction: "top", className: "pmap-detail", sticky: true },
+          );
+          rect.addTo(layer);
+        }
+      }
       const b = map.getBounds();
       const zoomPx = map.getZoomScale(map.getZoom(), 0) * (tiles ? 256 / (IMAGE_BOUNDS.getEast() - IMAGE_BOUNDS.getWest()) : 1);
       // 直接量:同一段地圖距離在螢幕上佔幾個像素

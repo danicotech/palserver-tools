@@ -75,7 +75,7 @@ const GROUPS = [
     FastTravels: "快速傳送", Respawn: "重生", SkylandWarpAltar: "傳送環", Home: "首頁",
     WatchTower: "瞭望塔", RegionName: "地區名稱",
     DungeonPortal: { label: "地牢", merge: ["DungeonFixed"] },
-    CaveEntrance: "洞穴入口", TreasureMap: "藏寶圖", HeatArea: "溫度", Quest: "任務",
+    CaveEntrance: "洞穴入口", TreasureMap: "藏寶圖", Quest: "任務",
   }],
   ["mineral", "礦物", {
     OreMetal: "金屬礦石", OreCoal: "石炭", OreQuartz: "純水晶", OreQuartzCluster: "純水晶簇",
@@ -204,6 +204,41 @@ for (const [groupKey, , cats] of GROUPS) {
   }
 }
 
+// ---- 溫度區域 ----
+// 它不是「一個點」,而是一塊有範圍的區域(extent = 半寬/半高,單位同世界座標),
+// 還帶白天/夜晚的體感溫差。畫成標記完全表達不出來,所以另外輸出成矩形區域,
+// 由前端畫成半透明色塊:偏熱紅、偏冷藍、日夜溫差大則黃。
+const areas = {};
+{
+  const rows = [];
+  for (const h of pts.HeatArea ?? []) {
+    const loc = h.l;
+    const ext = h.extent;
+    if (!Array.isArray(loc) || !Array.isArray(ext)) continue;
+    const c = savToMap(loc[0], loc[1]);
+    // savToMap 會把軸對調(地圖 x 來自世界 y),半徑也要跟著換邊
+    const halfX = ext[1] / WORLD_SCALE;
+    const halfY = ext[0] / WORLD_SCALE;
+    rows.push([
+      Math.round(c.x * 10) / 10,
+      Math.round(c.y * 10) / 10,
+      loc[0] > TREE_X ? 1 : 0,
+      Math.round(halfX * 10) / 10,
+      Math.round(halfY * 10) / 10,
+      h.day ?? null,
+      h.night ?? null,
+    ]);
+  }
+  if (rows.length) {
+    areas.HeatArea = rows;
+    // 側欄要能勾選它,所以也登記成一個分類(points 留空,渲染走 areas 那條路)
+    categories.HeatArea = { label: "溫度", group: "location", count: rows.length, worldTree: rows.filter((r) => r[2] === 1).length };
+    points.HeatArea = [];
+    total += rows.length;
+  }
+  console.log(`溫度區域:${rows.length} 塊`);
+}
+
 const out = {
   _comment:
     "互動地圖標記。座標已由世界座標經 savToMap 換算成地圖座標(與玩家/據點同一套)。" +
@@ -216,6 +251,7 @@ const out = {
   })),
   categories,
   points,
+  areas,
 };
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });

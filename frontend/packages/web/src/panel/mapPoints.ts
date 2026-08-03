@@ -18,8 +18,12 @@ export interface MapCategory {
   worldTree: number;
 }
 
+/** 溫度區域:[x, y, world, 半寬, 半高, 白天溫差, 夜晚溫差] */
+export type HeatArea = [number, number, number, number, number, number | null, number | null];
+
 export interface MapPointsData {
   version: string;
+  areas?: { HeatArea?: HeatArea[] };
   groups: { key: string; name: string; categories: string[] }[];
   categories: Record<string, MapCategory>;
   points: Record<string, RawPoint[]>;
@@ -338,3 +342,16 @@ export function loadPalSpawns(): Promise<PalSpawns | null> {
 /** 還沒載入棲息地資料時,先給一份帕魯代號清單讓選擇器有東西可顯示。
  *  真正有資料的是哪些,載完之後會自動換成 spawns 的鍵。 */
 export const PAL_IDS: string[] = [];
+
+
+/** 溫度區域的顏色:偏熱紅、偏冷藍、日夜溫差大則黃。
+ *  同時看日夜兩個值 —— 只看其中一個會把「白天悶熱、夜晚酷寒」這種區域標錯。 */
+export function heatColor(day: number | null, night: number | null): { color: string; label: string } {
+  const vals = [day, night].filter((v): v is number => v != null);
+  if (!vals.length) return { color: "#9ca3af", label: "—" };
+  const hi = Math.max(...vals);
+  const lo = Math.min(...vals);
+  if (hi > 0 && lo < 0) return { color: "#eab308", label: "日夜溫差" }; // 黃
+  if (hi > 0) return { color: "#ef4444", label: "高溫" }; // 紅
+  return { color: "#3b82f6", label: "低溫" }; // 藍
+}
