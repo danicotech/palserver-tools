@@ -2524,5 +2524,14 @@
   "移到此座標": "Go to coordinates",
   "帕洛斯群島 · 世界樹": "Palpagos · World Tree",
   "全螢幕": "Fullscreen",
-  "放大 · 縮小": "Zoom in / out"
+  "放大 · 縮小": "Zoom in / out",
+  "多個標記": "Multiple markers",
+  "點擊放大展開": "Click to zoom in",
+  "展開": "Expand",
+  "收集進度": "Collection",
+  "未收集": "To do",
+  "已收集": "Collected",
+  "清除收集紀錄": "Clear collection record",
+  "點地圖上的收集品即可標記;紀錄存在這台裝置的瀏覽器。": "Click a collectible on the map to mark it. Saved in this browser only.",
+  "地圖篩選": "Map filters"
 }

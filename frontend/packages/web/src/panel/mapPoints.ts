@@ -8,8 +8,8 @@ import { palInfo } from "./paldex";
 //   2. 依縮放層級把鄰近的點併成一顆「數字圓」,放大才散開
 // 兩者都是純計算,沒有額外相依。
 
-/** 一筆標記:[x, y, 世界(0=主/1=世界樹), 子型別?, 名稱?] */
-export type RawPoint = [number, number, number, string?, string?];
+/** 一筆標記:[x, y, 世界(0=主/1=世界樹), z(公尺), 子型別?, 名稱?] */
+export type RawPoint = [number, number, number, number, string?, string?];
 
 export interface MapCategory {
   label: string;
@@ -49,6 +49,9 @@ export interface Cluster {
   point?: RawPoint;
   /** 這一群屬於哪個類別(單一類別群才有;混合群為 undefined) */
   category?: string;
+  /** 代表點在該類別資料裡的索引 —— 用來給每個標記一個穩定的序號。
+   *  同一類動輒上千個點,沒有編號就無法互相指認(「你說的那個寶箱是哪一個?」)。 */
+  index?: number;
 }
 
 /**
@@ -65,9 +68,13 @@ export function clusterPoints(
   world: 0 | 1,
 ): Cluster[] {
   const cell = 44 / Math.max(pixelsPerUnit, 1e-6);
-  const grid = new Map<string, { sx: number; sy: number; n: number; first: RawPoint; cat: string; mixed: boolean }>();
+  const grid = new Map<
+    string,
+    { sx: number; sy: number; n: number; first: RawPoint; firstIdx: number; cat: string; mixed: boolean }
+  >();
   for (const { category, points } of entries) {
-    for (const p of points) {
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
       if (p[2] !== world) continue;
       const [x, y] = p;
       if (x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY) continue;
@@ -79,7 +86,7 @@ export function clusterPoints(
         g.n++;
         if (g.cat !== category) g.mixed = true;
       } else {
-        grid.set(key, { sx: x, sy: y, n: 1, first: p, cat: category, mixed: false });
+        grid.set(key, { sx: x, sy: y, n: 1, first: p, firstIdx: i, cat: category, mixed: false });
       }
     }
   }
@@ -90,6 +97,7 @@ export function clusterPoints(
       y: g.sy / g.n,
       n: g.n,
       point: g.first,
+      index: g.firstIdx,
       category: g.mixed ? undefined : g.cat,
     });
   }

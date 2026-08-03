@@ -668,3 +668,28 @@ body {
 .leaflet-container {
   isolation: isolate;
 }
+
+/* 地圖 tooltip:跟著主題走。
+   寫死黑底在淺色模式下會跟整站對不起來,寫死白底在深色地圖上又糊掉,
+   所以用主題變數 + 半透明,兩種模式各自都有對比。 */
+.leaflet-tooltip.pmap-detail {
+  background: color-mix(in oklab, var(--color-card) 88%, transparent);
+  color: var(--color-ink);
+  border: 1px solid color-mix(in oklab, var(--color-line) 70%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.35);
+  backdrop-filter: blur(4px);
+  padding: 6px 9px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.leaflet-tooltip.pmap-detail::before,
+.leaflet-tooltip-bottom.pmap-detail::before,
+.leaflet-tooltip-left.pmap-detail::before,
+.leaflet-tooltip-right.pmap-detail::before {
+  border-color: transparent;
+}
+.leaflet-tooltip.pmap-detail::before { border-top-color: color-mix(in oklab, var(--color-card) 88%, transparent); }
+.leaflet-tooltip-bottom.pmap-detail::before { border-bottom-color: color-mix(in oklab, var(--color-card) 88%, transparent); }
+.leaflet-tooltip-left.pmap-detail::before { border-left-color: color-mix(in oklab, var(--color-card) 88%, transparent); }
+.leaflet-tooltip-right.pmap-detail::before { border-right-color: color-mix(in oklab, var(--color-card) 88%, transparent); }

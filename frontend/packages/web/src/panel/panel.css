@@ -348,3 +348,25 @@ html {
 }
 /* 帕魯選擇器的頭像也用同一個底色,側欄與地圖上看起來才是同一個東西 */
 .pmap-pal-pick img { background: rgb(13 22 30); border-radius: 9999px; }
+
+/* 已收集的收集品:圖轉灰階並壓暗,再蓋一個紅底白叉。
+   只變灰不夠 —— 縮圖本來就小,單靠明度差在複雜地表上分不出來;加叉才一眼可辨。 */
+.pmap-poi-done img {
+  filter: grayscale(1) brightness(0.55) !important;
+}
+.pmap-poi-done span {
+  position: relative;
+  opacity: 0.85;
+}
+.pmap-poi-done i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background:
+    linear-gradient(45deg, transparent 44%, #fff 44%, #fff 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #fff 44%, #fff 56%, transparent 56%),
+    #dc2626;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(0 0 0 / 0.6);
+  transform: scale(0.62);
+}

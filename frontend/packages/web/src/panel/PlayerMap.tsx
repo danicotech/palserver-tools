@@ -21,6 +21,7 @@ import {
   FiTriangle,
   FiUsers,
   FiBox,
+  FiCheckSquare,
 } from "react-icons/fi";
 import { GiEggClutch } from "react-icons/gi";
 import type { IconType } from "react-icons";
@@ -196,6 +197,7 @@ export function PlayerMap({
   const [spawnPal, setSpawnPal] = useState<string | null>(null);
   const [spawnWhen, setSpawnWhen] = useState<"all" | "day" | "night">("all");
   const [palQ, setPalQ] = useState("");
+  const [palFold, setPalFold] = useState(false);
   const spawnLayerRef = useRef<L.LayerGroup | null>(null);
   useEffect(() => {
     if (!poiOpen || spawns) return;
@@ -216,6 +218,31 @@ export function PlayerMap({
       })
       .sort((a, b) => a.zh.localeCompare(b.zh, "zh-Hant"));
   }, [spawns]);
+
+  /** 已收集的座標(key = `類別:序號`)。存在瀏覽器,每個人各自一份;
+   *  不上傳後端 —— 這是個人進度,而網站是公開唯讀的,沒有身分可綁。 */
+  const COLLECT_KEY = "palpanel.collected";
+  const [collected, setCollected] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(COLLECT_KEY) || "[]") as string[]);
+    } catch {
+      return new Set<string>();
+    }
+  });
+  /** all = 全部、todo = 只看未收集、done = 只看已收集 */
+  const [collectView, setCollectView] = useState<"all" | "todo" | "done">("all");
+  const toggleCollected = (id: string) =>
+    setCollected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(COLLECT_KEY, JSON.stringify([...next]));
+      } catch {
+        /* 隱私模式寫不了就只在這次工作階段有效 */
+      }
+      return next;
+    });
 
   const [gotoX, setGotoX] = useState("");
   const [gotoY, setGotoY] = useState("");
@@ -377,7 +404,8 @@ export function PlayerMap({
           const fmt = (v: number | null) => (v == null ? "—" : v > 0 ? `+${v}` : `${v}`);
           rect.bindTooltip(
             `<div style="font-weight:800">${escapeHtml(t(label))}</div>` +
-              `<div>${t("白天")} ${fmt(day)} · ${t("夜晚")} ${fmt(night)}</div>`,
+              `<div>${t("白天")} ${fmt(day)} · ${t("夜晚")} ${fmt(night)}</div>` +
+              `<div>${t("座標")} X : ${Math.round(x)}, Y : ${Math.round(y)}</div>`,
             { direction: "top", className: "pmap-detail", sticky: true },
           );
           rect.addTo(layer);
@@ -399,18 +427,26 @@ export function PlayerMap({
         pixelsPerUnit,
         world === "tree" ? 1 : 0,
       );
-      for (const c of clusters) {
+      clusters.forEach((c) => {
         const cat = c.category ? poi.categories[c.category] : undefined;
         const color = cat ? (GROUP_COLOR[cat.group] ?? "#64748b") : "#64748b";
         const icon = cat ? (GROUP_ICON[cat.group] ?? "◆") : "◆";
-        const sub = c.point?.[3];
+        const sub = c.point?.[4];
+        const zM = c.point?.[3] ?? 0;
         // 有對得上的遊戲物品圖就用圖,沒有才退回分組符號 —— 圖比符號好認得多
         const url = c.category ? iconFor(c.category, sub) : null;
         // NPC / 頭目是人物肖像,方形去背會很怪,套圓框才像頭像
         const portrait = c.category ? isPortrait(c.category) : false;
         if (c.n === 1 && c.point) {
-          const [, , , , name] = c.point;
-          const cls = url ? (portrait ? "pmap-poi pmap-poi-img pmap-poi-face" : "pmap-poi pmap-poi-img") : "pmap-poi";
+          const [, , , , , name] = c.point;
+          // 收集品才做「已收集」記號 —— 礦石、寶箱會重生,勾了也沒意義
+          const collectable = c.category ? poi.categories[c.category]?.group === "collect" : false;
+          const cid = c.category ? `${c.category}:${c.index ?? 0}` : "";
+          const done = collectable && collected.has(cid);
+          if (collectable && collectView !== "all" && (collectView === "done") !== done) return;
+          const cls =
+            (url ? (portrait ? "pmap-poi pmap-poi-img pmap-poi-face" : "pmap-poi pmap-poi-img") : "pmap-poi") +
+            (done ? " pmap-poi-done" : "");
           const m = L.marker([c.y, c.x], {
             icon: L.divIcon({
               className: cls,
@@ -418,14 +454,24 @@ export function PlayerMap({
               iconSize: url ? [34, 34] : [20, 20],
               iconAnchor: url ? [17, 17] : [10, 10],
               html: url
-                ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" /></span>`
+                ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" />${
+                    done ? `<i></i>` : ""
+                  }</span>`
                 : `<span style="background:${color}">${icon}</span>`,
             }),
           });
+          if (collectable) {
+            m.on("click", () => toggleCollected(cid));
+          }
+          // 標題掛上序號:同一類有上千個點,沒有編號就無法互相指認
+          // (「你說的那個寶箱是哪一個?」)。序號是該類別在資料裡的固定順序,重整也不會變。
+          const label = name || cat?.label || "";
+          const seq = c.point ? (c.index ?? 0) + 1 : 0;
           m.bindTooltip(
-            `<div style="font-weight:800">${escapeHtml(name || cat?.label || "")}</div>` +
+            `<div style="font-weight:800">${escapeHtml(label)}${seq ? ` ${seq}` : ""}</div>` +
               (cat && name && name !== cat.label ? `<div>${escapeHtml(cat.label)}</div>` : "") +
-              (sub && sub !== name ? `<div style="opacity:.7">${escapeHtml(sub)}</div>` : ""),
+              (sub && sub !== name ? `<div style="opacity:.7">${escapeHtml(sub)}</div>` : "") +
+              `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${zM}m</div>`,
             { direction: "top", className: "pmap-detail" },
           );
           m.addTo(layer);
@@ -445,11 +491,17 @@ export function PlayerMap({
                 : `<span style="background:${color};width:28px;height:28px">${c.n}</span>`,
             }),
           });
+          m.bindTooltip(
+            `<div style="font-weight:800">${escapeHtml(cat?.label ?? t("多個標記"))} × ${c.n}</div>` +
+              `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}</div>` +
+              `<div style="opacity:.7">${t("點擊放大展開")}</div>`,
+            { direction: "top", className: "pmap-detail" },
+          );
           // 點群集就放大過去,跟一般地圖的操作直覺一致
           m.on("click", () => map.setView([c.y, c.x], Math.min(map.getZoom() + 2, map.getMaxZoom())));
           m.addTo(layer);
         }
-      }
+      });
     };
 
     draw();
@@ -458,7 +510,7 @@ export function PlayerMap({
       map.off("moveend zoomend", draw);
       layer.clearLayers();
     };
-  }, [poi, onCats, world, tiles]);
+  }, [poi, onCats, world, tiles, collected, collectView]);
 
   // ---- 帕魯出生地 ----
   // 一隻帕魯最多幾百個生成點,不需要分群,但仍只畫視野內的,縮到很小時才不會卡。
@@ -474,11 +526,11 @@ export function PlayerMap({
       const info = palInfo(spawnPal.toLowerCase());
       const b = map.getBounds();
       const w = world === "tree" ? 1 : 0;
-      for (const [x, y, when, lvMin, lvMax, tree] of list) {
-        if (tree !== w) continue;
-        if (spawnWhen === "day" && when === 1) continue;
-        if (spawnWhen === "night" && when === 0) continue;
-        if (x < b.getWest() || x > b.getEast() || y < b.getSouth() || y > b.getNorth()) continue;
+      list.forEach(([x, y, when, lvMin, lvMax, tree], idx) => {
+        if (tree !== w) return;
+        if (spawnWhen === "day" && when === 1) return;
+        if (spawnWhen === "night" && when === 0) return;
+        if (x < b.getWest() || x > b.getEast() || y < b.getSouth() || y > b.getNorth()) return;
         const m = L.marker([y, x], {
           icon: L.divIcon({
             className: "pmap-spawn",
@@ -490,14 +542,15 @@ export function PlayerMap({
           }),
         });
         m.bindTooltip(
-          `<div style="font-weight:800">${escapeHtml(info.zh || spawnPal)}</div>` +
+          `<div style="font-weight:800">${escapeHtml(info.zh || spawnPal)} ${idx + 1}</div>` +
             `<div>Lv ${lvMin}${lvMax !== lvMin ? `~${lvMax}` : ""} · ${
               when === 2 ? t("全天") : when === 1 ? t("夜晚") : t("白天")
-            }</div>`,
+            }</div>` +
+            `<div>${t("座標")} X : ${Math.round(x)}, Y : ${Math.round(y)}</div>`,
           { direction: "top", className: "pmap-detail" },
         );
         m.addTo(layer);
-      }
+      });
     };
     draw();
     map.on("moveend zoomend", draw);
@@ -538,8 +591,10 @@ export function PlayerMap({
       if (isWorldTreeCoord(sx) !== (world === "tree")) return null;
       return world === "tree" ? savToWorldTreeMap(sx, sy) : savToMap(sx, sy);
     };
-    /** tooltip 用的座標字串(與遊戲內地圖顯示同一套) */
-    const coord = (pos: { x: number; y: number }) => `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
+    /** tooltip 用的座標字串(與遊戲內地圖顯示同一套)。
+     *  寫成「X : 123, Y : -456」而不是「123, -456」—— 光兩個數字看不出誰是誰,
+     *  而且要拿去輸入定位框時也才對得上欄位。 */
+    const coord = (pos: { x: number; y: number }) => `X : ${Math.round(pos.x)}, Y : ${Math.round(pos.y)}`;
 
     if (showBases) {
       for (const g of shownGuilds) {
@@ -678,27 +733,6 @@ export function PlayerMap({
           className="min-h-8 min-w-36 flex-1 rounded-lg bg-card-soft px-2.5 text-xs text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
         />
 
-        {/* 地圖標記篩選(資料檔存在才顯示) */}
-        {poi && (
-          <button
-            type="button"
-            onClick={() => setPoiOpen((v) => !v)}
-            aria-expanded={poiOpen}
-            className={`flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium ring-1 transition ${
-              poiOpen || onCats.size
-                ? "bg-pal/15 text-pal ring-pal/40 hover:bg-pal/25"
-                : "bg-card-soft text-ink ring-line hover:ring-pal/50"
-            }`}
-          >
-            <FiMapPin size={13} aria-hidden="true" />
-            {t("地圖標記")}
-            {onCats.size > 0 && (
-              <span className="rounded-full bg-pal px-1.5 text-[11px] font-bold text-white">{onCats.size}</span>
-            )}
-            <span className="text-ink-muted">{poiOpen ? "▲" : "▼"}</span>
-          </button>
-        )}
-
         {/* 主世界 / 世界樹:常駐切換 */}
         <div className="ml-auto flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
           {(
@@ -735,10 +769,18 @@ export function PlayerMap({
               <FiRotateCcw size={13} aria-hidden="true" />
               {t("重置篩選")}
             </button>
-            <span className="min-w-0 flex-1 truncate text-ink-muted">
-              {onCats.size > 0
-                ? t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })
-                : t("尚未選擇")}
+            {/* 統計做成 tag 而不是一行灰字 —— 它是「目前狀態」,和旁邊兩顆按鈕同一層級 */}
+            <span className="min-w-0 flex-1">
+              {onCats.size > 0 ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-pal/15 px-2 py-1 text-[11px] font-medium text-pal ring-1 ring-pal/30">
+                  <FiMapPin size={11} aria-hidden="true" />
+                  {t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })}
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-card px-2 py-1 text-[11px] text-ink-muted ring-1 ring-line">
+                  {t("尚未選擇")}
+                </span>
+              )}
             </span>
             <button
               type="button"
@@ -779,10 +821,10 @@ export function PlayerMap({
                     }
                     aria-label={folded ? t("展開") : t("收合")}
                     aria-expanded={!folded}
-                    className="flex size-5 shrink-0 items-center justify-center rounded text-ink-muted transition hover:bg-card hover:text-ink"
+                    className="flex size-7 shrink-0 items-center justify-center rounded text-ink-muted transition hover:bg-card hover:text-ink"
                   >
                     <FiChevronDown
-                      size={13}
+                      size={16}
                       aria-hidden="true"
                       className={`transition-transform ${folded ? "-rotate-90" : ""}`}
                     />
@@ -790,20 +832,20 @@ export function PlayerMap({
                   <button
                     type="button"
                     onClick={toggleGroup}
-                    className={`flex min-w-0 flex-1 items-center gap-1.5 rounded px-1 py-1 text-xs font-bold transition hover:bg-card ${
+                    className={`flex min-h-9 min-w-0 flex-1 items-center gap-2 rounded px-1.5 py-1.5 text-sm font-bold transition hover:bg-card ${
                       on ? "text-ink" : "text-ink-muted"
                     }`}
                     style={on ? { color: GROUP_COLOR[g.key] } : undefined}
                     title={on === cats.length ? t("全部取消") : t("全部選取")}
                   >
-                    <GroupIcon size={13} aria-hidden="true" />
+                    <GroupIcon size={16} aria-hidden="true" />
                     <span className="truncate">{g.name}</span>
-                    <span className="ml-auto shrink-0 text-[10px] font-medium text-ink-muted">
+                    <span className="ml-auto shrink-0 text-[11px] font-medium text-ink-muted">
                       {on ? `${on}/${cats.length}` : t("全部")}
                     </span>
                   </button>
                 </div>
-                <div className={`min-w-0 flex-1 flex-wrap gap-1 ${folded ? "hidden" : "flex"}`}>
+                <div className={`grid grid-cols-2 gap-1 ${folded ? "hidden" : ""}`}>
                   {cats.map((c) => {
                     const info = poi.categories[c];
                     const active = onCats.has(c);
@@ -820,21 +862,27 @@ export function PlayerMap({
                             return next;
                           })
                         }
-                        className={`flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-xs ring-1 transition ${
+                        className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] ring-1 transition ${
                           active
                             ? "text-white ring-transparent"
-                            : "bg-card text-ink ring-line hover:ring-pal/50"
+                            : "bg-card text-ink ring-line hover:bg-card-soft hover:ring-pal/50"
                         }`}
                         style={active ? { background: GROUP_COLOR[g.key] } : undefined}
                       >
-                        {/* 每個分類都掛自己的圖示 —— 純文字清單掃起來很慢,有圖才找得快 */}
+                        {/* 圖示放大到與文字同級(20px):16px 在深色底上細節全糊掉,認不出是什麼 */}
                         {catIcon ? (
-                          <img src={catIcon} alt="" className="size-4 shrink-0 object-contain" loading="lazy" />
+                          <img src={catIcon} alt="" className="size-6 shrink-0 object-contain" loading="lazy" />
                         ) : (
-                          <GroupIcon size={13} className="shrink-0" aria-hidden="true" />
+                          <GroupIcon size={20} className="shrink-0" aria-hidden="true" />
                         )}
-                        <span>{info.label}</span>
-                        <span className={`shrink-0 text-[10px] tabular-nums ${active ? "text-white/80" : "text-ink-muted"}`}>
+                        {/* 名稱佔滿中間、數量靠右對齊 —— 兩欄網格加上右對齊的數字,
+                            視線才有固定的掃描線,不會像自動換行那樣參差不齊 */}
+                        <span className="min-w-0 flex-1 truncate">{info.label}</span>
+                        <span
+                          className={`shrink-0 text-xs font-medium tabular-nums ${
+                            active ? "text-white/75" : "text-ink-muted"
+                          }`}
+                        >
                           {info.count}
                         </span>
                       </button>
@@ -844,10 +892,59 @@ export function PlayerMap({
               </div>
             );
           })}
+          {/* 收集進度:只影響「收集品」那一組 */}
+          <div className="mt-2 border-t border-line pt-2">
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink-muted">
+              <FiCheckSquare size={13} aria-hidden="true" />
+              {t("收集進度")}
+              <span className="ml-auto font-medium tabular-nums">{collected.size}</span>
+            </div>
+            <div className="flex rounded-lg bg-card p-0.5 text-[11px] ring-1 ring-line">
+              {(["all", "todo", "done"] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setCollectView(k)}
+                  className={`flex-1 rounded px-1 py-1 ${collectView === k ? "bg-pal text-white" : "text-ink-muted"}`}
+                >
+                  {k === "all" ? t("全部") : k === "todo" ? t("未收集") : t("已收集")}
+                </button>
+              ))}
+            </div>
+            {collected.size > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCollected(new Set());
+                  try {
+                    localStorage.removeItem(COLLECT_KEY);
+                  } catch {
+                    /* 忽略 */
+                  }
+                }}
+                className="mt-1.5 text-[11px] text-berry underline underline-offset-2"
+              >
+                {t("清除收集紀錄")}
+              </button>
+            )}
+            <p className="mt-1 text-[10px] leading-tight text-ink-muted">
+              {t("點地圖上的收集品即可標記;紀錄存在這台裝置的瀏覽器。")}
+            </p>
+          </div>
+
           {/* 帕魯位置:選一隻就在地圖上標出牠的生成點 */}
           <div className="mt-3 border-t border-line pt-2">
-            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink-muted">
-              <FiSearch size={13} aria-hidden="true" />
+            <div className="mb-1.5 flex items-center gap-1 text-sm font-bold text-ink-muted">
+              <button
+                type="button"
+                onClick={() => setPalFold((v) => !v)}
+                aria-label={palFold ? t("展開") : t("收合")}
+                aria-expanded={!palFold}
+                className="flex size-7 shrink-0 items-center justify-center rounded text-ink-muted transition hover:bg-card hover:text-ink"
+              >
+                <FiChevronDown size={16} aria-hidden="true" className={`transition-transform ${palFold ? "-rotate-90" : ""}`} />
+              </button>
+              <FiSearch size={15} aria-hidden="true" />
               {t("帕魯位置")}
               {spawnPal && (
                 <button type="button" onClick={() => setSpawnPal(null)} className="ml-auto text-berry underline">
@@ -873,9 +970,10 @@ export function PlayerMap({
               value={palQ}
               onChange={(e) => setPalQ(e.target.value)}
               placeholder={t("依名稱搜尋帕魯…")}
+              hidden={palFold}
               className="mb-1.5 w-full rounded-lg bg-card px-2 py-1.5 text-xs text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
             />
-            <div className="grid max-h-56 grid-cols-4 gap-1 overflow-y-auto">
+            <div className={`max-h-56 grid-cols-4 gap-1 overflow-y-auto ${palFold ? "hidden" : "grid"}`}>
               {palList
                 .filter((x) => !palQ.trim() || x.zh.includes(palQ.trim()) || x.id.toLowerCase().includes(palQ.trim().toLowerCase()))
                 .slice(0, 200)
@@ -912,12 +1010,14 @@ export function PlayerMap({
           <button
             type="button"
             onClick={() => setPoiOpen(true)}
-            className="absolute top-3 left-3 z-1001 flex items-center gap-1.5 rounded-lg bg-card/95 px-3 py-2 text-sm font-medium text-ink shadow-cute ring-1 ring-line backdrop-blur transition hover:ring-pal"
+            className="absolute top-3 left-3 z-1001 flex items-center gap-2 rounded-xl bg-pal px-3.5 py-2.5 text-sm font-bold text-white shadow-cute ring-2 ring-white/25 transition hover:brightness-110"
           >
-            › {t("篩選")}
+            <FiFilter size={16} aria-hidden="true" />
+            {t("地圖篩選")}
             {onCats.size > 0 && (
-              <span className="rounded-full bg-pal px-1.5 text-[11px] font-bold text-white">{onCats.size}</span>
+              <span className="rounded-full bg-white/25 px-1.5 text-[11px] font-bold">{onCats.size}</span>
             )}
+            <FiChevronRight size={16} aria-hidden="true" />
           </button>
         )}
 

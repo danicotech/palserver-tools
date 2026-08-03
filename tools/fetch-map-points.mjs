@@ -163,7 +163,10 @@ for (const [groupKey, , cats] of GROUPS) {
         sub = p[f];
         if (name) break;
       }
-      const row = [Math.round(x * 10) / 10, Math.round(y * 10) / 10, isTree ? 1 : 0];
+      // 第 4 欄是高度(公尺)。遊戲的 z 是公分,除以 100 才是玩家看到的「Z 38m」。
+      // 早期版本省掉了它,但地牢/寶箱在立體地形上常常上下重疊,沒有高度會找錯層。
+      const zM = Math.round((loc[2] ?? 0) / 100);
+      const row = [Math.round(x * 10) / 10, Math.round(y * 10) / 10, isTree ? 1 : 0, zM];
       if (sub) row.push(sub);
       if (name && name !== sub) row.push(name);
       return row;
@@ -242,7 +245,7 @@ const areas = {};
 const out = {
   _comment:
     "互動地圖標記。座標已由世界座標經 savToMap 換算成地圖座標(與玩家/據點同一套)。" +
-    "每筆為 [x, y, world(0=主世界,1=世界樹), 子型別?, 名稱?]。由 tools/fetch-map-points.mjs 產生。",
+    "每筆為 [x, y, world(0=主世界,1=世界樹), z(公尺), 子型別?, 名稱?]。由 tools/fetch-map-points.mjs 產生。",
   version: VER,
   groups: GROUPS.map(([key, name]) => ({
     key,
