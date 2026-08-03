@@ -6,7 +6,7 @@ import type { JSX } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { FiMaximize, FiMinimize, FiMapPin } from "react-icons/fi";
-import { loadMapPoints, clusterPoints, GROUP_COLOR, GROUP_ICON, type MapPointsData } from "./mapPoints";
+import { loadMapPoints, clusterPoints, iconFor, GROUP_COLOR, GROUP_ICON, type MapPointsData } from "./mapPoints";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
 import {
   MAP_IMAGE,
@@ -289,12 +289,16 @@ export function PlayerMap({
         const icon = cat ? (GROUP_ICON[cat.group] ?? "◆") : "◆";
         if (c.n === 1 && c.point) {
           const [, , , sub, name] = c.point;
+          // 有對得上的遊戲物品圖就用圖,沒有才退回分組符號 —— 圖比符號好認得多
+          const url = c.category ? iconFor(c.category, sub) : null;
           const m = L.marker([c.y, c.x], {
             icon: L.divIcon({
-              className: "pmap-poi",
-              iconSize: [18, 18],
-              iconAnchor: [9, 9],
-              html: `<span style="background:${color}">${icon}</span>`,
+              className: url ? "pmap-poi pmap-poi-img" : "pmap-poi",
+              iconSize: url ? [24, 24] : [18, 18],
+              iconAnchor: url ? [12, 12] : [9, 9],
+              html: url
+                ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" /></span>`
+                : `<span style="background:${color}">${icon}</span>`,
             }),
           });
           m.bindTooltip(

@@ -249,3 +249,17 @@ html {
 .pmap-poi-cluster span:hover {
   filter: brightness(1.12);
 }
+
+/* 有遊戲物品圖的標記:白底圓 + 分組色外框,小圖在深色地圖上才看得清楚 */
+.pmap-poi-img span {
+  width: 24px;
+  height: 24px;
+  background: rgb(255 255 255 / 0.92);
+  border: 2px solid;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.45);
+}
+.pmap-poi-img img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}

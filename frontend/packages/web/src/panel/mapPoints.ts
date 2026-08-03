@@ -113,3 +113,62 @@ export const GROUP_ICON: Record<string, string> = {
   npc: "☻",
   resource: "■",
 };
+
+/**
+ * 類別 → 圖示。
+ *
+ * 全部用「專案裡本來就有的遊戲原生素材」,沒有從外站抓任何圖:
+ *   - op.gg 的標記圖示只有 4 個是圖檔,其餘 50 個是它 JS 裡的內嵌 SVG,
+ *     照抄等於複製人家的美術,比抓座標資料更敏感。
+ *   - 而 public/game-data/items/ 已經有 903 個遊戲物品圖示,礦物、蛋、原油、
+ *     夜星砂、古代素材、藏寶圖…幾乎全都對得上,那才是正確的來源。
+ * 對不上的(寶箱、釣場、NPC、地點類)留 null,改用分組符號 + 顏色,
+ * 不硬湊一個意思不對的圖。
+ */
+const ITEM = (n: string) => `/game-data/items/T_itemicon_${n}.webp`;
+const LANDMARK = (n: string) => `/game-data/landmark-icons/${n}`;
+
+export const CATEGORY_ICON: Record<string, string | null> = {
+  // 地點
+  FastTravels: LANDMARK("fasttravel.png"),
+  DungeonPortal: LANDMARK("dungeon.png"),
+  DungeonFixed: LANDMARK("dungeon.png"),
+  BossTower: LANDMARK("tower.png"),
+  Home: LANDMARK("palbox.webp"),
+  TreasureMap: ITEM("Consume_TreasureMap01"),
+  // 礦物 / 素材
+  OreCoal: ITEM("Material_Coal"),
+  OreSulfur: ITEM("Material_Sulfur"),
+  OreQuartz: ITEM("Material_Quartz"),
+  OreQuartzCluster: ITEM("Material_Quartz"),
+  Chromites: ITEM("Material_Chromium"),
+  RainbowCrystal: ITEM("Material_RainbowCrystal"),
+  SkyIslandOre: ITEM("Material_SkyIslandOre"),
+  OreMetal: ITEM("Material_Stone"),
+  WorldTreeOre: ITEM("Material_SkyIslandOre"),
+  AncientLava: ITEM("Material_Lava_Ancient"),
+  AncientWood: ITEM("Material_Wood_Ancient"),
+  AncientBeastBone: ITEM("Material_BeastBone_Ancient"),
+  // 資源
+  CrudeOil: ITEM("Material_CrudeOil"),
+  NightStone: ITEM("Material_NightStone"),
+  BeautifulFlower: ITEM("Food_Poppy"),
+  // 敵人(這張的檔名前綴不同,直接寫全路徑)
+  Bounty: "/game-data/items/T_icon_item_Jewelry_BountyProof_1.webp",
+};
+
+/** 蛋依子型別給不同顏色的蛋圖(k 例:grass_02 / volcano_01 / worldtree_01)。 */
+const EGG_BY_KEY: Record<string, string> = {
+  grass: "Leaf_01", desert: "Earth_01", volcano: "Fire_01", snow: "Ice_01",
+  sakura: "Water_01", skyisland: "Electricity_01", worldtree: "WorldTree_01", dark: "Dark_01",
+};
+
+/** 取得某一筆標記要用的圖示;沒有合適的圖回 null(呼叫端改用分組符號)。 */
+export function iconFor(category: string, sub?: string): string | null {
+  if (category === "Eggs") {
+    const base = (sub ?? "").split("_")[0].toLowerCase();
+    const v = EGG_BY_KEY[base];
+    return v ? ITEM(`Material_PalEgg_${v}`) : ITEM("Material_PalEgg");
+  }
+  return CATEGORY_ICON[category] ?? null;
+}
