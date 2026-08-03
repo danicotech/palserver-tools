@@ -39,6 +39,67 @@ export function loadMapPoints(): Promise<MapPointsData | null> {
   return cache;
 }
 
+/** 掉落 / 商品項目 */
+export interface DetailItem {
+  /** 名稱 */ n: string;
+  /** 圖示代號 */ i?: string;
+  /** 數量 */ q?: string | number;
+  /** 機率(0–1) */ r?: number;
+  /** 售價 */ p?: number;
+}
+
+/** 標記的詳細資料(標題、掉落表、商店品項),由 tools/fetch-map-detail.mjs 產生。 */
+export interface MapDetail {
+  version: string;
+  /** 事件種類 */
+  incidents: { t: string; c: string; n?: string[]; lv?: [number, number] }[];
+  /** 地圖座標 "x,y" → 該生成點會刷出的事件索引。一個點會隨機刷多種事件。 */
+  incidentAt: Record<string, number[]>;
+  incidentZ: Record<string, number>;
+  /** points.json 第 5 欄的 key → 筆記 */
+  notes: Record<string, { t: string; c: string; x?: string; z?: number }>;
+  missions: Record<string, { t: string; y: string; x?: string; exp?: number; z?: number }>;
+  chests: Record<string, { l: string; g: { grade: number; items: DetailItem[] }[] }>;
+  /** 地圖座標 "x,y" → 寶箱種類 */
+  chestAt: Record<string, string>;
+  skillFruit: Record<string, { l: string; g: { el?: string; l: string; items: DetailItem[] }[] }>;
+  /** [x, y, z, 種類代號] */
+  fruitTrees: [number, number, number, string][];
+  shops: { l: string; cur?: string; curIcon?: string; items: DetailItem[] }[];
+  npc: Record<string, string[]>;
+}
+
+let detailCache: Promise<MapDetail | null> | null = null;
+
+/** 載入詳細資料;缺檔時回 null,地圖照常運作只是提示裡沒有名稱與掉落表。 */
+export function loadMapDetail(): Promise<MapDetail | null> {
+  detailCache ??= fetch("/game-data/map-detail.json")
+    .then((r) => (r.ok ? (r.json() as Promise<MapDetail>) : null))
+    .catch(() => null);
+  return detailCache;
+}
+
+/** 詳細資料的座標鍵。必須和產生腳本的 ckey 一致(四捨五入到整數)。 */
+export const detailKey = (x: number, y: number) => `${Math.round(x)},${Math.round(y)}`;
+
+/** 事件分類的中文名 */
+export const INCIDENT_CATEGORY: Record<string, string> = {
+  battle: "對戰",
+  supply: "補給",
+  wild: "野生帕魯",
+  nest: "巢穴",
+  outbreak: "大量出現",
+  reward: "獎勵",
+  merchant: "商人",
+};
+
+/** 筆記分類的中文名 */
+export const NOTE_CATEGORY: Record<string, string> = {
+  boss: "首領筆記",
+  castaway: "漂流者手記",
+  worldTree: "世界樹筆記",
+};
+
 export interface Cluster {
   /** 群心(地圖座標) */
   x: number;

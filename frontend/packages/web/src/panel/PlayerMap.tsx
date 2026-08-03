@@ -38,6 +38,12 @@ import {
   PAL_IDS,
   heatColor,
   type PalSpawns,
+  loadMapDetail,
+  detailKey,
+  INCIDENT_CATEGORY,
+  NOTE_CATEGORY,
+  type MapDetail,
+  type DetailItem,
 } from "./mapPoints";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
 import {
@@ -59,6 +65,87 @@ import { t, useI18n } from "../i18n";
 
 type World = "main" | "tree";
 type WhoFilter = "all" | "online" | "offline" | "none";
+
+/** 提示裡的掉落表:機率高的排前面,只列前幾項 ——
+ *  一個寶箱的掉落表有上百項,全列出來提示會蓋掉整個地圖。 */
+function itemLines(items: DetailItem[], max = 6): string {
+  const rows = items.slice(0, max).map((it) => {
+    // rate 來源本來就是百分比(100 = 必掉),不要再乘 100。
+    // 低機率的長尾很多,小數位固定一位會全變 0.0,所以未滿 1% 的多給一位。
+    const pct =
+      typeof it.r === "number"
+        ? ` <span style="opacity:.6">${it.r >= 1 ? it.r.toFixed(1) : it.r.toFixed(2)}%</span>`
+        : "";
+    const qty = it.q && String(it.q) !== "1" ? ` ×${escapeHtml(String(it.q))}` : "";
+    const price = typeof it.p === "number" ? ` <span style="opacity:.6">${it.p}</span>` : "";
+    return `<div style="padding-left:.5em">・${escapeHtml(it.n)}${qty}${pct}${price}</div>`;
+  });
+  if (items.length > max) rows.push(`<div style="padding-left:.5em;opacity:.6">…還有 ${items.length - max} 項</div>`);
+  return rows.join("");
+}
+
+/** 這個座標的補充說明(事件名稱、筆記標題、寶箱掉落…)。
+ *  回傳 { name } 用來取代原本的流水號名稱,{ extra } 是要附在座標之後的額外行。
+ *
+ *  資料分兩種對接方式:事件與寶箱用座標對(來源沒有給 key),
+ *  筆記與任務用 points.json 第 5 欄的 key 對(比座標穩,不受四捨五入影響)。 */
+function detailFor(
+  d: MapDetail | null,
+  category: string | undefined,
+  sub: string | undefined,
+  x: number,
+  y: number,
+): { name?: string; extra: string } {
+  if (!d || !category) return { extra: "" };
+  const k = detailKey(x, y);
+
+  if (category === "Incident") {
+    const ids = d.incidentAt[k];
+    if (!ids?.length) return { extra: "" };
+    const first = d.incidents[ids[0]];
+    if (!first) return { extra: "" };
+    // 同一個生成點會隨機刷出多種事件,所以標題寫「第一種 +N」
+    const more = ids.length > 1 ? ` +${ids.length - 1}` : "";
+    const cat = INCIDENT_CATEGORY[first.c] ?? first.c;
+    const lv = first.lv ? `<div>Lv ${first.lv[0]}–${first.lv[1]}</div>` : "";
+    const rest =
+      ids.length > 1
+        ? `<div style="opacity:.7;margin-top:.25em">${ids
+            .slice(1, 6)
+            .map((i) => escapeHtml(d.incidents[i]?.t ?? ""))
+            .filter(Boolean)
+            .join("<br />")}</div>`
+        : "";
+    return { name: `${first.t}${more}`, extra: `<div>${escapeHtml(cat)}</div>${lv}${rest}` };
+  }
+
+  if (category === "Note" && sub) {
+    const n = d.notes[sub];
+    if (!n) return { extra: "" };
+    const cat = NOTE_CATEGORY[n.c] ?? n.c;
+    const body = n.x ? `<div style="opacity:.7;max-width:22em;white-space:normal">${escapeHtml(n.x)}</div>` : "";
+    return { name: n.t, extra: `<div>${escapeHtml(cat)}</div>${body}` };
+  }
+
+  if (sub && d.missions[sub]) {
+    const m = d.missions[sub];
+    const kind = m.y === "main" ? "主線任務" : "支線任務";
+    const exp = m.exp ? ` <span style="opacity:.6">EXP ${m.exp}</span>` : "";
+    const body = m.x ? `<div style="opacity:.7;max-width:22em;white-space:normal">${escapeHtml(m.x)}</div>` : "";
+    return { name: m.t, extra: `<div>${kind}${exp}</div>${body}` };
+  }
+
+  if (category.startsWith("Chest") || category === "ChestboxNormal") {
+    const slug = d.chestAt[k];
+    const c = slug ? d.chests[slug] : undefined;
+    if (!c) return { extra: "" };
+    // 只列最高品階 —— 低品階的內容是它的子集,全列出來只是重複
+    const best = c.g[c.g.length - 1];
+    return { name: c.l, extra: best ? `<div style="margin-top:.25em;opacity:.85">掉落</div>${itemLines(best.items)}` : "" };
+  }
+
+  return { extra: "" };
+}
 
 /** 分組圖示:一律用 icon 元件,不用幾何符號或 emoji ——
  *  符號在不同字型下大小/基線不一,emoji 各平台長得也不一樣。 */
@@ -180,6 +267,9 @@ export function PlayerMap({
   // (同源 HEAD,很快;沒有圖磚就退回原本的單張底圖,畫面照常能用)。
   // 互動地圖標記(快速旅行/地牢/礦物/蛋…)。資料檔不存在時 data 為 null,整段功能自動隱藏。
   const [poi, setPoi] = useState<MapPointsData | null>(null);
+  /** 標記的名稱與掉落表。獨立一份是因為它比座標大得多(288 KB),
+      而且缺了也只是提示少幾行,不該擋住地圖本身顯示。 */
+  const [detail, setDetail] = useState<MapDetail | null>(null);
   const [onCats, setOnCats] = useState<Set<string>>(new Set());
   const [poiOpen, setPoiOpen] = useState(false);
   /** 收合起來的分組(預設全開) */
@@ -188,6 +278,7 @@ export function PlayerMap({
   useEffect(() => {
     let alive = true;
     void loadMapPoints().then((d) => alive && setPoi(d));
+    void loadMapDetail().then((d) => alive && setDetail(d));
     return () => {
       alive = false;
     };
@@ -486,12 +577,19 @@ export function PlayerMap({
           // 對玩家沒有意義,只會把提示撐長。
           const seq = c.point ? (c.index ?? 0) + 1 : 0;
           const head = `${cat?.label ?? name ?? ""}${seq ? ` ${seq}` : ""}`;
+          // 專屬名稱優先用 map-detail 的(事件名、筆記標題、寶箱種類),
+          // 沒有才退回 points.json 內建的名稱欄位。
+          const det = detailFor(detail, c.category, sub, c.x, c.y);
+          const own = det.name ?? (name && name !== cat?.label ? name : "");
           m.bindTooltip(
             `<div style="font-weight:800">${escapeHtml(head)}</div>` +
-              (name && name !== cat?.label ? `<div>${escapeHtml(name)}</div>` : "") +
+              (own ? `<div>${escapeHtml(own)}</div>` : "") +
               (typeof lv === "number" && lv > 0 ? `<div>Lv ${lv}</div>` : "") +
               (typeof lv === "string" && lv ? `<div>${escapeHtml(lv)}</div>` : "") +
-              `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${zM}m</div>`,
+              `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${
+                detail?.incidentZ?.[detailKey(c.x, c.y)] ?? zM
+              }m</div>` +
+              det.extra,
             { direction: "top", className: "pmap-detail" },
           );
           m.addTo(layer);
@@ -530,7 +628,7 @@ export function PlayerMap({
       map.off("moveend zoomend", draw);
       layer.clearLayers();
     };
-  }, [poi, onCats, world, tiles, collected, collectView]);
+  }, [poi, detail, onCats, world, tiles, collected, collectView]);
 
   // ---- 帕魯出生地 ----
   // 一隻帕魯最多幾百個生成點,不需要分群,但仍只畫視野內的,縮到很小時才不會卡。
