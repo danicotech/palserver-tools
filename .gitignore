@@ -55,3 +55,6 @@ frontend/packages/web/public/map-tiles/
 # 互動地圖標記(56 類、14,013 筆,373 KB)。資料來源是 op.gg 整理的成果,
 # 不隨專案散布;要用就跑 node tools/fetch-map-points.mjs 自行產生。
 frontend/packages/web/public/game-data/map-points.json
+
+# 地圖標記用的 NPC 頭像(10 張,由 fetch-map-points.mjs 一併取得)
+frontend/packages/web/public/game-data/map-icons/

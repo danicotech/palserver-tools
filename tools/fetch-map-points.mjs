@@ -149,6 +149,33 @@ const out = {
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
+// ---- NPC 頭像 ----
+// 標記圖示絕大多數用專案既有素材(items/ 的物品圖、pals/ 的帕魯頭像、landmark-icons/),
+// 只有這 10 張 NPC 頭像原本沒有,一併抓下來。都是遊戲美術,不是站方自製圖示。
+const ICONS = [
+  "SalesPerson", "PalDealer", "Male_DarkTrader01", "BountyTrader", "Human",
+  "NPC_PalDisplay_1", "Female_Presenter01", "Emote_location_A_01",
+  "Boss_Anubis", "PalEgg_Normal_01",
+];
+const ICON_DIR = path.join(ROOT, "frontend", "packages", "web", "public", "game-data", "map-icons");
+fs.mkdirSync(ICON_DIR, { recursive: true });
+let got = 0;
+for (const n of ICONS) {
+  const file = path.join(ICON_DIR, `${n}.webp`);
+  if (fs.existsSync(file) && fs.statSync(file).size > 0) continue;
+  try {
+    const r = await fetch(`https://s-stats-platform-cdn.op.gg/palworld/images/icons/${n}.webp`, {
+      headers: { Referer: "https://op.gg/" },
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    fs.writeFileSync(file, Buffer.from(await r.arrayBuffer()));
+    got++;
+  } catch (e) {
+    console.log(`  NPC 頭像 ${n} 下載失敗:${e.message}`);
+  }
+}
+console.log(`NPC 頭像:新下載 ${got}、已有 ${ICONS.length - got}`);
+
 const kb = Math.round(fs.statSync(OUT).size / 1024);
 console.log(`已寫入 ${path.relative(ROOT, OUT)} — ${Object.keys(categories).length} 類、${total} 個標記、${kb} KB`);
 if (unknown.length) console.log("來源沒有這些類別(可能已改名):", unknown.join(", "));

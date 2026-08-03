@@ -1,3 +1,5 @@
+import { palInfo } from "./paldex";
+
 // 互動地圖的標記資料:載入、篩選、以及「畫得動」所需的分群。
 //
 // 資料由 tools/fetch-map-points.mjs 產生(見該檔說明),共 56 類、約 14,000 個標記。
@@ -127,6 +129,21 @@ export const GROUP_ICON: Record<string, string> = {
  */
 const ITEM = (n: string) => `/game-data/items/T_itemicon_${n}.webp`;
 const LANDMARK = (n: string) => `/game-data/landmark-icons/${n}`;
+/** 遊戲裡的 NPC 頭像;這 10 張專案原本沒有,由 tools/fetch-map-points.mjs 一併取得。 */
+const MAPICON = (n: string) => `/game-data/map-icons/${n}.webp`;
+
+/** NPC 類別 → 頭像。原始值形如 SalesPerson / U_Emote_location_E_02,只取得出類型即可。 */
+const NPC_ICON: Record<string, string> = {
+  NpcSalesPerson: "SalesPerson",
+  NpcPalDealer: "PalDealer",
+  NpcDarkTrader: "Male_DarkTrader01",
+  NpcBountyTrader: "BountyTrader",
+  NpcMedalTrader: "Human",
+  NpcPalDisplay: "NPC_PalDisplay_1",
+  NpcPresenter: "Female_Presenter01",
+  NpcEmote: "Emote_location_A_01",
+  NpcOther: "Human",
+};
 
 export const CATEGORY_ICON: Record<string, string | null> = {
   // 地點
@@ -157,6 +174,25 @@ export const CATEGORY_ICON: Record<string, string | null> = {
   Bounty: "/game-data/items/T_icon_item_Jewelry_BountyProof_1.webp",
 };
 
+/** 翠葉鼠雕像:每種帕魯的雕像長得不一樣,對應 Relic 系列圖。
+ *  這 12 張專案裡本來就有(T_itemicon_Relic{,_01.._11}.webp),不必外求;
+ *  編號對照取自遊戲資料,並實測比對過同編號圖檔為同一張(平均像素差 8.5/255,
+ *  差異來自解析度 140 vs 256 的縮放)。 */
+const EFFIGY_RELIC: Record<string, string> = {
+  Carbunclo: "Relic", // 翠葉鼠
+  SheepBall: "Relic_01", // 棉悠悠
+  Penguin: "Relic_02", // 企丸丸
+  IceCrocodile: "Relic_03", // 肚肚鱷
+  FlameBambi: "Relic_04", // 燎火鹿
+  LeafMomonga: "Relic_05", // 達鼠泥
+  Monkey: "Relic_06", // 新葉猿
+  NegativeKoala: "Relic_07", // 瞅什魔
+  PinkCat: "Relic_08", // 搗蛋貓
+  Mutant: "Relic_09", // 秘斯媞雅
+  LazyDragon: "Relic_10", // 佩克龍
+  GuardianDog: "Relic_11", // 八雲犬
+};
+
 /** 蛋依子型別給不同顏色的蛋圖(k 例:grass_02 / volcano_01 / worldtree_01)。 */
 const EGG_BY_KEY: Record<string, string> = {
   grass: "Leaf_01", desert: "Earth_01", volcano: "Fire_01", snow: "Ice_01",
@@ -165,10 +201,20 @@ const EGG_BY_KEY: Record<string, string> = {
 
 /** 取得某一筆標記要用的圖示;沒有合適的圖回 null(呼叫端改用分組符號)。 */
 export function iconFor(category: string, sub?: string): string | null {
+  // 區域頭目/狂暴:原始值是帕魯代號(BOSS_Horus_Water、PREDATOR_SifuDog),
+  // 去掉前綴就能用專案既有的帕魯頭像 —— 直接看到是哪一隻,比一個通用圖示有用得多。
+  if (category === "FieldBoss" || category === "Predator") {
+    const key = (sub ?? "").replace(/^(BOSS_|PREDATOR_)/, "");
+    return key ? palInfo(key.toLowerCase()).iconUrl || null : null;
+  }
+  if (NPC_ICON[category]) return MAPICON(NPC_ICON[category]);
+  if (category === "LifmunkEffigy") {
+    return ITEM(EFFIGY_RELIC[sub ?? "Carbunclo"] ?? "Relic");
+  }
   if (category === "Eggs") {
     const base = (sub ?? "").split("_")[0].toLowerCase();
     const v = EGG_BY_KEY[base];
-    return v ? ITEM(`Material_PalEgg_${v}`) : ITEM("Material_PalEgg");
+    return v ? ITEM(`Material_PalEgg_${v}`) : MAPICON("PalEgg_Normal_01");
   }
   return CATEGORY_ICON[category] ?? null;
 }
