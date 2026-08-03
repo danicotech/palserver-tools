@@ -65,6 +65,8 @@ export interface MapDetail {
   skillFruit: Record<string, { l: string; g: { el?: string; l: string; items: DetailItem[] }[] }>;
   /** [x, y, z, 種類代號] */
   fruitTrees: [number, number, number, string][];
+  /** 地圖座標 "x,y" → 技能果實樹種類 */
+  fruitAt: Record<string, string>;
   shops: { l: string; cur?: string; curIcon?: string; items: DetailItem[] }[];
   npc: Record<string, string[]>;
 }

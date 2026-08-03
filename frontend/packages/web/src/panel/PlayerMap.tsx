@@ -98,9 +98,22 @@ function detailFor(
 ): { name?: string; extra: string } {
   if (!d || !category) return { extra: "" };
   const k = detailKey(x, y);
+  /** 容差一格的查表。兩邊的座標各自四捨五入過(來源是整數,points.json 留一位小數),
+   *  在整數邊界上會差一格。標記彼此至少隔幾十單位,往鄰格找不會認錯對象。 */
+  const near = <T,>(table: Record<string, T>): T | undefined => {
+    const exact = table[k];
+    if (exact !== undefined) return exact;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const v = table[detailKey(x + dx, y + dy)];
+        if (v !== undefined) return v;
+      }
+    }
+    return undefined;
+  };
 
   if (category === "Incident") {
-    const ids = d.incidentAt[k];
+    const ids = near(d.incidentAt);
     if (!ids?.length) return { extra: "" };
     const first = d.incidents[ids[0]];
     if (!first) return { extra: "" };
@@ -135,8 +148,26 @@ function detailFor(
     return { name: m.t, extra: `<div>${kind}${exp}</div>${body}` };
   }
 
+  if (category === "SkillFruits") {
+    const slug = near(d.fruitAt);
+    const f = slug ? d.skillFruit[slug] : undefined;
+    if (!f) return { extra: "" };
+    // 每棵樹依屬性分成九組,全展開會有上百項。
+    // 這裡只列各屬性最高機率的那顆,想知道細節再點進去看 —— 提示不是圖鑑。
+    const top = f.g
+      .map((g) => {
+        const best = g.items[0];
+        return best ? `<div style="padding-left:.5em">・${escapeHtml(best.n)}${
+          typeof best.r === "number" ? ` <span style="opacity:.6">${best.r.toFixed(1)}%</span>` : ""
+        }</div>` : "";
+      })
+      .filter(Boolean)
+      .join("");
+    return { name: f.l, extra: top ? `<div style="margin-top:.25em;opacity:.85">果實</div>${top}` : "" };
+  }
+
   if (category.startsWith("Chest") || category === "ChestboxNormal") {
-    const slug = d.chestAt[k];
+    const slug = near(d.chestAt);
     const c = slug ? d.chests[slug] : undefined;
     if (!c) return { extra: "" };
     // 只列最高品階 —— 低品階的內容是它的子集,全列出來只是重複

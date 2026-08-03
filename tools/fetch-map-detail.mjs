@@ -153,6 +153,7 @@ for (const c of chestRaw.chests) {
 // ── 技能果實樹 ──────────────────────────────────────────────────────
 // 這是地圖上原本完全沒有的一類標記 —— points.json 沒收錄。
 const fruitTrees = [];
+const fruitAt = {};
 const skillFruit = {};
 for (const s of fruitRaw.sources) {
   skillFruit[s.slug] = {
@@ -161,6 +162,7 @@ for (const s of fruitRaw.sources) {
   };
   for (const l of s.mapLocations ?? []) {
     fruitTrees.push([r1(l.x), r1(l.y), l.z != null ? Math.round(l.z) : 0, s.slug]);
+    fruitAt[ckey(l.x, l.y)] = s.slug;
   }
 }
 
@@ -193,6 +195,7 @@ const out = {
   chestAt,
   skillFruit,
   fruitTrees,
+  fruitAt,
   shops,
   npc,
 };
