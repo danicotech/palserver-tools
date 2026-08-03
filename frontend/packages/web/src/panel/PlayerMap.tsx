@@ -6,7 +6,16 @@ import type { JSX } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { FiMaximize, FiMinimize, FiMapPin } from "react-icons/fi";
-import { loadMapPoints, clusterPoints, iconFor, GROUP_COLOR, GROUP_ICON, type MapPointsData } from "./mapPoints";
+import {
+  loadMapPoints,
+  clusterPoints,
+  iconFor,
+  categoryIcon,
+  isPortrait,
+  GROUP_COLOR,
+  GROUP_ICON,
+  type MapPointsData,
+} from "./mapPoints";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
 import {
   MAP_IMAGE,
@@ -287,18 +296,22 @@ export function PlayerMap({
         const cat = c.category ? poi.categories[c.category] : undefined;
         const color = cat ? (GROUP_COLOR[cat.group] ?? "#64748b") : "#64748b";
         const icon = cat ? (GROUP_ICON[cat.group] ?? "◆") : "◆";
+        const sub = c.point?.[3];
+        // 有對得上的遊戲物品圖就用圖,沒有才退回分組符號 —— 圖比符號好認得多
+        const url = c.category ? iconFor(c.category, sub) : null;
+        // NPC / 頭目是人物肖像,方形去背會很怪,套圓框才像頭像
+        const portrait = c.category ? isPortrait(c.category) : false;
         if (c.n === 1 && c.point) {
-          const [, , , sub, name] = c.point;
-          // 有對得上的遊戲物品圖就用圖,沒有才退回分組符號 —— 圖比符號好認得多
-          const url = c.category ? iconFor(c.category, sub) : null;
+          const [, , , , name] = c.point;
+          const cls = url ? (portrait ? "pmap-poi pmap-poi-img pmap-poi-face" : "pmap-poi pmap-poi-img") : "pmap-poi";
           const m = L.marker([c.y, c.x], {
             icon: L.divIcon({
-              className: url ? "pmap-poi pmap-poi-img" : "pmap-poi",
+              className: cls,
               // 有圖的放大到 34px:原本 24px 的圖太小,遊戲物品圖的辨識度就沒了
               iconSize: url ? [34, 34] : [20, 20],
               iconAnchor: url ? [17, 17] : [10, 10],
               html: url
-                ? `<span><img src="${escapeHtml(url)}" alt="" loading="lazy" /></span>`
+                ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" /></span>`
                 : `<span style="background:${color}">${icon}</span>`,
             }),
           });
@@ -310,13 +323,19 @@ export function PlayerMap({
           );
           m.addTo(layer);
         } else {
-          const size = c.n > 99 ? 34 : c.n > 9 ? 28 : 24;
+          // 分群不再畫成「數字圓」——那樣看不出這一堆是什麼東西。
+          // 改成「標記圖本身 + 右上角數量徽章」,縮小時仍然一眼認得出是蛋還是礦。
           const m = L.marker([c.y, c.x], {
             icon: L.divIcon({
-              className: "pmap-poi-cluster",
-              iconSize: [size, size],
-              iconAnchor: [size / 2, size / 2],
-              html: `<span style="background:${color};width:${size}px;height:${size}px">${c.n}</span>`,
+              className: url
+                ? `pmap-poi pmap-poi-img pmap-poi-group${portrait ? " pmap-poi-face" : ""}`
+                : "pmap-poi-cluster",
+              iconSize: [34, 34],
+              iconAnchor: [17, 17],
+              html: url
+                ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" />` +
+                  `<b style="background:${color}">${c.n > 999 ? "999+" : c.n}</b></span>`
+                : `<span style="background:${color};width:28px;height:28px">${c.n}</span>`,
             }),
           });
           // 點群集就放大過去,跟一般地圖的操作直覺一致
@@ -545,7 +564,9 @@ export function PlayerMap({
           橫幅比地圖還高 —— 側欄才是這種「多分類 + 大地圖」的正確版型。 */}
       <div className={`flex min-h-0 flex-col sm:flex-row ${isFull ? "flex-1" : ""}`}>
       {poi && poiOpen && (
-        <div className="max-h-64 shrink-0 overflow-y-auto border-t border-line bg-card-soft/60 px-3 py-2 sm:max-h-none sm:w-72 sm:border-t-0 sm:border-r">
+        <div className={`shrink-0 overflow-y-auto border-t border-line bg-card-soft/60 px-3 py-2 sm:w-72 sm:border-t-0 sm:border-r ${
+            isFull ? "max-h-64 sm:max-h-none" : "max-h-64 sm:max-h-170"
+          }`}>
           {poi.groups.map((g) => {
             const cats = g.categories.filter((c) => poi.categories[c]);
             const on = cats.filter((c) => onCats.has(c)).length;
@@ -578,6 +599,7 @@ export function PlayerMap({
                   {cats.map((c) => {
                     const info = poi.categories[c];
                     const active = onCats.has(c);
+                    const catIcon = categoryIcon(c);
                     return (
                       <button
                         key={c}
@@ -590,15 +612,23 @@ export function PlayerMap({
                             return next;
                           })
                         }
-                        className={`flex min-h-7 items-center gap-1 rounded-lg px-2 text-xs ring-1 transition ${
+                        className={`flex min-h-8 min-w-0 flex-1 items-center gap-1.5 rounded-lg px-2 text-xs ring-1 transition ${
                           active
                             ? "text-white ring-transparent"
                             : "bg-card text-ink ring-line hover:ring-pal/50"
                         }`}
                         style={active ? { background: GROUP_COLOR[g.key] } : undefined}
                       >
-                        {info.label}
-                        <span className={`text-[10px] tabular-nums ${active ? "text-white/80" : "text-ink-muted"}`}>
+                        {/* 每個分類都掛自己的圖示 —— 純文字清單掃起來很慢,有圖才找得快 */}
+                        {catIcon ? (
+                          <img src={catIcon} alt="" className="size-4 shrink-0 object-contain" loading="lazy" />
+                        ) : (
+                          <span className="w-4 shrink-0 text-center" aria-hidden="true">
+                            {GROUP_ICON[g.key]}
+                          </span>
+                        )}
+                        <span className="truncate">{info.label}</span>
+                        <span className={`ml-auto shrink-0 text-[10px] tabular-nums ${active ? "text-white/80" : "text-ink-muted"}`}>
                           {info.count}
                         </span>
                       </button>
@@ -626,7 +656,7 @@ export function PlayerMap({
           而 React 只要重繪就會用自己的 className 整個覆蓋掉,把那些 class 洗掉。
           少了 .leaflet-container,Leaflet 的 CSS(含 img.leaflet-image-layer 的 max-width:none)
           全部失效,底圖寬度被 preflight 的 img{max-width:100%} 壓成 0 —— 症狀就是「進全螢幕後地圖不見了」。 */}
-      <div ref={mapBoxRef} className={`relative min-w-0 flex-1 ${isFull ? "min-h-0" : "h-80 sm:h-115"}`}>
+      <div ref={mapBoxRef} className={`relative min-w-0 flex-1 ${isFull ? "min-h-0" : "h-80 sm:h-170"}`}>
         <div ref={containerRef} className="size-full" />
         {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
         <button

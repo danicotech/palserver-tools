@@ -41,7 +41,7 @@ export interface Cluster {
   y: number;
   /** 這一群包含幾個點 */
   n: number;
-  /** n === 1 時的那個點,用來顯示名稱 */
+  /** 這一群的代表點(n === 1 時就是唯一那個);用來取名稱與圖示 */
   point?: RawPoint;
   /** 這一群屬於哪個類別(單一類別群才有;混合群為 undefined) */
   category?: string;
@@ -85,7 +85,7 @@ export function clusterPoints(
       x: g.sx / g.n,
       y: g.sy / g.n,
       n: g.n,
-      point: g.n === 1 ? g.first : undefined,
+      point: g.first,
       category: g.mixed ? undefined : g.cat,
     });
   }
@@ -145,7 +145,68 @@ const NPC_ICON: Record<string, string> = {
   NpcOther: "Human",
 };
 
-export const CATEGORY_ICON: Record<string, string | null> = {
+/** 每個類別的專用標記圖(來自地圖站的 markers 圖組,已下載到 game-data/map-icons/)。
+ *  這些是「地圖標記語意」的圖示(寶箱、釣場、地牢入口…),遊戲物品圖沒有對應物,
+ *  所以這一份優先;蛋與雕像另有更細的子型別圖,由 iconFor 覆寫。 */
+const MARKER: Record<string, string> = {
+  AncientBeastBone: "BeastBone_Ancient.webp",
+  AncientLava: "Lava_Ancient.webp",
+  AncientWood: "Wood_Ancient.webp",
+  AntiAir: "anti-air.webp",
+  BeautifulFlower: "Poppy.webp",
+  BossTower: "boss-tower.webp",
+  Bounty: "bounty.webp",
+  CaveEntrance: "cave-entrance.webp",
+  Chestbox: "chest.webp",
+  Chromites: "chromite.webp",
+  CrudeOil: "crude-oil.webp",
+  DungeonFixed: "dungeon.webp",
+  DungeonPortal: "dungeon.webp",
+  ElementTreasure: "element-chest.webp",
+  EnemyCamp: "enemy-camp.webp",
+  FastTravels: "fast-travel.webp",
+  FieldBoss: "field-boss.webp",
+  FishingSpot: "fishing.webp",
+  HeatArea: "heat.webp",
+  Home: "home.webp",
+  Incident: "incident.webp",
+  Junk: "junk.webp",
+  LifmunkEffigy: "Relic.webp",
+  LootTower: "supply.webp",
+  NightStone: "night-stone.webp",
+  Note: "note.webp",
+  NpcBountyTrader: "BountyTrader.webp",
+  NpcDarkTrader: "Male_DarkTrader01.webp",
+  NpcEmote: "Emote_location_A_01.webp",
+  NpcMedalTrader: "Human.webp",
+  NpcOther: "Human.webp",
+  NpcPalDealer: "PalDealer.webp",
+  NpcPalDisplay: "NPC_PalDisplay_1.webp",
+  NpcPresenter: "Female_Presenter01.webp",
+  NpcSalesPerson: "SalesPerson.webp",
+  OreCoal: "ore-coal.webp",
+  OreMetal: "ore-metal.webp",
+  OreQuartz: "ore-quartz.webp",
+  OreQuartzCluster: "ore-quartz.webp",
+  OreSulfur: "ore-sulfur.webp",
+  Peach: "peach.webp",
+  Predator: "predator.webp",
+  Quest: "quest.webp",
+  RainbowCrystal: "rainbow-crystal.webp",
+  RareFishingSpot: "fishing.webp",
+  RegionName: "region.webp",
+  Respawn: "respawn.webp",
+  Salvage: "salvage.webp",
+  SkillFruits: "skill-fruit.webp",
+  SkyIslandOre: "sky-island-ore.webp",
+  SkylandWarpAltar: "skyland-warp-altar.webp",
+  Supply: "supply.webp",
+  TreasureMap: "treasure-map.webp",
+  WatchTower: "watch-tower.webp",
+  WorldTreeOre: "sky-island-ore.webp"
+};
+
+const LEGACY_ICON: Record<string, string | null> = {
   // 地點
   FastTravels: LANDMARK("fasttravel.png"),
   DungeonPortal: LANDMARK("dungeon.png"),
@@ -201,6 +262,7 @@ const EGG_BY_KEY: Record<string, string> = {
 
 /** 取得某一筆標記要用的圖示;沒有合適的圖回 null(呼叫端改用分組符號)。 */
 export function iconFor(category: string, sub?: string): string | null {
+  // 蛋、雕像、頭目、NPC 有更精確的子型別圖,先讓下面的規則處理;其餘一律用標記圖。
   // 區域頭目/狂暴:原始值是帕魯代號(BOSS_Horus_Water、PREDATOR_SifuDog),
   // 去掉前綴就能用專案既有的帕魯頭像 —— 直接看到是哪一隻,比一個通用圖示有用得多。
   if (category === "FieldBoss" || category === "Predator") {
@@ -216,5 +278,23 @@ export function iconFor(category: string, sub?: string): string | null {
     const v = EGG_BY_KEY[base];
     return v ? ITEM(`Material_PalEgg_${v}`) : MAPICON("PalEgg_Normal_01");
   }
-  return CATEGORY_ICON[category] ?? null;
+  if (MARKER[category]) return `/game-data/map-icons/${MARKER[category]}`;
+  return LEGACY_ICON[category] ?? null;
+}
+
+
+/** 類別的代表圖示(側欄標籤、分群圓都用它)。
+ *  蛋與雕像有很多子型別,取一個最通用的當代表就好。 */
+export function categoryIcon(category: string): string | null {
+  if (MARKER[category]) return `/game-data/map-icons/${MARKER[category]}`;
+  if (category === "Eggs") return MAPICON("PalEgg_Normal_01");
+  if (category === "LifmunkEffigy") return ITEM("Relic");
+  if (category === "FieldBoss") return MAPICON("Boss_Anubis");
+  if (category === "Predator") return palInfo("sifudog").iconUrl || null;
+  return iconFor(category);
+}
+
+/** 這個類別要不要用圓形頭像框(NPC 與頭目是人物/生物肖像,方形去背會很怪)。 */
+export function isPortrait(category: string): boolean {
+  return category.startsWith("Npc") || category === "FieldBoss" || category === "Predator";
 }

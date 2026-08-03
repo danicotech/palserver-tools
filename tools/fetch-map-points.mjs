@@ -152,19 +152,29 @@ fs.writeFileSync(OUT, JSON.stringify(out));
 // ---- NPC 頭像 ----
 // 標記圖示絕大多數用專案既有素材(items/ 的物品圖、pals/ 的帕魯頭像、landmark-icons/),
 // 只有這 10 張 NPC 頭像原本沒有,一併抓下來。都是遊戲美術,不是站方自製圖示。
+// images/icons/ = 遊戲物品與 NPC 頭像;images/markers/ = 地圖標記語意圖(寶箱、釣場、地牢…)
 const ICONS = [
   "SalesPerson", "PalDealer", "Male_DarkTrader01", "BountyTrader", "Human",
   "NPC_PalDisplay_1", "Female_Presenter01", "Emote_location_A_01",
   "Boss_Anubis", "PalEgg_Normal_01",
 ];
+const MARKERS = [
+  "fast-travel", "dungeon", "cave-entrance", "home", "watch-tower", "respawn",
+  "skyland-warp-altar", "region", "heat", "treasure-map", "quest", "note",
+  "boss-tower", "field-boss", "bounty", "predator", "enemy-camp", "anti-air", "incident",
+  "effigy", "skill-fruit", "fishing", "salvage", "loot-tower",
+  "ore-metal", "ore-coal", "ore-quartz", "ore-sulfur", "chromite", "rainbow-crystal",
+  "sky-island-ore", "chest", "element-chest", "night-stone", "junk", "peach",
+  "crude-oil", "supply", "oilrig-chest",
+];
 const ICON_DIR = path.join(ROOT, "frontend", "packages", "web", "public", "game-data", "map-icons");
 fs.mkdirSync(ICON_DIR, { recursive: true });
 let got = 0;
-for (const n of ICONS) {
+for (const [n, kind] of [...ICONS.map((x) => [x, "icons"]), ...MARKERS.map((x) => [x, "markers"])]) {
   const file = path.join(ICON_DIR, `${n}.webp`);
   if (fs.existsSync(file) && fs.statSync(file).size > 0) continue;
   try {
-    const r = await fetch(`https://s-stats-platform-cdn.op.gg/palworld/images/icons/${n}.webp`, {
+    const r = await fetch(`https://s-stats-platform-cdn.op.gg/palworld/images/${kind}/${n}.webp`, {
       headers: { Referer: "https://op.gg/" },
     });
     if (!r.ok) throw new Error("HTTP " + r.status);
@@ -174,7 +184,7 @@ for (const n of ICONS) {
     console.log(`  NPC 頭像 ${n} 下載失敗:${e.message}`);
   }
 }
-console.log(`NPC 頭像:新下載 ${got}、已有 ${ICONS.length - got}`);
+console.log(`標記圖示:新下載 ${got}、已有 ${ICONS.length + MARKERS.length - got}`);
 
 const kb = Math.round(fs.statSync(OUT).size / 1024);
 console.log(`已寫入 ${path.relative(ROOT, OUT)} — ${Object.keys(categories).length} 類、${total} 個標記、${kb} KB`);
