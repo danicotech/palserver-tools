@@ -58,7 +58,7 @@ import type { Dataset } from "./data";
 import { t, useI18n } from "../i18n";
 
 type World = "main" | "tree";
-type WhoFilter = "all" | "online" | "offline";
+type WhoFilter = "all" | "online" | "offline" | "none";
 
 /** 分組圖示:一律用 icon 元件,不用幾何符號或 emoji ——
  *  符號在不同字型下大小/基線不一,emoji 各平台長得也不一樣。 */
@@ -126,6 +126,7 @@ export function PlayerMap({
   const shownPlayers = useMemo(() => {
     const s = q.trim().toLowerCase();
     return located.filter((p) => {
+      if (who === "none") return false; // 只看標記時把玩家頭像整批關掉
       if (who === "online" && !isOnline(p)) return false;
       if (who === "offline" && isOnline(p)) return false;
       if (guildFilter !== "all" && guildByUid.get(p.uid)?.id !== guildFilter) return false;
@@ -412,18 +413,27 @@ export function PlayerMap({
         }
       }
       const b = map.getBounds();
-      const zoomPx = map.getZoomScale(map.getZoom(), 0) * (tiles ? 256 / (IMAGE_BOUNDS.getEast() - IMAGE_BOUNDS.getWest()) : 1);
-      // 直接量:同一段地圖距離在螢幕上佔幾個像素
-      const p1 = map.latLngToContainerPoint(map.getCenter());
-      const p2 = map.latLngToContainerPoint(L.latLng(map.getCenter().lat, map.getCenter().lng + 100));
-      const pixelsPerUnit = Math.abs(p2.x - p1.x) / 100 || zoomPx;
+      // 每個地圖單位佔幾個螢幕像素。
+      // 先前是拿地圖中心 + 100 單位去投影,但超過原生圖磚層級(z>6)之後,
+      // 那個「中心 +100」的點會落到投影範圍外,算出來的比例失真,
+      // 導致 cell 大到把整批點併成看不見的一群 —— 放到最大時標記全消失就是這樣來的。
+      // 改成反過來:從容器上兩個實際像素點換回地圖座標,永遠落在有效範圍內。
+      const c1 = map.containerPointToLatLng(L.point(0, 0));
+      const c2 = map.containerPointToLatLng(L.point(100, 0));
+      const pixelsPerUnit = 100 / Math.max(Math.abs(c2.lng - c1.lng), 1e-9);
 
       const entries = [...onCats]
         .filter((c) => poi.points[c])
         .map((c) => ({ category: c, points: poi.points[c] }));
       const clusters = clusterPoints(
         entries,
-        { minX: b.getWest(), maxX: b.getEast(), minY: b.getSouth(), maxY: b.getNorth() },
+        // 外擴一點:剛好落在邊界上的標記不該因為四捨五入被裁掉
+        {
+          minX: Math.min(b.getWest(), b.getEast()) - 20,
+          maxX: Math.max(b.getWest(), b.getEast()) + 20,
+          minY: Math.min(b.getSouth(), b.getNorth()) - 20,
+          maxY: Math.max(b.getSouth(), b.getNorth()) + 20,
+        },
         pixelsPerUnit,
         world === "tree" ? 1 : 0,
       );
@@ -457,8 +467,8 @@ export function PlayerMap({
             icon: L.divIcon({
               className: cls,
               // 有圖的放大到 34px:原本 24px 的圖太小,遊戲物品圖的辨識度就沒了
-              iconSize: url ? [34, 34] : [20, 20],
-              iconAnchor: url ? [17, 17] : [10, 10],
+              iconSize: url ? [42, 42] : [24, 24],
+              iconAnchor: url ? [21, 21] : [12, 12],
               html: url
                 ? `<span style="border-color:${color};--poi:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" />${
                     done ? `<i></i>` : ""
@@ -493,8 +503,8 @@ export function PlayerMap({
               className: url
                 ? `pmap-poi pmap-poi-img pmap-poi-group${portrait ? " pmap-poi-face" : ""}`
                 : "pmap-poi-cluster",
-              iconSize: [34, 34],
-              iconAnchor: [17, 17],
+              iconSize: [42, 42],
+              iconAnchor: [21, 21],
               html: url
                 ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" />` +
                   `<b style="background:${color}">${c.n > 999 ? "999+" : c.n}</b></span>`
@@ -706,6 +716,7 @@ export function PlayerMap({
               ["all", t("全部")],
               ["online", t("在線")],
               ["offline", t("離線")],
+              ["none", t("不顯示")],
             ] as [WhoFilter, string][]
           ).map(([k, label]) => (
             <button key={k} type="button" onClick={() => setWho(k)} className={btn(who === k)}>

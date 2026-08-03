@@ -2533,5 +2533,6 @@
   "已收集": "Collected",
   "清除收集紀錄": "Clear collection record",
   "點地圖上的收集品即可標記;紀錄存在這台裝置的瀏覽器。": "Click a collectible on the map to mark it. Saved in this browser only.",
-  "地圖篩選": "Map filters"
+  "地圖篩選": "Map filters",
+  "不顯示": "Hide"
 }

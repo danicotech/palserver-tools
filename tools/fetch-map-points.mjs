@@ -45,7 +45,7 @@ const savToMap = (sx, sy) => ({
  */
 const EGG_REGION = {
   grass: "草原蛋", desert: "沙漠蛋", volcano: "火山蛋", snow: "雪原蛋",
-  sakurajima: "櫻花島蛋", darkisland: "天墜蛋", skyisland: "天陽鄉蛋", worldtree: "世界樹蛋",
+  sakurajima: "櫻花島蛋", darkisland: "天墜蛋", skyisland: "天陽鄉蛋",
 };
 const FISH_LV = {
   Easy: "初級釣場", Normal: "中級釣場", Difficult: "高級釣場",
@@ -91,7 +91,7 @@ const GROUPS = [
   ["mineral", "礦物", {
     OreMetal: "金屬礦石", OreCoal: "石炭", OreQuartz: "純水晶", OreQuartzCluster: "純水晶簇",
     OreSulfur: "硫磺", Chromites: "鉻鐵礦", RainbowCrystal: "六稜晶礦", SkyIslandOre: "烈陽金屬",
-    WorldTreeOre: "世界樹礦石", AncientLava: "古代熔岩塊", AncientWood: "古代樹皮",
+    AncientLava: "古代熔岩塊", AncientWood: "古代樹皮",
     AncientBeastBone: "古代獸骨",
   }],
   ["npc", "NPC", {

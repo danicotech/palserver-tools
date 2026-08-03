@@ -254,15 +254,15 @@ html {
    圓框會把每個標記變成一顆一顆的貼紙,地圖上一多就非常吵,而且圖本身被縮到很小。
    改成去背 + 描邊陰影 —— 深色海面與淺色地表上都看得清楚,又能看清楚是什麼東西。 */
 .pmap-poi-img span {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   background: none;
   border: none;
   box-shadow: none;
 }
 .pmap-poi-img img {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
   /* 兩層描邊(白+黑)讓圖示在任何底色上都有輪廓,比加底圓乾淨 */
   filter: drop-shadow(0 0 1.5px rgb(255 255 255 / 0.95)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.75));
@@ -341,8 +341,8 @@ html {
   overflow: hidden;
 }
 .pmap-poi-face img {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border-radius: 9999px;
   filter: none;
 }
@@ -391,8 +391,8 @@ html {
   overflow: hidden;
 }
 .pmap-poi-ring img {
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   filter: none;
 }
 .pmap-poi-rare span {
