@@ -513,23 +513,37 @@ body {
   background: transparent;
   border: none;
 }
+/* 據點:不加底框,直接顯示帕魯箱的圖。
+   原本是圓角方框 + 卡片底色,在地圖上看起來像一張張貼紙而不是地景上的東西;
+   公會色改用底下那條色帶表示,資訊沒少但畫面乾淨得多。 */
 .pmap-base {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 3px;
-  border-radius: 10px;
-  border: 3px solid #fff; /* overridden inline with the guild colour */
-  background: var(--color-card);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: none;
 }
 .pmap-base img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.4));
+  filter: drop-shadow(0 0 1.5px rgb(255 255 255 / 0.9)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.75));
+}
+/* 公會色:圖示底下一條短色帶,取代原本的外框 */
+.pmap-base::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 18px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.45);
 }
 
 /* Field-boss (Alpha Pal) markers: a red-framed Pal portrait with a gold crown

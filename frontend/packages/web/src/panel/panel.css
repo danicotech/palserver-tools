@@ -224,8 +224,8 @@ html {
 /* 單點:小圓底 + 符號。用符號而不是圖檔,體積 0 且各平台長得一樣。 */
 .pmap-poi span {
   display: flex;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
@@ -250,16 +250,25 @@ html {
   filter: brightness(1.12);
 }
 
-/* 有遊戲物品圖的標記:白底圓 + 分組色外框,小圖在深色地圖上才看得清楚 */
+/* 有遊戲物品圖的標記:直接顯示圖,不加白底圓。
+   圓框會把每個標記變成一顆一顆的貼紙,地圖上一多就非常吵,而且圖本身被縮到很小。
+   改成去背 + 描邊陰影 —— 深色海面與淺色地表上都看得清楚,又能看清楚是什麼東西。 */
 .pmap-poi-img span {
-  width: 24px;
-  height: 24px;
-  background: rgb(255 255 255 / 0.92);
-  border: 2px solid;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.45);
+  width: 34px;
+  height: 34px;
+  background: none;
+  border: none;
+  box-shadow: none;
 }
 .pmap-poi-img img {
-  width: 18px;
-  height: 18px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
+  /* 兩層描邊(白+黑)讓圖示在任何底色上都有輪廓,比加底圓乾淨 */
+  filter: drop-shadow(0 0 1.5px rgb(255 255 255 / 0.95)) drop-shadow(0 1px 2px rgb(0 0 0 / 0.75));
 }
+.pmap-poi-img:hover img {
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 3px rgb(0 0 0 / 0.85));
+  transform: scale(1.12);
+}
+.pmap-poi-img img { transition: transform 0.12s ease; }

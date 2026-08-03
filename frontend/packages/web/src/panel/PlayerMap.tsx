@@ -294,10 +294,11 @@ export function PlayerMap({
           const m = L.marker([c.y, c.x], {
             icon: L.divIcon({
               className: url ? "pmap-poi pmap-poi-img" : "pmap-poi",
-              iconSize: url ? [24, 24] : [18, 18],
-              iconAnchor: url ? [12, 12] : [9, 9],
+              // 有圖的放大到 34px:原本 24px 的圖太小,遊戲物品圖的辨識度就沒了
+              iconSize: url ? [34, 34] : [20, 20],
+              iconAnchor: url ? [17, 17] : [10, 10],
               html: url
-                ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" /></span>`
+                ? `<span><img src="${escapeHtml(url)}" alt="" loading="lazy" /></span>`
                 : `<span style="background:${color}">${icon}</span>`,
             }),
           });
@@ -378,7 +379,7 @@ export function PlayerMap({
             iconSize: [32, 32],
             iconAnchor: [16, 16],
             tooltipAnchor: [0, -16],
-            html: `<span class="pmap-base" style="border-color:${color}"><img src="/game-data/landmark-icons/palbox.webp" alt="" /></span>`,
+            html: `<span class="pmap-base" style="color:${color}"><img src="/game-data/landmark-icons/palbox.webp" alt="" /></span>`,
           });
           upsert(
             `base:${g.id}:${i}`,
@@ -539,8 +540,12 @@ export function PlayerMap({
           ))}
         </div>
       </div>
+      {/* 地圖區:桌機為「側欄 + 地圖」兩欄,側欄可收合(手機則側欄佔滿寬度疊在上方)。
+          原本把篩選做成橫幅接在上面,一展開就把地圖整個往下推,而且分類多的時候
+          橫幅比地圖還高 —— 側欄才是這種「多分類 + 大地圖」的正確版型。 */}
+      <div className={`flex min-h-0 flex-col sm:flex-row ${isFull ? "flex-1" : ""}`}>
       {poi && poiOpen && (
-        <div className="max-h-64 overflow-y-auto border-t border-line bg-card-soft/60 px-3 py-2">
+        <div className="max-h-64 shrink-0 overflow-y-auto border-t border-line bg-card-soft/60 px-3 py-2 sm:max-h-none sm:w-72 sm:border-t-0 sm:border-r">
           {poi.groups.map((g) => {
             const cats = g.categories.filter((c) => poi.categories[c]);
             const on = cats.filter((c) => onCats.has(c)).length;
@@ -552,18 +557,22 @@ export function PlayerMap({
                 return next;
               });
             return (
-              <div key={g.key} className="mb-1.5 flex items-start gap-2">
+              <div key={g.key} className="mb-2">
+                {/* 組標題自成一列(側欄只有 288px,再左右分欄會把分類擠成兩三個字) */}
                 <button
                   type="button"
                   onClick={toggleGroup}
-                  className={`flex w-20 shrink-0 items-center gap-1 rounded px-1.5 py-1 text-xs font-bold transition ${
+                  className={`mb-1 flex w-full items-center gap-1.5 rounded px-1 py-1 text-xs font-bold transition hover:bg-card ${
                     on ? "text-ink" : "text-ink-muted"
-                  } hover:bg-card`}
+                  }`}
                   style={on ? { color: GROUP_COLOR[g.key] } : undefined}
                   title={on === cats.length ? t("全部取消") : t("全部選取")}
                 >
                   <span aria-hidden="true">{GROUP_ICON[g.key]}</span>
                   {g.name}
+                  <span className="ml-auto text-[10px] font-medium text-ink-muted">
+                    {on ? `${on}/${cats.length}` : t("全部")}
+                  </span>
                 </button>
                 <div className="flex min-w-0 flex-1 flex-wrap gap-1">
                   {cats.map((c) => {
@@ -617,7 +626,7 @@ export function PlayerMap({
           而 React 只要重繪就會用自己的 className 整個覆蓋掉,把那些 class 洗掉。
           少了 .leaflet-container,Leaflet 的 CSS(含 img.leaflet-image-layer 的 max-width:none)
           全部失效,底圖寬度被 preflight 的 img{max-width:100%} 壓成 0 —— 症狀就是「進全螢幕後地圖不見了」。 */}
-      <div ref={mapBoxRef} className={`relative ${isFull ? "min-h-0 flex-1" : "h-80 sm:h-115"}`}>
+      <div ref={mapBoxRef} className={`relative min-w-0 flex-1 ${isFull ? "min-h-0" : "h-80 sm:h-115"}`}>
         <div ref={containerRef} className="size-full" />
         {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
         <button
@@ -629,6 +638,7 @@ export function PlayerMap({
         >
           {isFull ? <FiMinimize size={18} /> : <FiMaximize size={18} />}
         </button>
+      </div>
       </div>
     </div>
   );
