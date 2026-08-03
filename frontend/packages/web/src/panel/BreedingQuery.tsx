@@ -80,12 +80,33 @@ interface PalMeta {
   r: number;
 }
 
+/**
+ * 遊戲裡實際上放不進配種牧場的帕魯。
+ *
+ * 配方表(Pal Calc v26)是從遊戲檔案推導的,它會把這些帕魯列成「可當父母」——
+ * 但實測牠們根本放不進牧場,照著配方走會白忙一場。資料源沒有這個旗標,
+ * 只能在這裡人工維護。
+ *
+ * 注意:這裡列的是「不能當父母」。「配不出來」是另一回事 ——
+ * 有 26 隻傳說級帕魯只有「自己 + 自己 = 自己」這條配方(空渦龍、喚冬獸、荷魯斯…),
+ * 那個情況解算器本來就處理得對(會顯示「沒有任何帕魯能配到牠」),不必列在這。
+ */
+const NOT_BREEDABLE = new Set(["KingWhale"]); // 奧滄鯨
+
 let breedingCache: Promise<BreedingData> | null = null;
 function loadBreeding(): Promise<BreedingData> {
   if (!breedingCache) {
-    breedingCache = fetch("/game-data/breeding.json").then((r) => {
+    breedingCache = fetch("/game-data/breeding.json").then(async (r) => {
       if (!r.ok) throw new Error(`breeding.json: HTTP ${r.status}`);
-      return r.json() as Promise<BreedingData>;
+      const data = (await r.json()) as BreedingData;
+      // 在資料進入解算器之前就濾掉,後面所有模式(最短路徑/反查/配種樹/變異)
+      // 自動一致,不必每個畫面各自記得要排除。
+      return {
+        ...data,
+        recipes: data.recipes.filter(
+          ([a, , b, , child]) => !NOT_BREEDABLE.has(a) && !NOT_BREEDABLE.has(b) && !NOT_BREEDABLE.has(child),
+        ),
+      };
     });
     breedingCache.catch(() => {
       breedingCache = null; // 失敗不快取,重進分頁可重試
