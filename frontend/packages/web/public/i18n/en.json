@@ -2512,5 +2512,10 @@
   "全部選取": "Select all",
   "全部取消": "Clear all",
   "已顯示 {n} 類": "{n} categories shown",
-  "{n} 個標記": "{n} markers"
+  "{n} 個標記": "{n} markers",
+  "帕魯位置": "Pal locations",
+  "依名稱搜尋帕魯…": "Search pals…",
+  "全天": "All day",
+  "白天": "Day",
+  "夜晚": "Night"
 }

@@ -14,7 +14,10 @@ import {
   isPortrait,
   GROUP_COLOR,
   GROUP_ICON,
+  loadPalSpawns,
   type MapPointsData,
+  PAL_IDS,
+  type PalSpawns,
 } from "./mapPoints";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
 import {
@@ -29,6 +32,7 @@ import {
   escapeHtml,
 } from "../mapLayers";
 import { usePlayerAvatar, playerInitial } from "./playerAvatar";
+import { palInfo } from "./paldex";
 import type { Player, Guild } from "./types";
 import type { Dataset } from "./data";
 import { t, useI18n } from "../i18n";
@@ -152,6 +156,32 @@ export function PlayerMap({
       alive = false;
     };
   }, []);
+
+  // 帕魯出生地:選一隻就把牠的生成點畫出來(日/夜可分開看)
+  const [spawns, setSpawns] = useState<PalSpawns | null>(null);
+  const [spawnPal, setSpawnPal] = useState<string | null>(null);
+  const [spawnWhen, setSpawnWhen] = useState<"all" | "day" | "night">("all");
+  const [palQ, setPalQ] = useState("");
+  const spawnLayerRef = useRef<L.LayerGroup | null>(null);
+  useEffect(() => {
+    if (!poiOpen || spawns) return;
+    let alive = true;
+    void loadPalSpawns().then((d) => alive && setSpawns(d));
+    return () => {
+      alive = false;
+    };
+  }, [poiOpen, spawns]);
+
+  /** 可選的帕魯:有棲息地資料的才列出來(沒資料的點了也是空的)。 */
+  const palList = useMemo(() => {
+    const ids = spawns ? Object.keys(spawns.pals) : PAL_IDS;
+    return ids
+      .map((id) => {
+        const info = palInfo(id.toLowerCase());
+        return { id, zh: info.zh || id, icon: info.iconUrl || "" };
+      })
+      .sort((a, b) => a.zh.localeCompare(b.zh, "zh-Hant"));
+  }, [spawns]);
 
   const [tiles, setTiles] = useState<"webp" | "png" | null | undefined>(undefined);
   useEffect(() => {
@@ -352,6 +382,53 @@ export function PlayerMap({
       layer.clearLayers();
     };
   }, [poi, onCats, world, tiles]);
+
+  // ---- 帕魯出生地 ----
+  // 一隻帕魯最多幾百個生成點,不需要分群,但仍只畫視野內的,縮到很小時才不會卡。
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    spawnLayerRef.current ??= L.layerGroup().addTo(map);
+    const layer = spawnLayerRef.current;
+    const draw = () => {
+      layer.clearLayers();
+      const list = spawnPal && spawns?.pals[spawnPal];
+      if (!list) return;
+      const info = palInfo(spawnPal.toLowerCase());
+      const b = map.getBounds();
+      const w = world === "tree" ? 1 : 0;
+      for (const [x, y, when, lvMin, lvMax, tree] of list) {
+        if (tree !== w) continue;
+        if (spawnWhen === "day" && when === 1) continue;
+        if (spawnWhen === "night" && when === 0) continue;
+        if (x < b.getWest() || x > b.getEast() || y < b.getSouth() || y > b.getNorth()) continue;
+        const m = L.marker([y, x], {
+          icon: L.divIcon({
+            className: "pmap-spawn",
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+            html: info.iconUrl
+              ? `<span class="${when === 1 ? "night" : when === 0 ? "day" : ""}"><img src="${escapeHtml(info.iconUrl)}" alt="" loading="lazy" /></span>`
+              : `<span></span>`,
+          }),
+        });
+        m.bindTooltip(
+          `<div style="font-weight:800">${escapeHtml(info.zh || spawnPal)}</div>` +
+            `<div>Lv ${lvMin}${lvMax !== lvMin ? `~${lvMax}` : ""} · ${
+              when === 2 ? t("全天") : when === 1 ? t("夜晚") : t("白天")
+            }</div>`,
+          { direction: "top", className: "pmap-detail" },
+        );
+        m.addTo(layer);
+      }
+    };
+    draw();
+    map.on("moveend zoomend", draw);
+    return () => {
+      map.off("moveend zoomend", draw);
+      layer.clearLayers();
+    };
+  }, [spawns, spawnPal, spawnWhen, world]);
 
   // 標記:據點在下、玩家在上。
   // 重點:更新時「不清空重畫」,而是沿用既有 marker 用 setLatLng 移動,
@@ -638,7 +715,58 @@ export function PlayerMap({
               </div>
             );
           })}
-          <div className="flex items-center gap-2 pt-1 text-xs">
+          {/* 帕魯位置:選一隻就在地圖上標出牠的生成點 */}
+          <div className="mt-3 border-t border-line pt-2">
+            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-ink-muted">
+              🐾 {t("帕魯位置")}
+              {spawnPal && (
+                <button type="button" onClick={() => setSpawnPal(null)} className="ml-auto text-berry underline">
+                  {t("清除")}
+                </button>
+              )}
+            </div>
+            {spawnPal && (
+              <div className="mb-1.5 flex rounded-lg bg-card p-0.5 text-[11px] ring-1 ring-line">
+                {(["all", "day", "night"] as const).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setSpawnWhen(k)}
+                    className={`flex-1 rounded px-1 py-1 ${spawnWhen === k ? "bg-pal text-white" : "text-ink-muted"}`}
+                  >
+                    {k === "all" ? t("全天") : k === "day" ? t("白天") : t("夜晚")}
+                  </button>
+                ))}
+              </div>
+            )}
+            <input
+              value={palQ}
+              onChange={(e) => setPalQ(e.target.value)}
+              placeholder={t("依名稱搜尋帕魯…")}
+              className="mb-1.5 w-full rounded-lg bg-card px-2 py-1.5 text-xs text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
+            />
+            <div className="grid max-h-56 grid-cols-4 gap-1 overflow-y-auto">
+              {palList
+                .filter((x) => !palQ.trim() || x.zh.includes(palQ.trim()) || x.id.toLowerCase().includes(palQ.trim().toLowerCase()))
+                .slice(0, 200)
+                .map((x) => (
+                  <button
+                    key={x.id}
+                    type="button"
+                    onClick={() => setSpawnPal(spawnPal === x.id ? null : x.id)}
+                    title={x.zh}
+                    className={`flex flex-col items-center gap-0.5 rounded-lg p-1 ring-1 transition ${
+                      spawnPal === x.id ? "bg-pal/20 ring-pal" : "bg-card ring-line hover:ring-pal/50"
+                    }`}
+                  >
+                    {x.icon && <img src={x.icon} alt="" className="size-8 object-contain" loading="lazy" />}
+                    <span className="w-full truncate text-center text-[10px] text-ink">{x.zh}</span>
+                  </button>
+                ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 pt-2 text-xs">
             <button type="button" onClick={() => setOnCats(new Set())} className="text-berry underline underline-offset-2">
               {t("全部清除")}
             </button>

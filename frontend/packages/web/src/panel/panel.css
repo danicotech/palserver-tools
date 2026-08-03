@@ -292,3 +292,18 @@ html {
   text-shadow:
     0 0 2px #000, 0 0 2px #000, 0 1px 2px rgb(0 0 0 / 0.9);
 }
+
+/* 帕魯出生地:小頭像 + 依日夜給不同色框,一眼分得出白天點還是夜晚點 */
+.pmap-spawn span {
+  display: flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 0 0 2px rgb(120 120 120 / 0.9), 0 1px 3px rgb(0 0 0 / 0.5);
+}
+.pmap-spawn span.day { box-shadow: 0 0 0 2px #f59e0b, 0 1px 3px rgb(0 0 0 / 0.5); }
+.pmap-spawn span.night { box-shadow: 0 0 0 2px #6366f1, 0 1px 3px rgb(0 0 0 / 0.5); }
+.pmap-spawn img { width: 18px; height: 18px; object-fit: contain; }

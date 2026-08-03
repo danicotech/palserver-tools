@@ -318,3 +318,23 @@ export function categoryIcon(category: string): string | null {
 export function isPortrait(category: string): boolean {
   return category.startsWith("Npc") || category === "FieldBoss" || category === "Predator";
 }
+
+
+/** 一筆生成點:[x, y, when(0=白天,1=夜晚,2=全天), 等級下限, 等級上限, world] */
+export type SpawnPoint = [number, number, number, number, number, number];
+export interface PalSpawns {
+  pals: Record<string, SpawnPoint[]>;
+}
+
+/** 帕魯出生地(1.4 MB,只有真的要看時才載)。沒有這個檔就回 null,功能自動隱藏。 */
+let spawnCache: Promise<PalSpawns | null> | null = null;
+export function loadPalSpawns(): Promise<PalSpawns | null> {
+  spawnCache ??= fetch("/game-data/pal-spawns.json")
+    .then((r) => (r.ok ? (r.json() as Promise<PalSpawns>) : null))
+    .catch(() => null);
+  return spawnCache;
+}
+
+/** 還沒載入棲息地資料時,先給一份帕魯代號清單讓選擇器有東西可顯示。
+ *  真正有資料的是哪些,載完之後會自動換成 spawns 的鍵。 */
+export const PAL_IDS: string[] = [];
