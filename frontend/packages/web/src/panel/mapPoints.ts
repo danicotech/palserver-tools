@@ -257,11 +257,29 @@ const EFFIGY_RELIC: Record<string, string> = {
 /** 蛋依子型別給不同顏色的蛋圖(k 例:grass_02 / volcano_01 / worldtree_01)。 */
 const EGG_BY_KEY: Record<string, string> = {
   grass: "Leaf_01", desert: "Earth_01", volcano: "Fire_01", snow: "Ice_01",
-  sakura: "Water_01", skyisland: "Electricity_01", worldtree: "WorldTree_01", dark: "Dark_01",
+  sakurajima: "Water_01", skyisland: "Electricity_01", worldtree: "WorldTree_01",
+  darkisland: "Dark_01",
 };
 
 /** 取得某一筆標記要用的圖示;沒有合適的圖回 null(呼叫端改用分組符號)。 */
+/** 拆分後的分類鍵長成 Eggs_grass / LifmunkEffigy_Carbunclo / ChestboxNormal,
+ *  圖示對照仍以原始類別為主,這裡把鍵還原並補上拆分專屬的圖。 */
+function splitIcon(category: string): string | null {
+  if (category.startsWith("Eggs_")) {
+    const v = EGG_BY_KEY[category.slice(5)];
+    return v ? ITEM(`Material_PalEgg_${v}`) : MAPICON("PalEgg_Normal_01");
+  }
+  if (category.startsWith("LifmunkEffigy_")) {
+    return ITEM(EFFIGY_RELIC[category.slice(14)] ?? "Relic");
+  }
+  if (category === "ChestboxNormal") return `/game-data/map-icons/chest.webp`;
+  if (category.startsWith("ChestboxOilrig")) return `/game-data/map-icons/oilrig-chest.webp`;
+  return null;
+}
+
 export function iconFor(category: string, sub?: string): string | null {
+  const split = splitIcon(category);
+  if (split) return split;
   // 蛋、雕像、頭目、NPC 有更精確的子型別圖,先讓下面的規則處理;其餘一律用標記圖。
   // 區域頭目/狂暴:原始值是帕魯代號(BOSS_Horus_Water、PREDATOR_SifuDog),
   // 去掉前綴就能用專案既有的帕魯頭像 —— 直接看到是哪一隻,比一個通用圖示有用得多。
@@ -286,6 +304,8 @@ export function iconFor(category: string, sub?: string): string | null {
 /** 類別的代表圖示(側欄標籤、分群圓都用它)。
  *  蛋與雕像有很多子型別,取一個最通用的當代表就好。 */
 export function categoryIcon(category: string): string | null {
+  const split = splitIcon(category);
+  if (split) return split;
   if (MARKER[category]) return `/game-data/map-icons/${MARKER[category]}`;
   if (category === "Eggs") return MAPICON("PalEgg_Normal_01");
   if (category === "LifmunkEffigy") return ITEM("Relic");

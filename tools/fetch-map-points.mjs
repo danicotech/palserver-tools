@@ -34,21 +34,49 @@ const savToMap = (sx, sy) => ({
   y: (sx + WORLD_OFFSET.northSouth) / WORLD_SCALE,
 });
 
-/** 分組與中文標籤 —— 對齊遊戲內與常見地圖網站的分類方式。 */
+/** 分組與分類定義。
+ *
+ *  每個分類可以是:
+ *    "標籤"                          → 整個來源類別當一類
+ *    { src, label, split, only }     → 依子型別拆開,或只取符合條件的點
+ *
+ *  拆分是必要的:蛋有 7 種產地、雕像有 11 種帕魯、寶箱又分一般與石油平台,
+ *  混在一起只能整組開關,實際上玩家要找的往往是「火山蛋」而不是「所有蛋」。
+ */
+const EGG_REGION = {
+  grass: "草原蛋", desert: "沙漠蛋", volcano: "火山蛋", snow: "雪原蛋",
+  sakurajima: "櫻花島蛋", darkisland: "天墜蛋", skyisland: "天陽鄉蛋", worldtree: "世界樹蛋",
+};
+const EFFIGY = {
+  Carbunclo: "翠葉鼠雕像", SheepBall: "棉悠悠雕像", Penguin: "企丸丸雕像",
+  IceCrocodile: "肚肚鱷雕像", FlameBambi: "燎火鹿雕像", LeafMomonga: "達鼠泥雕像",
+  Monkey: "新葉猿雕像", NegativeKoala: "瞅什魔雕像", PinkCat: "搗蛋貓雕像",
+  Mutant: "秘斯媞雅雕像", LazyDragon: "佩克龍雕像", GuardianDog: "八雲犬雕像",
+};
+
 const GROUPS = [
-  ["location", "地點", {
-    FastTravels: "快速傳送", DungeonPortal: "地牢入口", DungeonFixed: "固定地牢",
-    CaveEntrance: "洞穴入口", Home: "首頁", WatchTower: "瞭望塔", Respawn: "重生點",
-    SkylandWarpAltar: "傳送環", RegionName: "地區名稱", HeatArea: "溫度區域",
-    TreasureMap: "藏寶圖", Quest: "任務", Note: "筆記",
+  ["collect", "收集品", {
+    LifmunkEffigy: { split: "t", labels: EFFIGY },
+    LootTower: "古代遺跡",
+    Note: "筆記",
+  }],
+  ["egg", "蛋", {
+    Eggs: { split: "k", labels: EGG_REGION, keyOf: (v) => (v ?? "").split("_")[0].toLowerCase() },
   }],
   ["enemy", "敵人", {
     BossTower: "組織之塔", FieldBoss: "區域頭目", Bounty: "通緝", Predator: "狂暴",
     EnemyCamp: "敵人營地", AntiAir: "防空砲塔", Incident: "事件",
   }],
-  ["collect", "收集品", { LifmunkEffigy: "翠葉鼠雕像", SkillFruits: "技能果實樹" }],
-  ["egg", "蛋", { Eggs: "帕魯蛋" }],
-  ["fishing", "釣魚", { FishingSpot: "釣魚點", RareFishingSpot: "稀有釣點", Salvage: "打撈" }],
+  ["fishing", "釣魚", {
+    FishingSpot: { label: "釣魚點", merge: ["RareFishingSpot"] },
+    Salvage: "打撈",
+  }],
+  ["location", "地點", {
+    FastTravels: "快速傳送", Respawn: "重生", SkylandWarpAltar: "傳送環", Home: "首頁",
+    WatchTower: "瞭望塔", RegionName: "地區名稱",
+    DungeonPortal: { label: "地牢", merge: ["DungeonFixed"] },
+    CaveEntrance: "洞穴入口", TreasureMap: "藏寶圖", HeatArea: "溫度", Quest: "任務",
+  }],
   ["mineral", "礦物", {
     OreMetal: "金屬礦石", OreCoal: "石炭", OreQuartz: "純水晶", OreQuartzCluster: "純水晶簇",
     OreSulfur: "硫磺", Chromites: "鉻鐵礦", RainbowCrystal: "六稜晶礦", SkyIslandOre: "烈陽金屬",
@@ -60,10 +88,20 @@ const GROUPS = [
     NpcMedalTrader: "獎章商人", NpcPalDisplay: "帕魯評論家", NpcEmote: "愛的傳教士",
     NpcPresenter: "帕魯馴養師", NpcBountyTrader: "賞金負責人", NpcOther: "其他 NPC",
   }],
+  ["oilrig", "石油鑽井平台", {
+    ChestboxOilrig: { src: "Chestbox", label: "石油鑽井平台寶箱", only: (t) => t === "oilrigMini" || t === "oilrigLarge" },
+    ChestboxOilrigGoal: { src: "Chestbox", label: "石油鑽井平台獎勵寶箱", only: (t) => t === "oilrigGoal" },
+  }],
   ["resource", "資源", {
-    Chestbox: "寶箱", ElementTreasure: "屬性寶箱", NightStone: "夜星砂", Junk: "殘骸",
-    Peach: "羈絆寶桃", BeautifulFlower: "美麗花朵", CrudeOil: "原油", Supply: "補給箱",
-    LootTower: "隕石",
+    ChestboxNormal: { src: "Chestbox", label: "寶箱", only: (t) => !String(t ?? "").startsWith("oilrig") },
+    ElementTreasure: "屬性寶箱",
+    Supply: "隕石",
+    Junk: "殘骸",
+    SkillFruits: "技能果實樹",
+    Peach: "羈絆寶桃",
+    BeautifulFlower: "美麗花朵",
+    CrudeOil: "原油",
+    NightStone: "夜星砂",
   }],
 ];
 
@@ -101,22 +139,22 @@ let total = 0;
 let unknown = [];
 
 for (const [groupKey, , cats] of GROUPS) {
-  for (const cat of Object.keys(cats)) {
-    const arr = pts[cat];
-    if (!Array.isArray(arr)) {
-      unknown.push(cat);
-      continue;
+  for (const [key, def] of Object.entries(cats)) {
+    const spec = typeof def === "string" ? { label: def } : def;
+    const srcNames = [spec.src ?? key, ...(spec.merge ?? [])];
+    /** 收集這個分類要用的原始點(可能來自多個來源類別) */
+    const raw = [];
+    for (const n of srcNames) {
+      if (Array.isArray(pts[n])) raw.push(...pts[n]);
+      else unknown.push(n);
     }
-    const rows = [];
-    let tree = 0;
-    for (const p of arr) {
+    /** 一筆點 → [x, y, world, 子型別?, 名稱?];回 null 代表這筆不屬於此分類 */
+    const toRow = (p) => {
       const loc = p.l ?? p.loc;
-      if (!Array.isArray(loc) || loc.length < 2) continue;
+      if (!Array.isArray(loc) || loc.length < 2) return null;
       const [sx, sy] = loc;
       const isTree = sx > TREE_X;
-      if (isTree) tree++;
       const { x, y } = savToMap(sx, sy);
-      // 子型別/名稱:能翻的翻,翻不到就留原始值(至少能分色分群)
       let name = null;
       let sub = null;
       for (const f of NAME_FIELDS) {
@@ -125,15 +163,44 @@ for (const [groupKey, , cats] of GROUPS) {
         sub = p[f];
         if (name) break;
       }
-      // [x, y, 世界(0=主/1=世界樹), 子型別, 名稱] —— 後兩欄沒有就省略,檔案才不會爆
       const row = [Math.round(x * 10) / 10, Math.round(y * 10) / 10, isTree ? 1 : 0];
       if (sub) row.push(sub);
       if (name && name !== sub) row.push(name);
-      rows.push(row);
+      return row;
+    };
+    const add = (cat, label, list) => {
+      const rows = [];
+      let tree = 0;
+      for (const p of list) {
+        const row = toRow(p);
+        if (!row) continue;
+        if (row[2] === 1) tree++;
+        rows.push(row);
+      }
+      if (!rows.length) return;
+      categories[cat] = { label, group: groupKey, count: rows.length, worldTree: tree };
+      points[cat] = rows;
+      total += rows.length;
+    };
+
+    if (spec.split) {
+      // 依子型別拆成多個分類
+      const keyOf = spec.keyOf ?? ((v) => v);
+      const buckets = new Map();
+      for (const p of raw) {
+        const k = keyOf(p[spec.split]);
+        if (!buckets.has(k)) buckets.set(k, []);
+        buckets.get(k).push(p);
+      }
+      for (const [k, list] of [...buckets].sort((a, b) => b[1].length - a[1].length)) {
+        const label = spec.labels?.[k];
+        if (!label) continue; // 沒定義中文名的子型別不獨立成類(避免冒出代號)
+        add(`${key}_${k}`, label, list);
+      }
+    } else {
+      const list = spec.only ? raw.filter((p) => spec.only(p.t ?? p.k ?? p.type)) : raw;
+      add(key, spec.label, list);
     }
-    categories[cat] = { label: label.get(cat) ?? cat, group: groupKey, count: rows.length, worldTree: tree };
-    points[cat] = rows;
-    total += rows.length;
   }
 }
 
@@ -142,7 +209,11 @@ const out = {
     "互動地圖標記。座標已由世界座標經 savToMap 換算成地圖座標(與玩家/據點同一套)。" +
     "每筆為 [x, y, world(0=主世界,1=世界樹), 子型別?, 名稱?]。由 tools/fetch-map-points.mjs 產生。",
   version: VER,
-  groups: GROUPS.map(([key, name, cats]) => ({ key, name, categories: Object.keys(cats) })),
+  groups: GROUPS.map(([key, name]) => ({
+    key,
+    name,
+    categories: Object.keys(categories).filter((c) => categories[c].group === key),
+  })),
   categories,
   points,
 };
