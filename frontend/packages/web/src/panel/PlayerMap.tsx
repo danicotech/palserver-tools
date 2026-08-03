@@ -944,20 +944,6 @@ export function PlayerMap({
           <span>{t("顯示據點")}</span>
         </label>
 
-        {/* 標記大小 */}
-        <label className="pmap-size" title={t("標記大小")}>
-          <FiMapPin size={14} aria-hidden="true" />
-          <input
-            type="range"
-            min={50}
-            max={200}
-            step={10}
-            value={poiScale}
-            onChange={(e) => setPoiScale(Number(e.target.value))}
-            aria-label={t("標記大小")}
-          />
-          <b>{poiScale}%</b>
-        </label>
 
         {/* 主世界 / 世界樹:常駐切換 */}
         <div className="ml-auto flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
@@ -1285,6 +1271,24 @@ export function PlayerMap({
           </div>
         )}
 
+        {/* 地圖右下角一列:標記大小滑桿 + X / Y 定位。
+            兩者都是「操作地圖」的工具,擺在一起比散在篩選列直覺;
+            放在同一列而不是上下疊,是因為右下角還要留給縮放鈕。 */}
+        <div className="absolute right-4 bottom-4 z-1001 flex items-center gap-3">
+          <label className="pmap-size" title={t("標記大小")}>
+            <FiMapPin size={14} aria-hidden="true" />
+            <input
+              type="range"
+              min={50}
+              max={200}
+              step={10}
+              value={poiScale}
+              onChange={(e) => setPoiScale(Number(e.target.value))}
+              aria-label={t("標記大小")}
+            />
+            <b>{poiScale}%</b>
+          </label>
+
         {/* 座標定位:輸入 X / Y 直接把鏡頭移過去並放大 */}
         <form
           onSubmit={(e) => {
@@ -1300,7 +1304,7 @@ export function PlayerMap({
               icon: L.divIcon({ className: "pmap-pin", iconSize: [26, 26], iconAnchor: [13, 13], html: "<span></span>" }),
             }).addTo(map);
           }}
-          className="absolute right-3 bottom-3 z-1001 flex items-center gap-1 rounded-lg bg-card/95 px-2 py-1.5 text-xs shadow-cute ring-1 ring-line backdrop-blur"
+          className="flex min-h-10 items-center gap-2 rounded-xl bg-card/95 px-3 py-1.5 text-xs shadow-cute ring-1 ring-line backdrop-blur"
         >
           <span className="font-bold text-ink-muted">X / Y</span>
           <input
@@ -1308,26 +1312,34 @@ export function PlayerMap({
             onChange={(e) => setGotoX(e.target.value)}
             placeholder="X"
             inputMode="numeric"
-            className="w-16 rounded bg-card-soft px-1.5 py-1 text-ink ring-1 ring-line outline-none focus:ring-pal"
+            className="w-16 rounded-lg bg-card-soft px-2 py-1.5 text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
           />
           <input
             value={gotoY}
             onChange={(e) => setGotoY(e.target.value)}
             placeholder="Y"
             inputMode="numeric"
-            className="w-16 rounded bg-card-soft px-1.5 py-1 text-ink ring-1 ring-line outline-none focus:ring-pal"
+            className="w-16 rounded-lg bg-card-soft px-2 py-1.5 text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
           />
           <button type="submit" aria-label={t("移到此座標")} title={t("移到此座標")}
             className="flex size-7 items-center justify-center rounded-full bg-pal text-white transition hover:opacity-90">
             <FiMapPin size={14} />
           </button>
         </form>
+        </div>
 
         {/* 鍵盤提示:與 op.gg 一致,T 換地圖、F 全螢幕 */}
-        <div className="absolute bottom-3 left-3 z-1001 hidden rounded-lg bg-card/90 px-2.5 py-1.5 text-[11px] text-ink-muted shadow-cute ring-1 ring-line backdrop-blur sm:block">
-          <div><kbd className="rounded bg-card-soft px-1 font-mono ring-1 ring-line">T</kbd> {t("帕洛斯群島 · 世界樹")}</div>
-          <div className="mt-0.5"><kbd className="rounded bg-card-soft px-1 font-mono ring-1 ring-line">F</kbd> {t("全螢幕")}</div>
-          <div className="mt-0.5"><kbd className="rounded bg-card-soft px-1 font-mono ring-1 ring-line">Wheel</kbd> {t("放大 · 縮小")}</div>
+        {/* 只留真正的快捷鍵。滾輪縮放是所有地圖的通則,寫出來不會讓誰多學到什麼,
+            反而佔掉一行、把區塊撐長。 */}
+        <div className="absolute bottom-4 left-4 z-1001 hidden space-y-1.5 rounded-xl bg-card/90 px-3.5 py-2.5 text-[13px] text-ink-muted shadow-cute ring-1 ring-line backdrop-blur sm:block">
+          <div className="flex items-center gap-2">
+            <kbd className="min-w-6 rounded-md bg-card-soft px-1.5 py-0.5 text-center font-mono text-ink ring-1 ring-line">T</kbd>
+            {t("帕洛斯群島 · 世界樹")}
+          </div>
+          <div className="flex items-center gap-2">
+            <kbd className="min-w-6 rounded-md bg-card-soft px-1.5 py-0.5 text-center font-mono text-ink ring-1 ring-line">F</kbd>
+            {t("全螢幕")}
+          </div>
         </div>
 
         {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
