@@ -497,7 +497,7 @@ export function PlayerMap({
           });
           m.bindTooltip(
             `<div style="font-weight:800">${escapeHtml(cat?.label ?? t("多個標記"))} × ${c.n}</div>` +
-              `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}</div>` +
+              `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${c.point?.[3] ?? 0}m</div>` +
               `<div style="opacity:.7">${t("點擊放大展開")}</div>`,
             { direction: "top", className: "pmap-detail" },
           );
