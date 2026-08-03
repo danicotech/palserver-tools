@@ -5,7 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FiMaximize, FiMinimize } from "react-icons/fi";
+import { FiMaximize, FiMinimize, FiMapPin } from "react-icons/fi";
+import { loadMapPoints, clusterPoints, GROUP_COLOR, GROUP_ICON, type MapPointsData } from "./mapPoints";
 import { savToMap, savToWorldTreeMap, isWorldTreeCoord, guildColorFromId } from "@palserver/shared";
 import {
   MAP_IMAGE,
@@ -130,6 +131,19 @@ export function PlayerMap({
 
   // 有沒有部署高解析圖磚。CRS 必須在建立地圖時就決定,所以要先探測完才能建圖
   // (同源 HEAD,很快;沒有圖磚就退回原本的單張底圖,畫面照常能用)。
+  // 互動地圖標記(快速旅行/地牢/礦物/蛋…)。資料檔不存在時 data 為 null,整段功能自動隱藏。
+  const [poi, setPoi] = useState<MapPointsData | null>(null);
+  const [onCats, setOnCats] = useState<Set<string>>(new Set());
+  const [poiOpen, setPoiOpen] = useState(false);
+  const poiLayerRef = useRef<L.LayerGroup | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void loadMapPoints().then((d) => alive && setPoi(d));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const [tiles, setTiles] = useState<"webp" | "png" | null | undefined>(undefined);
   useEffect(() => {
     let alive = true;
@@ -240,6 +254,80 @@ export function PlayerMap({
     markersRef.current?.clearLayers();
     markerRegRef.current.clear();
   }, [world]);
+
+  // ---- 互動地圖標記(POI)----
+  // 一萬多個點不可能全部丟給 Leaflet,所以只畫「視野內」的,而且依縮放把鄰近的點併成
+  // 一顆數字圓。地圖一移動/縮放就重算一次 —— 重算是純陣列運算,比維護上萬個 DOM 便宜得多。
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    poiLayerRef.current ??= L.layerGroup().addTo(map);
+    const layer = poiLayerRef.current;
+
+    const draw = () => {
+      layer.clearLayers();
+      if (!poi || onCats.size === 0) return;
+      const b = map.getBounds();
+      const zoomPx = map.getZoomScale(map.getZoom(), 0) * (tiles ? 256 / (IMAGE_BOUNDS.getEast() - IMAGE_BOUNDS.getWest()) : 1);
+      // 直接量:同一段地圖距離在螢幕上佔幾個像素
+      const p1 = map.latLngToContainerPoint(map.getCenter());
+      const p2 = map.latLngToContainerPoint(L.latLng(map.getCenter().lat, map.getCenter().lng + 100));
+      const pixelsPerUnit = Math.abs(p2.x - p1.x) / 100 || zoomPx;
+
+      const entries = [...onCats]
+        .filter((c) => poi.points[c])
+        .map((c) => ({ category: c, points: poi.points[c] }));
+      const clusters = clusterPoints(
+        entries,
+        { minX: b.getWest(), maxX: b.getEast(), minY: b.getSouth(), maxY: b.getNorth() },
+        pixelsPerUnit,
+        world === "tree" ? 1 : 0,
+      );
+      for (const c of clusters) {
+        const cat = c.category ? poi.categories[c.category] : undefined;
+        const color = cat ? (GROUP_COLOR[cat.group] ?? "#64748b") : "#64748b";
+        const icon = cat ? (GROUP_ICON[cat.group] ?? "◆") : "◆";
+        if (c.n === 1 && c.point) {
+          const [, , , sub, name] = c.point;
+          const m = L.marker([c.y, c.x], {
+            icon: L.divIcon({
+              className: "pmap-poi",
+              iconSize: [18, 18],
+              iconAnchor: [9, 9],
+              html: `<span style="background:${color}">${icon}</span>`,
+            }),
+          });
+          m.bindTooltip(
+            `<div style="font-weight:800">${escapeHtml(name || cat?.label || "")}</div>` +
+              (cat && name && name !== cat.label ? `<div>${escapeHtml(cat.label)}</div>` : "") +
+              (sub && sub !== name ? `<div style="opacity:.7">${escapeHtml(sub)}</div>` : ""),
+            { direction: "top", className: "pmap-detail" },
+          );
+          m.addTo(layer);
+        } else {
+          const size = c.n > 99 ? 34 : c.n > 9 ? 28 : 24;
+          const m = L.marker([c.y, c.x], {
+            icon: L.divIcon({
+              className: "pmap-poi-cluster",
+              iconSize: [size, size],
+              iconAnchor: [size / 2, size / 2],
+              html: `<span style="background:${color};width:${size}px;height:${size}px">${c.n}</span>`,
+            }),
+          });
+          // 點群集就放大過去,跟一般地圖的操作直覺一致
+          m.on("click", () => map.setView([c.y, c.x], Math.min(map.getZoom() + 2, map.getMaxZoom())));
+          m.addTo(layer);
+        }
+      }
+    };
+
+    draw();
+    map.on("moveend zoomend", draw);
+    return () => {
+      map.off("moveend zoomend", draw);
+      layer.clearLayers();
+    };
+  }, [poi, onCats, world, tiles]);
 
   // 標記:據點在下、玩家在上。
   // 重點:更新時「不清空重畫」,而是沿用既有 marker 用 setLatLng 移動,
@@ -412,6 +500,27 @@ export function PlayerMap({
           className="min-h-8 min-w-36 flex-1 rounded-lg bg-card-soft px-2.5 text-xs text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
         />
 
+        {/* 地圖標記篩選(資料檔存在才顯示) */}
+        {poi && (
+          <button
+            type="button"
+            onClick={() => setPoiOpen((v) => !v)}
+            aria-expanded={poiOpen}
+            className={`flex min-h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium ring-1 transition ${
+              poiOpen || onCats.size
+                ? "bg-pal/15 text-pal ring-pal/40 hover:bg-pal/25"
+                : "bg-card-soft text-ink ring-line hover:ring-pal/50"
+            }`}
+          >
+            <FiMapPin size={13} aria-hidden="true" />
+            {t("地圖標記")}
+            {onCats.size > 0 && (
+              <span className="rounded-full bg-pal px-1.5 text-[11px] font-bold text-white">{onCats.size}</span>
+            )}
+            <span className="text-ink-muted">{poiOpen ? "▲" : "▼"}</span>
+          </button>
+        )}
+
         {/* 主世界 / 世界樹:常駐切換 */}
         <div className="ml-auto flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
           {(
@@ -426,6 +535,79 @@ export function PlayerMap({
           ))}
         </div>
       </div>
+      {poi && poiOpen && (
+        <div className="max-h-64 overflow-y-auto border-t border-line bg-card-soft/60 px-3 py-2">
+          {poi.groups.map((g) => {
+            const cats = g.categories.filter((c) => poi.categories[c]);
+            const on = cats.filter((c) => onCats.has(c)).length;
+            const toggleGroup = () =>
+              setOnCats((prev) => {
+                const next = new Set(prev);
+                if (on === cats.length) cats.forEach((c) => next.delete(c));
+                else cats.forEach((c) => next.add(c));
+                return next;
+              });
+            return (
+              <div key={g.key} className="mb-1.5 flex items-start gap-2">
+                <button
+                  type="button"
+                  onClick={toggleGroup}
+                  className={`flex w-20 shrink-0 items-center gap-1 rounded px-1.5 py-1 text-xs font-bold transition ${
+                    on ? "text-ink" : "text-ink-muted"
+                  } hover:bg-card`}
+                  style={on ? { color: GROUP_COLOR[g.key] } : undefined}
+                  title={on === cats.length ? t("全部取消") : t("全部選取")}
+                >
+                  <span aria-hidden="true">{GROUP_ICON[g.key]}</span>
+                  {g.name}
+                </button>
+                <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                  {cats.map((c) => {
+                    const info = poi.categories[c];
+                    const active = onCats.has(c);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() =>
+                          setOnCats((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(c)) next.delete(c);
+                            else next.add(c);
+                            return next;
+                          })
+                        }
+                        className={`flex min-h-7 items-center gap-1 rounded-lg px-2 text-xs ring-1 transition ${
+                          active
+                            ? "text-white ring-transparent"
+                            : "bg-card text-ink ring-line hover:ring-pal/50"
+                        }`}
+                        style={active ? { background: GROUP_COLOR[g.key] } : undefined}
+                      >
+                        {info.label}
+                        <span className={`text-[10px] tabular-nums ${active ? "text-white/80" : "text-ink-muted"}`}>
+                          {info.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          <div className="flex items-center gap-2 pt-1 text-xs">
+            <button type="button" onClick={() => setOnCats(new Set())} className="text-berry underline underline-offset-2">
+              {t("全部清除")}
+            </button>
+            <span className="text-ink-muted">
+              {t("已顯示 {n} 類", { n: onCats.size })}
+              {onCats.size > 0 &&
+                ` · ${t("{n} 個標記", { n: [...onCats].reduce((a, c) => a + (poi.categories[c]?.count ?? 0), 0) })}`}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* 高度變化一律做在「外層」,地圖容器的 className 必須從頭到尾固定不變。
           原因:L.map() 會直接在這個 DOM 元素上加 leaflet-container / leaflet-touch 等 class,
           而 React 只要重繪就會用自己的 className 整個覆蓋掉,把那些 class 洗掉。

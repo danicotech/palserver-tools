@@ -51,3 +51,7 @@ frontend/packages/web/public/pals_fixture.json
 # 高解析地圖圖磚(5461 檔 / 約 108 MB)。不進版控:
 # 沒有它會自動退回單張 palworld-full-map.jpg,要啟用就跑 tools/fetch-map-tiles.mjs。
 frontend/packages/web/public/map-tiles/
+
+# 互動地圖標記(56 類、14,013 筆,373 KB)。資料來源是 op.gg 整理的成果,
+# 不隨專案散布;要用就跑 node tools/fetch-map-points.mjs 自行產生。
+frontend/packages/web/public/game-data/map-points.json
