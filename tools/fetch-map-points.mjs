@@ -84,7 +84,8 @@ const GROUPS = [
   }],
   ["location", "地點", {
     FastTravels: "快速傳送", Respawn: "重生", SkylandWarpAltar: "傳送環", Home: "首頁",
-    WatchTower: "瞭望塔", RegionName: "地區名稱",
+    WatchTower: "瞭望塔",
+    RegionName: { label: "地區名稱", requireName: true },
     DungeonPortal: { label: "地牢", merge: ["DungeonFixed"] },
     CaveEntrance: "洞穴入口", TreasureMap: "藏寶圖", Quest: "任務",
   }],
@@ -100,8 +101,19 @@ const GROUPS = [
     NpcPresenter: "帕魯馴養師", NpcBountyTrader: "賞金負責人", NpcOther: "其他 NPC",
   }],
   ["oilrig", "石油鑽井平台", {
-    ChestboxOilrig: { src: "Chestbox", label: "石油鑽井平台寶箱", only: (t) => t === "oilrigMini" || t === "oilrigLarge" },
-    ChestboxOilrigGoal: { src: "Chestbox", label: "石油鑽井平台獎勵寶箱", only: (t) => t === "oilrigGoal" },
+    // 鑽井平台的寶箱有三種變體(oilrig / oilrigMini / oilrigLarge),獎勵箱有兩種。
+    // 只列部分會少算:少了 oilrig 就是 33 而不是 45,少了 oilrigMiniGoal 就是 4 而不是 6。
+    // 用「排除獎勵箱」而不是逐一列舉,以後多出新變體才不會又漏掉。
+    ChestboxOilrig: {
+      src: "Chestbox",
+      label: "石油鑽井平台寶箱",
+      only: (t) => String(t ?? "").startsWith("oilrig") && !String(t).endsWith("Goal"),
+    },
+    ChestboxOilrigGoal: {
+      src: "Chestbox",
+      label: "石油鑽井平台獎勵寶箱",
+      only: (t) => String(t ?? "").startsWith("oilrig") && String(t).endsWith("Goal"),
+    },
   }],
   ["resource", "資源", {
     ChestboxNormal: { src: "Chestbox", label: "寶箱", only: (t) => !String(t ?? "").startsWith("oilrig") },
@@ -190,12 +202,16 @@ for (const [groupKey, , cats] of GROUPS) {
         typeof p.lv === "number" ? p.lv : (typeof p.bossType === "string" ? p.bossType : 0),
       ];
     };
-    const add = (cat, label, list) => {
+    const add = (cat, label, list, requireName = false) => {
       const rows = [];
       let tree = 0;
       for (const p of list) {
         const row = toRow(p);
         if (!row) continue;
+        // 「地區名稱」這種以名字為主體的標記,來源翻譯表缺字時會變成空白標記。
+        // 沒有名字的地區名對玩家沒有意義,直接不收(來源共 121 筆,其中
+        // Darkisland07 沒有譯名,濾掉後正好是參考站顯示的 120)。
+        if (requireName && !row[5]) continue;
         if (row[2] === 1) tree++;
         rows.push(row);
       }
@@ -221,7 +237,7 @@ for (const [groupKey, , cats] of GROUPS) {
       }
     } else {
       const list = spec.only ? raw.filter((p) => spec.only(p.t ?? p.k ?? p.type)) : raw;
-      add(key, spec.label, list);
+      add(key, spec.label, list, spec.requireName);
     }
   }
 }
