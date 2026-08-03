@@ -465,12 +465,14 @@ export function PlayerMap({
           }
           // 標題掛上序號:同一類有上千個點,沒有編號就無法互相指認
           // (「你說的那個寶箱是哪一個?」)。序號是該類別在資料裡的固定順序,重整也不會變。
-          const label = name || cat?.label || "";
+          // 第一行放「類別 + 序號」(這是拿來互相指認的東西),第二行才是該點的專屬名稱。
+          // 原始代號(Volcano_UnderGroundCave_002 之類)不顯示 —— 那是資料內部的鍵,
+          // 對玩家沒有意義,只會把提示撐長。
           const seq = c.point ? (c.index ?? 0) + 1 : 0;
+          const head = `${cat?.label ?? name ?? ""}${seq ? ` ${seq}` : ""}`;
           m.bindTooltip(
-            `<div style="font-weight:800">${escapeHtml(label)}${seq ? ` ${seq}` : ""}</div>` +
-              (cat && name && name !== cat.label ? `<div>${escapeHtml(cat.label)}</div>` : "") +
-              (sub && sub !== name ? `<div style="opacity:.7">${escapeHtml(sub)}</div>` : "") +
+            `<div style="font-weight:800">${escapeHtml(head)}</div>` +
+              (name && name !== cat?.label ? `<div>${escapeHtml(name)}</div>` : "") +
               `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${zM}m</div>`,
             { direction: "top", className: "pmap-detail" },
           );
@@ -752,7 +754,7 @@ export function PlayerMap({
           橫幅比地圖還高 —— 側欄才是這種「多分類 + 大地圖」的正確版型。 */}
       <div className={`flex min-h-0 flex-col sm:flex-row ${isFull ? "flex-1" : ""}`}>
       {poi && poiOpen && (
-        <div className={`flex shrink-0 flex-col border-t border-line bg-card-soft/60 sm:w-72 sm:border-t-0 sm:border-r ${
+        <div className={`flex shrink-0 flex-col border-t border-line bg-card-soft/60 sm:w-96 sm:border-t-0 sm:border-r ${
             isFull ? "max-h-64 sm:max-h-none" : "max-h-64 sm:max-h-170"
           }`}>
           {/* 工具列固定在最上方 —— 分類很長,擺下面等於要一路捲到底才按得到 */}
@@ -862,7 +864,7 @@ export function PlayerMap({
                             return next;
                           })
                         }
-                        className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] ring-1 transition ${
+                        className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs ring-1 transition ${
                           active
                             ? "text-white ring-transparent"
                             : "bg-card text-ink ring-line hover:bg-card-soft hover:ring-pal/50"
@@ -1010,14 +1012,19 @@ export function PlayerMap({
           <button
             type="button"
             onClick={() => setPoiOpen(true)}
-            className="absolute top-3 left-3 z-1001 flex items-center gap-2 rounded-xl bg-pal px-3.5 py-2.5 text-sm font-bold text-white shadow-cute ring-2 ring-white/25 transition hover:brightness-110"
+            /* 這顆鈕是疊在地圖上的,不能只看它在頁面裡好不好看:
+               整片實心品牌藍太搶眼、又和底下的水域同色系,反而不好認。
+               改用與 tooltip 同一套「卡片底 + 主文字色 + 半透明模糊」——
+               淺色模式是白底深字、深色模式是深底淺字,兩種都跟地圖有明確對比,
+               識別色只留在圖示上,尺寸也收斂一級。 */
+            className="pmap-filter-btn absolute top-3 left-3 z-1001 flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold shadow-cute transition hover:brightness-110"
           >
-            <FiFilter size={16} aria-hidden="true" />
+            <FiFilter size={14} className="text-pal" aria-hidden="true" />
             {t("地圖篩選")}
             {onCats.size > 0 && (
-              <span className="rounded-full bg-white/25 px-1.5 text-[11px] font-bold">{onCats.size}</span>
+              <span className="rounded-full bg-pal px-1.5 text-[11px] font-bold text-white">{onCats.size}</span>
             )}
-            <FiChevronRight size={16} aria-hidden="true" />
+            <FiChevronRight size={14} className="opacity-60" aria-hidden="true" />
           </button>
         )}
 

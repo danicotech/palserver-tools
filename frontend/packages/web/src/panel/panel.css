@@ -349,24 +349,34 @@ html {
 /* 帕魯選擇器的頭像也用同一個底色,側欄與地圖上看起來才是同一個東西 */
 .pmap-pal-pick img { background: rgb(13 22 30); border-radius: 9999px; }
 
-/* 已收集的收集品:圖轉灰階並壓暗,再蓋一個紅底白叉。
-   只變灰不夠 —— 縮圖本來就小,單靠明度差在複雜地表上分不出來;加叉才一眼可辨。 */
+/* 已收集的收集品:圖轉灰階壓暗,再畫一個「叉」。
+   先前做成紅底方塊,結果整張圖被蓋住,反而看不出那格原本是什麼 ——
+   改成只有兩道紅線的細叉,底下的圖示保持可辨識。 */
 .pmap-poi-done img {
-  filter: grayscale(1) brightness(0.55) !important;
+  filter: grayscale(1) brightness(0.6) !important;
 }
 .pmap-poi-done span {
   position: relative;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 .pmap-poi-done i {
   position: absolute;
-  inset: 0;
+  inset: 2px;
   display: block;
   background:
-    linear-gradient(45deg, transparent 44%, #fff 44%, #fff 56%, transparent 56%),
-    linear-gradient(-45deg, transparent 44%, #fff 44%, #fff 56%, transparent 56%),
-    #dc2626;
-  border-radius: 6px;
-  box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgb(0 0 0 / 0.6);
-  transform: scale(0.62);
+    linear-gradient(45deg, transparent calc(50% - 1.6px), #ef4444 calc(50% - 1.6px), #ef4444 calc(50% + 1.6px), transparent calc(50% + 1.6px)),
+    linear-gradient(-45deg, transparent calc(50% - 1.6px), #ef4444 calc(50% - 1.6px), #ef4444 calc(50% + 1.6px), transparent calc(50% + 1.6px));
+  /* 白色外描邊讓紅線在任何底色上都看得見,但不填滿背景 */
+  filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+}
+
+/* 疊在地圖上的「地圖篩選」鈕:與 tooltip 同一套配色,兩種主題各自都有對比 */
+.pmap-filter-btn {
+  background: color-mix(in oklab, var(--color-card) 92%, transparent);
+  color: var(--color-ink);
+  border: 1px solid color-mix(in oklab, var(--color-line) 80%, transparent);
+  backdrop-filter: blur(4px);
+}
+.pmap-filter-btn:hover {
+  border-color: var(--color-pal);
 }
