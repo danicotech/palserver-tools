@@ -2534,5 +2534,12 @@
   "清除收集紀錄": "Clear collection record",
   "點地圖上的收集品即可標記;紀錄存在這台裝置的瀏覽器。": "Click a collectible on the map to mark it. Saved in this browser only.",
   "地圖篩選": "Map filters",
-  "不顯示": "Hide"
+  "不顯示": "Hide",
+  "全部玩家": "All players",
+  "不顯示玩家": "Hide players",
+  "指定玩家": "Specific player",
+  "玩家篩選": "Player filter",
+  "不顯示據點": "Hide bases",
+  "指定公會": "Specific guild",
+  "據點篩選": "Base filter"
 }

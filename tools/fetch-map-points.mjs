@@ -57,7 +57,8 @@ const RARE_FISHING = Object.fromEntries(Object.entries(FISH_LV).map(([k, v]) => 
 const EFFIGY = {
   Carbunclo: "翠葉鼠雕像", SheepBall: "棉悠悠雕像", Penguin: "企丸丸雕像",
   IceCrocodile: "肚肚鱷雕像", FlameBambi: "燎火鹿雕像", LeafMomonga: "達鼠泥雕像",
-  Monkey: "新葉猿雕像", NegativeKoala: "瞅什魔雕像", PinkCat: "搗蛋貓雕像",
+  Monkey: "新葉猿雕像", NegativeKoala: "瞅什魔雕像",
+  // 搗蛋貓雕像:來源有這筆,但遊戲裡沒有這種雕像,不收。
   Mutant: "秘斯媞雅雕像", LazyDragon: "佩克龍雕像", GuardianDog: "八雲犬雕像",
 };
 

@@ -216,10 +216,14 @@ export function PlayerMap({
       world === "tree" ? (info.worldTree ?? 0) : info.count - (info.worldTree ?? 0),
     [world],
   );
-  const [who, setWho] = useState<WhoFilter>("all");
+  /** 玩家篩選。值是 "all" / "online" / "offline" / "none",或 "p:<uid>" 指定單一玩家。
+   *  範圍與指定玩家共用同一個值,是因為它們互斥 —— 選了某個玩家就不該還套著「只看在線」。 */
+  const [pick, setPick] = useState("all");
+  const who: WhoFilter = pick.startsWith("p:") ? "all" : (pick as WhoFilter);
+  const onlyUid = pick.startsWith("p:") ? pick.slice(2) : "";
+  /** 據點篩選。"all" / "none"(不顯示)/ 公會 id。 */
   const [guildFilter, setGuildFilter] = useState("all");
-  const [showBases, setShowBases] = useState(true);
-  const [q, setQ] = useState("");
+  const showBases = guildFilter !== "none";
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null); // 全螢幕的對象:連同上方篩選列一起放大
   const mapBoxRef = useRef<HTMLDivElement>(null); // 地圖容器的外框(用來把它對齊到整數像素)
@@ -249,24 +253,31 @@ export function PlayerMap({
 
   /** 套用篩選後要畫的玩家。 */
   const shownPlayers = useMemo(() => {
-    const s = q.trim().toLowerCase();
     return located.filter((p) => {
+      if (onlyUid) return p.uid === onlyUid; // 指定了某個玩家就只看他,不再疊其他條件
       if (who === "none") return false; // 只看標記時把玩家頭像整批關掉
       if (who === "online" && !isOnline(p)) return false;
       if (who === "offline" && isOnline(p)) return false;
-      if (guildFilter !== "all" && guildByUid.get(p.uid)?.id !== guildFilter) return false;
-      if (s && !p.name.toLowerCase().includes(s) && !p.uid.toLowerCase().includes(s)) return false;
+      // 「不顯示據點」只關據點,不該連帶把玩家也濾掉
+      if (guildFilter !== "all" && guildFilter !== "none" && guildByUid.get(p.uid)?.id !== guildFilter) return false;
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [located, who, guildFilter, q, online, guildByUid]);
+  }, [located, who, onlyUid, guildFilter, online, guildByUid]);
 
   /** 套用篩選後要畫的據點(依公會)。 */
   const shownGuilds = useMemo(
-    () => (guildFilter === "all" ? data.guilds : data.guilds.filter((g) => g.id === guildFilter)),
+    () =>
+      guildFilter === "all" || guildFilter === "none"
+        ? data.guilds
+        : data.guilds.filter((g) => g.id === guildFilter),
     [data.guilds, guildFilter],
   );
-  const baseCount = useMemo(() => shownGuilds.reduce((n, g) => n + g.bases.length, 0), [shownGuilds]);
+  // 關掉據點時數字要跟著歸零 —— 標題說有 N 個據點、地圖上卻一個都沒有會很怪
+  const baseCount = useMemo(
+    () => (showBases ? shownGuilds.reduce((n, g) => n + g.bases.length, 0) : 0),
+    [shownGuilds, showBases],
+  );
 
   // 全螢幕。用瀏覽器原生 Fullscreen API,所以按 ESC 或系統手勢離開時我們也要跟著同步狀態
   // (不能只靠自己的按鈕記錄,不然離開後按鈕還停在「離開全螢幕」)。
@@ -845,50 +856,59 @@ export function PlayerMap({
           {t("{n} 位玩家", { n: shownPlayers.length })} · {t("{n} 個據點", { n: baseCount })}
         </span>
 
-        {/* 在線 / 離線 */}
-        <div className="flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
-          {(
-            [
-              ["all", t("全部")],
-              ["online", t("在線")],
-              ["offline", t("離線")],
-              ["none", t("不顯示")],
-            ] as [WhoFilter, string][]
-          ).map(([k, label]) => (
-            <button key={k} type="button" onClick={() => setWho(k)} className={btn(who === k)}>
-              {label}
-            </button>
-          ))}
-        </div>
+        {/* 玩家:範圍(全部/在線/離線/不顯示)與指定某個玩家併成同一個下拉 ——
+            原本是「四顆按鈕 + 一個搜尋框」共兩組元件,但它們其實在回答同一個問題
+            (地圖上要顯示誰),拆成兩處只是讓篩選列變長,還要各自對照才知道目前狀態。 */}
+        <select
+          value={pick}
+          onChange={(e) => setPick(e.target.value)}
+          className="min-h-8 max-w-52 rounded-lg bg-card-soft px-2 text-xs text-ink ring-1 ring-line"
+          aria-label={t("玩家篩選")}
+        >
+          <option value="all">
+            {t("全部玩家")}({located.length})
+          </option>
+          <option value="online">
+            {t("在線玩家")}({located.filter(isOnline).length})
+          </option>
+          <option value="offline">
+            {t("離線玩家")}({located.filter((p) => !isOnline(p)).length})
+          </option>
+          <option value="none">{t("不顯示玩家")}</option>
+          {/* 個別玩家排在同一份清單裡,選了就只看那一個 */}
+          <optgroup label={t("指定玩家")}>
+            {[...located]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((p) => (
+                <option key={p.uid} value={`p:${p.uid}`}>
+                  {p.name || p.uid.slice(0, 8)}
+                  {isOnline(p) ? " ●" : ""}
+                </option>
+              ))}
+          </optgroup>
+        </select>
 
-        {/* 公會/據點歸屬 */}
+        {/* 據點:「不顯示據點」原本是另一個勾選框,現在收進同一個下拉 */}
         <select
           value={guildFilter}
           onChange={(e) => setGuildFilter(e.target.value)}
-          className="min-h-8 rounded-lg bg-card-soft px-2 text-xs text-ink ring-1 ring-line"
+          className="min-h-8 max-w-52 rounded-lg bg-card-soft px-2 text-xs text-ink ring-1 ring-line"
+          aria-label={t("據點篩選")}
         >
           <option value="all">
             {t("全部公會據點")}({data.guilds.reduce((n, g) => n + g.bases.length, 0)})
           </option>
-          {[...data.guilds]
-            .sort((a, b) => b.bases.length - a.bases.length)
-            .map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name || t("無名公會")}({t("{n} 個據點", { n: g.bases.length })})
-              </option>
-            ))}
+          <option value="none">{t("不顯示據點")}</option>
+          <optgroup label={t("指定公會")}>
+            {[...data.guilds]
+              .sort((a, b) => b.bases.length - a.bases.length)
+              .map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name || t("無名公會")}({t("{n} 個據點", { n: g.bases.length })})
+                </option>
+              ))}
+          </optgroup>
         </select>
-        <label className="flex items-center gap-1 text-xs text-ink">
-          <input type="checkbox" checked={showBases} onChange={(e) => setShowBases(e.target.checked)} />
-          {t("顯示據點")}
-        </label>
-
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={t("在地圖上找玩家…")}
-          className="min-h-8 min-w-36 flex-1 rounded-lg bg-card-soft px-2.5 text-xs text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
-        />
 
         {/* 主世界 / 世界樹:常駐切換 */}
         <div className="ml-auto flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">

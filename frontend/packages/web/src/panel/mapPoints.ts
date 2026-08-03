@@ -247,7 +247,8 @@ const MARKER: Record<string, string> = {
   Incident: "incident.webp",
   Junk: "junk.webp",
   LifmunkEffigy: "Relic.webp",
-  LootTower: "supply.webp",
+  // 古代遺跡有自己的圖示;之前指到 supply.webp,那是隕石的圖。
+  LootTower: "loot-tower.webp",
   NightStone: "night-stone.webp",
   Note: "note.webp",
   NpcBountyTrader: "BountyTrader.webp",
