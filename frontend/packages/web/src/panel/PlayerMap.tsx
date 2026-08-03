@@ -444,8 +444,14 @@ export function PlayerMap({
           const cid = c.category ? `${c.category}:${c.index ?? 0}` : "";
           const done = collectable && collected.has(cid);
           if (collectable && collectView !== "all" && (collectView === "done") !== done) return;
+          // 釣場/打撈做成圓框:稀有的把圓填滿分組色,一般的維持深底 ——
+          // 同一個圖示重複幾百次,靠「填不填色」比再換一張圖好分辨。
+          const ring = c.category?.startsWith("FishingSpot") || c.category?.startsWith("Salvage_Rank1");
+          const ringRare = c.category?.startsWith("RareFishingSpot") || c.category === "Salvage_Rank2";
           const cls =
             (url ? (portrait ? "pmap-poi pmap-poi-img pmap-poi-face" : "pmap-poi pmap-poi-img") : "pmap-poi") +
+            (ring || ringRare ? " pmap-poi-ring" : "") +
+            (ringRare ? " pmap-poi-rare" : "") +
             (done ? " pmap-poi-done" : "");
           const m = L.marker([c.y, c.x], {
             icon: L.divIcon({
@@ -454,7 +460,7 @@ export function PlayerMap({
               iconSize: url ? [34, 34] : [20, 20],
               iconAnchor: url ? [17, 17] : [10, 10],
               html: url
-                ? `<span style="border-color:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" />${
+                ? `<span style="border-color:${color};--poi:${color}"><img src="${escapeHtml(url)}" alt="" loading="lazy" />${
                     done ? `<i></i>` : ""
                   }</span>`
                 : `<span style="background:${color}">${icon}</span>`,

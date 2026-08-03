@@ -47,6 +47,13 @@ const EGG_REGION = {
   grass: "草原蛋", desert: "沙漠蛋", volcano: "火山蛋", snow: "雪原蛋",
   sakurajima: "櫻花島蛋", darkisland: "天墜蛋", skyisland: "天陽鄉蛋", worldtree: "世界樹蛋",
 };
+const FISH_LV = {
+  Easy: "初級釣場", Normal: "中級釣場", Difficult: "高級釣場",
+  VeryDifficult: "達人釣場", ExtremelyDifficult: "專家釣場", IMPOSSIBLE: "極難釣場",
+};
+const FISHING = FISH_LV;
+const RARE_FISHING = Object.fromEntries(Object.entries(FISH_LV).map(([k, v]) => [k, `稀有${v}`]));
+
 const EFFIGY = {
   Carbunclo: "翠葉鼠雕像", SheepBall: "棉悠悠雕像", Penguin: "企丸丸雕像",
   IceCrocodile: "肚肚鱷雕像", FlameBambi: "燎火鹿雕像", LeafMomonga: "達鼠泥雕像",
@@ -68,8 +75,12 @@ const GROUPS = [
     EnemyCamp: "敵人營地", AntiAir: "防空砲塔", Incident: "事件",
   }],
   ["fishing", "釣魚", {
-    FishingSpot: { label: "釣魚點", merge: ["RareFishingSpot"] },
-    Salvage: "打撈",
+    // 依難度拆開:合併成一類的話,「我要找達人釣場」這種最常見的需求就做不到。
+    // 譯名直接用來源的 fishing 命名空間(Easy→初級釣場 … IMPOSSIBLE→極難釣場)。
+    FishingSpot: { split: "type", labels: FISHING },
+    RareFishingSpot: { split: "type", labels: RARE_FISHING },
+    // 打撈只有兩級,來源沒給譯名;它用銀/金兩色環區分,對應普通與稀有。
+    Salvage: { split: "type", labels: { Rank1: "打撈", Rank2: "稀有打撈" } },
   }],
   ["location", "地點", {
     FastTravels: "快速傳送", Respawn: "重生", SkylandWarpAltar: "傳送環", Home: "首頁",

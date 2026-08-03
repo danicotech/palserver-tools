@@ -380,3 +380,22 @@ html {
 .pmap-filter-btn:hover {
   border-color: var(--color-pal);
 }
+
+/* 釣場 / 打撈:圓形外框。稀有的填滿分組色,一般的維持深底 ——
+   同一個圖示重複幾百次,靠「填不填色」分辨比再畫一張圖直接。 */
+.pmap-poi-ring span {
+  background: rgb(13 22 30) !important;
+  border: 2px solid var(--poi, #64748b);
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
+  overflow: hidden;
+}
+.pmap-poi-ring img {
+  width: 20px;
+  height: 20px;
+  filter: none;
+}
+.pmap-poi-rare span {
+  background: var(--poi, #64748b) !important;
+  border-color: #fff;
+}
