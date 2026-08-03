@@ -1298,11 +1298,30 @@ export function PlayerMap({
             const y = Number(gotoY);
             if (!map || !Number.isFinite(x) || !Number.isFinite(y)) return;
             map.setView([y, x], Math.max(map.getZoom(), map.getMaxZoom() - 2));
-            // 丟一個暫時的定位標記,不然放大後不知道到底指到哪
+            // 丟一個定位標記,不然放大後不知道到底指到哪。
+            // 用有尖端的圖釘而不是圓點:圓點和地圖上其他圓形標記混在一起,
+            // 分不出哪個是自己剛定位的;圖釘的尖端就是實際座標所在,
+            // 所以錨點取底部中央而不是正中心。
             pinRef.current?.remove();
             pinRef.current = L.marker([y, x], {
-              icon: L.divIcon({ className: "pmap-pin", iconSize: [26, 26], iconAnchor: [13, 13], html: "<span></span>" }),
-            }).addTo(map);
+              zIndexOffset: 1000, // 壓在其他標記之上,不然放大後可能被蓋住
+              icon: L.divIcon({
+                className: "pmap-pin",
+                iconSize: [28, 36],
+                iconAnchor: [14, 36],
+                html:
+                  `<svg width="28" height="36" viewBox="0 0 24 32" fill="none" aria-hidden="true">` +
+                  `<path d="M12 0C5.9 0 1 4.9 1 11c0 8 11 21 11 21s11-13 11-21c0-6.1-4.9-11-11-11z" ` +
+                  `fill="currentColor" stroke="#fff" stroke-width="2"/>` +
+                  `<circle cx="12" cy="11" r="4" fill="#fff"/></svg>`,
+              }),
+            })
+              .bindTooltip(
+                `<div style="font-weight:800">${escapeHtml(t("定位座標"))}</div>` +
+                  `<div>${t("座標")} X : ${Math.round(x)}, Y : ${Math.round(y)}</div>`,
+                { direction: "top", offset: [0, -34], className: "pmap-detail" },
+              )
+              .addTo(map);
           }}
           className="flex min-h-10 items-center gap-2 rounded-xl bg-card/95 px-3 py-1.5 text-xs shadow-cute ring-1 ring-line backdrop-blur"
         >
