@@ -246,6 +246,8 @@ export function PlayerMap({
       maxZoom: tiles ? MAP_TILES_MAXNATIVE + 2 : 4,
     });
     map.setView(IMAGE_BOUNDS.getCenter(), tiles ? 2 : -2);
+    // +/- 移到右下角:左上角是「篩選」展開鈕的位置,而且右下本來就是地圖工具的慣例區
+    map.zoomControl.setPosition("bottomright");
     // 地圖四周的底色。用接近海面的深藍,底圖沒鋪滿容器時看起來是連續的海,
     // 而不是白色/卡片色的一塊空白。
     el.style.background = "#0d161e";

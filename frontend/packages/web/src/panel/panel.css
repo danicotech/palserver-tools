@@ -324,3 +324,8 @@ html {
   100% { box-shadow: 0 0 0 3px rgb(255 255 255 / 0.9), 0 0 0 16px rgb(59 130 246 / 0); }
 }
 @media (prefers-reduced-motion: reduce) { .pmap-pin span { animation: none; } }
+
+/* Leaflet 的縮放鈕移到右下後,要讓開下方的座標輸入列,不然會疊在一起 */
+.leaflet-container .leaflet-bottom.leaflet-right {
+  margin-bottom: 46px;
+}
