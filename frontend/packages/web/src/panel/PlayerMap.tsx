@@ -994,7 +994,8 @@ export function PlayerMap({
               hidden={palFold}
               className="mb-1.5 w-full rounded-lg bg-card px-2 py-1.5 text-xs text-ink ring-1 ring-line outline-none focus:ring-2 focus:ring-pal"
             />
-            <div className={`max-h-56 grid-cols-4 gap-1 overflow-y-auto ${palFold ? "hidden" : "grid"}`}>
+            {/* 84×84 一格:側欄 420px 放得下四欄,圖大到看得清是哪隻帕魯 */}
+            <div className={`max-h-96 grid-cols-4 gap-1.5 overflow-y-auto ${palFold ? "hidden" : "grid"}`}>
               {palList
                 .filter((x) => !palQ.trim() || x.zh.includes(palQ.trim()) || x.id.toLowerCase().includes(palQ.trim().toLowerCase()))
                 .slice(0, 200)
@@ -1004,12 +1005,13 @@ export function PlayerMap({
                     type="button"
                     onClick={() => setSpawnPal(spawnPal === x.id ? null : x.id)}
                     title={x.zh}
-                    className={`flex flex-col items-center gap-0.5 rounded-lg p-1 ring-1 transition ${
+                    className={`flex size-21 flex-col items-center justify-center gap-0.5 rounded-lg p-1 ring-1 transition ${
                       spawnPal === x.id ? "bg-pal/20 ring-pal" : "bg-card ring-line hover:ring-pal/50"
                     }`}
                   >
-                    {x.icon && <img src={x.icon} alt="" className="pmap-pal-pick size-8 object-contain" loading="lazy" />}
-                    <span className="w-full truncate text-center text-[10px] text-ink">{x.zh}</span>
+                    {/* 圓形去背,不加底色外框 —— 頭像本身已經有輪廓,再套一圈框只是變吵 */}
+                    {x.icon && <img src={x.icon} alt="" className="size-13 rounded-full object-contain" loading="lazy" />}
+                    <span className="w-full truncate text-center text-xs text-ink">{x.zh}</span>
                   </button>
                 ))}
             </div>

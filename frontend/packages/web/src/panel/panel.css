@@ -346,8 +346,6 @@ html {
   border-radius: 9999px;
   filter: none;
 }
-/* 帕魯選擇器的頭像也用同一個底色,側欄與地圖上看起來才是同一個東西 */
-.pmap-pal-pick img { background: rgb(13 22 30); border-radius: 9999px; }
 
 /* 已收集的收集品:圖轉灰階壓暗,再畫一個「叉」。
    先前做成紅底方塊,結果整張圖被蓋住,反而看不出那格原本是什麼 ——
