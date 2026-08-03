@@ -2,7 +2,7 @@
 // 底圖常數/樣式與管理端地圖共用(mapLayers + styles.css 的 pmap-*),座標經
 // shared 的 savToMap/savToWorldTreeMap 換算;世界樹座標的實體只出現在世界樹底圖。
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { JSX } from "react";
+import type { CSSProperties, JSX } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -228,6 +228,15 @@ export function PlayerMap({
   const [pick, setPick] = useState("all");
   /** 顯示與否是獨立的開關,不佔用篩選值 —— 關掉再打開,原本挑的範圍還在。 */
   const [showPlayers, setShowPlayers] = useState(true);
+  /** 標記大小(百分比)。密集的類別(打撈 2763 個)想調小、找單一目標時想調大,
+   *  固定尺寸沒辦法同時滿足。存在瀏覽器,下次進來維持上次的設定。 */
+  const [poiScale, setPoiScale] = useState(() => {
+    const v = Number(localStorage.getItem("pmap.poiScale"));
+    return Number.isFinite(v) && v >= 50 && v <= 200 ? v : 100;
+  });
+  useEffect(() => {
+    localStorage.setItem("pmap.poiScale", String(poiScale));
+  }, [poiScale]);
   const who: WhoFilter = !showPlayers ? "none" : pick.startsWith("p:") ? "all" : (pick as WhoFilter);
   const onlyUid = pick.startsWith("p:") ? pick.slice(2) : "";
   /** 據點篩選。"all" 或公會 id;顯示與否由 showBases 控制。 */
@@ -935,6 +944,21 @@ export function PlayerMap({
           <span>{t("顯示據點")}</span>
         </label>
 
+        {/* 標記大小 */}
+        <label className="pmap-size" title={t("標記大小")}>
+          <FiMapPin size={14} aria-hidden="true" />
+          <input
+            type="range"
+            min={50}
+            max={200}
+            step={10}
+            value={poiScale}
+            onChange={(e) => setPoiScale(Number(e.target.value))}
+            aria-label={t("標記大小")}
+          />
+          <b>{poiScale}%</b>
+        </label>
+
         {/* 主世界 / 世界樹:常駐切換 */}
         <div className="ml-auto flex rounded-lg bg-card-soft p-0.5 ring-1 ring-line">
           {(
@@ -1213,7 +1237,15 @@ export function PlayerMap({
           少了 .leaflet-container,Leaflet 的 CSS(含 img.leaflet-image-layer 的 max-width:none)
           全部失效,底圖寬度被 preflight 的 img{max-width:100%} 壓成 0 —— 症狀就是「進全螢幕後地圖不見了」。 */}
       <div ref={mapBoxRef} className={`relative min-w-0 flex-1 ${isFull ? "min-h-0" : "h-80 sm:h-170"}`}>
-        <div ref={containerRef} className="size-full" />
+        {/* --poi-scale 掛在外層而不是 marker 上:marker 每次重畫都會重建,
+            掛在容器上只要改一次,所有標記(含之後才畫出來的)都會跟著。
+            className 保持不變 —— 之前改成條件式,React 覆寫掉 Leaflet 自己加的
+            .leaflet-container,結果全螢幕時整張底圖消失。 */}
+        <div
+          ref={containerRef}
+          className="size-full"
+          style={{ "--poi-scale": poiScale / 100 } as CSSProperties}
+        />
         {/* 收合時:地圖左上角一顆展開鈕(op.gg 的作法,地圖不會被側欄吃掉寬度) */}
         {poi && !poiOpen && (
           <button

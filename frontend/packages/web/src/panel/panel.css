@@ -434,3 +434,58 @@ html {
   outline: 2px solid var(--pal, #38bdf8);
   outline-offset: 2px;
 }
+
+/* 標記大小滑桿。縮放的是標記內層的 span,不是 marker 本身 ——
+   marker 的 transform 是 Leaflet 拿來定位的,覆蓋掉會讓所有標記跑位。
+   錨點本來就在正中央,以中心縮放不會偏移。 */
+.leaflet-marker-icon.pmap-poi > span,
+.leaflet-marker-icon.pmap-poi-cluster > span {
+  transform: scale(var(--poi-scale, 1));
+  transform-origin: center center;
+}
+.pmap-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
+  padding: 0 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--card-soft, rgb(30 41 59));
+  box-shadow: inset 0 0 0 1px var(--line, rgb(51 65 85));
+  color: var(--ink-muted, #94a3b8);
+}
+.pmap-size input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 84px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--line, rgb(71 85 105));
+  outline: none;
+}
+.pmap-size input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: var(--pal, #38bdf8);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+}
+.pmap-size input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--pal, #38bdf8);
+  cursor: pointer;
+}
+.pmap-size b {
+  min-width: 3.1em;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink, #e2e8f0);
+}

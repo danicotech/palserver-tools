@@ -49,7 +49,8 @@ const EGG_REGION = {
 };
 const FISH_LV = {
   Easy: "初級釣場", Normal: "中級釣場", Difficult: "高級釣場",
-  VeryDifficult: "達人釣場", ExtremelyDifficult: "專家釣場", IMPOSSIBLE: "極難釣場",
+  VeryDifficult: "達人釣場", ExtremelyDifficult: "專家釣場",
+  // 極難釣場(IMPOSSIBLE):來源有這一級,但遊戲裡沒有,不收。
 };
 const FISHING = FISH_LV;
 const RARE_FISHING = Object.fromEntries(Object.entries(FISH_LV).map(([k, v]) => [k, `稀有${v}`]));
