@@ -8,8 +8,8 @@ import { palInfo } from "./paldex";
 //   2. 依縮放層級把鄰近的點併成一顆「數字圓」,放大才散開
 // 兩者都是純計算,沒有額外相依。
 
-/** 一筆標記:[x, y, 世界(0=主/1=世界樹), z(公尺), 子型別?, 名稱?] */
-export type RawPoint = [number, number, number, number, string?, string?];
+/** 一筆標記:[x, y, 世界(0=主/1=世界樹), z(公尺), 子型別, 名稱, 等級或首領類型] */
+export type RawPoint = [number, number, number, number, string, string, number | string];
 
 export interface MapCategory {
   label: string;

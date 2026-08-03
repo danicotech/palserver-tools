@@ -438,7 +438,7 @@ export function PlayerMap({
         // NPC / 頭目是人物肖像,方形去背會很怪,套圓框才像頭像
         const portrait = c.category ? isPortrait(c.category) : false;
         if (c.n === 1 && c.point) {
-          const [, , , , , name] = c.point;
+          const [, , , , , name, lv] = c.point;
           // 收集品才做「已收集」記號 —— 礦石、寶箱會重生,勾了也沒意義
           const collectable = c.category ? poi.categories[c.category]?.group === "collect" : false;
           const cid = c.category ? `${c.category}:${c.index ?? 0}` : "";
@@ -473,6 +473,8 @@ export function PlayerMap({
           m.bindTooltip(
             `<div style="font-weight:800">${escapeHtml(head)}</div>` +
               (name && name !== cat?.label ? `<div>${escapeHtml(name)}</div>` : "") +
+              (typeof lv === "number" && lv > 0 ? `<div>Lv ${lv}</div>` : "") +
+              (typeof lv === "string" && lv ? `<div>${escapeHtml(lv)}</div>` : "") +
               `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${zM}m</div>`,
             { direction: "top", className: "pmap-detail" },
           );

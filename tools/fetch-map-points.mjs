@@ -166,10 +166,18 @@ for (const [groupKey, , cats] of GROUPS) {
       // 第 4 欄是高度(公尺)。遊戲的 z 是公分,除以 100 才是玩家看到的「Z 38m」。
       // 早期版本省掉了它,但地牢/寶箱在立體地形上常常上下重疊,沒有高度會找錯層。
       const zM = Math.round((loc[2] ?? 0) / 100);
-      const row = [Math.round(x * 10) / 10, Math.round(y * 10) / 10, isTree ? 1 : 0, zM];
-      if (sub) row.push(sub);
-      if (name && name !== sub) row.push(name);
-      return row;
+      // 固定七欄,缺的補空值 —— 早期用「有才 push」的變長格式,結果加一個欄位
+      // 就得動到所有取值的索引。等級/首領類型是通緝、區域頭目、NPC 的關鍵資訊,
+      // 之前整批被丟掉,提示裡才會只剩一個名字。
+      return [
+        Math.round(x * 10) / 10,
+        Math.round(y * 10) / 10,
+        isTree ? 1 : 0,
+        zM,
+        sub ?? "",
+        name && name !== sub ? name : "",
+        typeof p.lv === "number" ? p.lv : (typeof p.bossType === "string" ? p.bossType : 0),
+      ];
     };
     const add = (cat, label, list) => {
       const rows = [];
@@ -245,7 +253,7 @@ const areas = {};
 const out = {
   _comment:
     "互動地圖標記。座標已由世界座標經 savToMap 換算成地圖座標(與玩家/據點同一套)。" +
-    "每筆為 [x, y, world(0=主世界,1=世界樹), z(公尺), 子型別?, 名稱?]。由 tools/fetch-map-points.mjs 產生。",
+    "每筆為 [x, y, world(0=主世界,1=世界樹), z(公尺), 子型別, 名稱, 等級或首領類型]。由 tools/fetch-map-points.mjs 產生。",
   version: VER,
   groups: GROUPS.map(([key, name]) => ({
     key,
