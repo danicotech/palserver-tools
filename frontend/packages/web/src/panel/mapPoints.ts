@@ -46,6 +46,7 @@ export interface DetailItem {
   /** 數量 */ q?: string | number;
   /** 機率(0–1) */ r?: number;
   /** 售價 */ p?: number;
+  /** 帕魯代號(蛋的孵化清單用;有這個就顯示帕魯頭像而不是道具圖) */ pal?: string;
 }
 
 /** 標記的詳細資料(標題、掉落表、商店品項),由 tools/fetch-map-detail.mjs 產生。 */

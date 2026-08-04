@@ -65,7 +65,7 @@ import { palInfo } from "./paldex";
 import type { Player, Guild } from "./types";
 import type { Dataset } from "./data";
 import { t, useI18n } from "../i18n";
-import { MarkerPanel } from "./MarkerPanel";
+import { MarkerPanel, hasPanelContent } from "./MarkerPanel";
 
 type World = "main" | "tree";
 type WhoFilter = "all" | "online" | "offline" | "none";
@@ -377,6 +377,11 @@ export function PlayerMap({
   const [detail, setDetail] = useState<MapDetail | null>(null);
   /** 頭目 / 釣場 / 地牢 / 打撈… 的掉落表。座標索引在 at,內容在 panels。 */
   const [panel, setPanel] = useState<MapPanel | null>(null);
+  /** 地圖是否已建立。mapRef 是 ref、改了不會重繪,所以另外用 state 通知 ——
+   *  地圖要等圖磚偵測(非同步)完成才建立,在那之前跑過的圖層 effect
+   *  只會拿到 null 然後 return,而且不會再有理由重跑。
+   *  症狀就是初次載入時玩家與據點都不見,要動一下篩選才冒出來。 */
+  const [mapReady, setMapReady] = useState(false);
   /** 目前點開的標記。null = 沒開面板。 */
   const [sel, setSel] = useState<{
     cat: string;
@@ -527,6 +532,7 @@ export function PlayerMap({
     el.style.background = "#0d161e";
     markersRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
+    setMapReady(true);
     // 容器高度由版面決定,首輪可能是 0:用 ResizeObserver 校正 fit 與最小縮放。
     let fitted = false;
     const applySize = () => {
@@ -546,6 +552,7 @@ export function PlayerMap({
       ro.disconnect();
       map.remove();
       mapRef.current = null;
+      setMapReady(false);
       markersRef.current = null;
     };
   }, [tiles]);
@@ -696,9 +703,28 @@ export function PlayerMap({
                 : `<span style="background:${color}">${icon}</span>`,
             }),
           });
-          // 點標記開面板。收集品原本是「點一下就切換已收集」,
-          // 但那樣沒地方看掉落表,也容易誤觸;改成在面板裡按按鈕。
+          // 沒有東西可看就不開面板 —— 雕像、礦石、原油、夜星砂、羈絆寶桃那些
+          // 點開只會顯示「沒有更多資料」,白費一次點擊。
+          // 是收集品就直接打叉(雕像唯一的用途就是記進度),不是的話什麼都不做。
+          // 判斷用實際查一次資料而不是維護一份類別清單:之後補了資料會自己開始運作。
+          const selection = {
+            cat: c.category ?? "",
+            label: cat?.label ?? "",
+            idx: (c.index ?? 0) + 1,
+            x: c.x,
+            y: c.y,
+            z: detail?.incidentZ?.[detailKey(c.x, c.y)] ?? zM,
+            name: name ?? "",
+            lv: lv ?? 0,
+            sub: sub ?? "",
+            collectable,
+          };
+          const markOnly = !hasPanelContent(selection, detail, panel);
           m.on("click", () => {
+            if (markOnly) {
+              if (collectable) toggleCollected(cid);
+              return;
+            }
             setSel({
               cat: c.category ?? "",
               label: cat?.label ?? "",
@@ -731,7 +757,12 @@ export function PlayerMap({
               `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${
                 detail?.incidentZ?.[detailKey(c.x, c.y)] ?? zM
               }m</div>` +
-              det.extra,
+              det.extra +
+              // 雕像點一下就切換收集狀態,提示裡先講清楚,免得以為沒反應
+              // 只有收集品才提示可點擊 —— 礦石那些點了不會有任何反應
+              (markOnly && collectable
+                ? `<div style="opacity:.65;margin-top:.25em">${done ? t("點擊取消收集") : t("點擊標記為已收集")}</div>`
+                : ""),
             { direction: "top", className: "pmap-detail" },
           );
           m.addTo(layer);
@@ -770,7 +801,7 @@ export function PlayerMap({
       map.off("moveend zoomend", draw);
       layer.clearLayers();
     };
-  }, [poi, detail, panel, onCats, world, tiles, collected, collectView]);
+  }, [mapReady, poi, detail, panel, onCats, world, tiles, collected, collectView]);
 
   // ---- 帕魯出生地 ----
   // 一隻帕魯最多幾百個生成點,不需要分群,但仍只畫視野內的,縮到很小時才不會卡。
@@ -818,7 +849,7 @@ export function PlayerMap({
       map.off("moveend zoomend", draw);
       layer.clearLayers();
     };
-  }, [spawns, spawnPal, spawnWhen, world]);
+  }, [mapReady, spawns, spawnPal, spawnWhen, world]);
 
   // 標記:據點在下、玩家在上。
   // 重點:更新時「不清空重畫」,而是沿用既有 marker 用 setLatLng 移動,
@@ -927,7 +958,7 @@ export function PlayerMap({
         reg.delete(key);
       }
     }
-  }, [shownPlayers, shownGuilds, showBases, guildByUid, world, online, avatarOf, live]);
+  }, [mapReady, shownPlayers, shownGuilds, showBases, guildByUid, world, online, avatarOf, live]);
 
   if (!located.length && !data.guilds.length) return null;
 

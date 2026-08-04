@@ -71,7 +71,9 @@ for (const [poolKey, pool] of Object.entries(eggs.pools ?? {})) {
     .slice()
     .sort((a, b) => (b.rate ?? 0) - (a.rate ?? 0))
     .slice(0, 30)
-    .map((e) => ({ n: palName(e.pal), i: e.egg, q: 1, r: e.rate }));
+    // 存帕魯代號而不是蛋的圖示代號 —— 玩家要看的是「孵出哪一隻」,
+    // 十幾種帕魯配同一張蛋圖完全分不出差別。前端用 pal 去查帕魯頭像。
+    .map((e) => ({ n: palName(e.pal), pal: e.pal, q: 1, r: e.rate }));
   if (!items.length) continue;
   eggPanels[poolKey] = {
     // 不給標題:提示第一行已經是分類名(草原蛋 15),再寫「帕魯蛋」只是重複

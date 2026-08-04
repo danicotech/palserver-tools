@@ -2556,5 +2556,7 @@
   "這個標記沒有更多資料": "No further data for this marker",
   "複製座標": "Copy coordinates",
   "貨幣": "Currency",
-  "售價": "Price"
+  "售價": "Price",
+  "點擊標記為已收集": "Click to mark as collected",
+  "點擊取消收集": "Click to unmark"
 }

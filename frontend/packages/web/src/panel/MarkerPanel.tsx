@@ -15,6 +15,7 @@ import {
   type MapPanel,
   type DetailItem,
 } from "./mapPoints";
+import { palInfo } from "./paldex";
 import { t } from "../i18n";
 
 /** 面板要顯示的一組品項 */
@@ -36,7 +37,12 @@ export interface Selection {
   collectable: boolean;
 }
 
-const ICON = (name?: string) => (name ? `/game-data/item-icons/${name}.webp` : null);
+/** 一列要顯示的圖:帕魯優先用頭像(蛋的孵化清單),其餘用道具圖示。
+ *  十幾種帕魯配同一張蛋圖分不出差別,頭像才看得出孵到什麼。 */
+const rowIcon = (it: DetailItem): { url: string | null; round: boolean } => {
+  if (it.pal) return { url: palInfo(it.pal.toLowerCase()).iconUrl || null, round: true };
+  return { url: it.i ? `/game-data/item-icons/${it.i}.webp` : null, round: false };
+};
 
 /** 容差一格的座標查表。兩邊座標各自四捨五入過,整數邊界上會差一格。 */
 function near<T>(table: Record<string, T> | undefined, x: number, y: number): T | undefined {
@@ -60,6 +66,15 @@ const NPC_SHOP: Record<string, string> = {
   NpcMedalTrader: "獎章商店 1",
   NpcBountyTrader: "賞金商店 1",
 };
+
+/** 這個標記有沒有東西可以看?沒有就不該開面板 ——
+ *  礦石、原油、夜星砂那些點開只會看到「沒有更多資料」,白費一次點擊。
+ *  用 contentOf 實際跑一次而不是維護一份「哪些類別沒資料」的清單:
+ *  之後補了資料,面板會自己開始運作,不必記得回來改這裡。 */
+export function hasPanelContent(sel: Selection, detail: MapDetail | null, panel: MapPanel | null): boolean {
+  const c = contentOf(sel, detail, panel);
+  return c.groups.length > 0 || !!c.desc;
+}
 
 /** 蒐集這個標記能顯示的所有內容:副標題、說明、分組品項。 */
 function contentOf(
@@ -285,12 +300,14 @@ export function MarkerPanel({
                   key={i}
                   className="flex items-center gap-2 border-t border-line px-3 py-2 text-[13px] text-ink first:border-t-0"
                 >
-                  {ICON(it.i) ? (
+                  {rowIcon(it).url ? (
                     <img
-                      src={ICON(it.i) as string}
+                      src={rowIcon(it).url as string}
                       alt=""
                       loading="lazy"
-                      className="size-7 shrink-0 rounded-md bg-card-soft object-contain"
+                      className={`size-7 shrink-0 object-contain ${
+                        rowIcon(it).round ? "rounded-full" : "rounded-md bg-card-soft"
+                      }`}
                       onError={(e) => {
                         // 有 18 種圖示在來源就抓不到,壞圖直接收起來比顯示破圖好
                         (e.currentTarget as HTMLImageElement).style.display = "none";
