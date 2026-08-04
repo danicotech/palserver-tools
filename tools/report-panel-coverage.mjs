@@ -44,7 +44,7 @@ function contentCount(cat, rows) {
     const [x, y, , , sub] = r;
     if (cat === "LootTower" && near(P.lootTower, x, y)) n++;
     else if (cat === "TreasureMap" && near(P.treasureMap, x, y)) n++;
-    else if (cat.startsWith("Chestbox") && near(detail?.chestAt, x, y)) n++;
+    else if ((cat.startsWith("Chestbox") || cat === "ElementTreasure") && near(detail?.chestAt, x, y)) n++;
     else if (cat === "SkillFruits" && near(detail?.fruitAt, x, y)) n++;
     else if (cat === "Incident" && near(detail?.incidentAt, x, y)) n++;
     else if (cat === "Note" && detail?.notes?.[sub]) n++;
@@ -59,6 +59,7 @@ const SOURCE = {
   ChestboxNormal: "chest-views",
   ChestboxOilrig: "chest-views",
   ChestboxOilrigGoal: "chest-views",
+  ElementTreasure: "chest-views",
   Note: "note-views",
   Quest: "mission-views",
   Incident: "incident-views",

@@ -173,7 +173,10 @@ function detailFor(
     return { name: f.l, extra: top ? `<div style="margin-top:.25em;opacity:.85">果實</div>${top}` : "" };
   }
 
-  if (category.startsWith("Chest") || category === "ChestboxNormal") {
+  // 屬性寶箱的類別代號是 ElementTreasure,不是 Chest 開頭 ——
+  // 它的掉落表其實一直都在 chest-views 裡(四種變體共 109 個座標),
+  // 只是這個判斷式沒把它算進來,白白漏掉 104 個查得到內容的標記。
+  if (category.startsWith("Chest") || category === "ElementTreasure") {
     const slug = near(d.chestAt);
     const c = slug ? d.chests[slug] : undefined;
     if (!c) return { extra: "" };
