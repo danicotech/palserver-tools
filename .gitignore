@@ -66,3 +66,6 @@ frontend/packages/web/public/game-data/map-detail.json
 frontend/packages/web/public/game-data/map-panel.json
 
 # 蛋與商店的面板資料;跑 node tools/fetch-egg-shop.mjs 一併產生。
+
+# 面板用的道具圖示;跑 node tools/fetch-item-icons.mjs 產生。
+frontend/packages/web/public/game-data/item-icons/

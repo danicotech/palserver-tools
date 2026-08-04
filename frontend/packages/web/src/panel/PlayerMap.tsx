@@ -65,6 +65,7 @@ import { palInfo } from "./paldex";
 import type { Player, Guild } from "./types";
 import type { Dataset } from "./data";
 import { t, useI18n } from "../i18n";
+import { MarkerPanel } from "./MarkerPanel";
 
 type World = "main" | "tree";
 type WhoFilter = "all" | "online" | "offline" | "none";
@@ -376,6 +377,19 @@ export function PlayerMap({
   const [detail, setDetail] = useState<MapDetail | null>(null);
   /** 頭目 / 釣場 / 地牢 / 打撈… 的掉落表。座標索引在 at,內容在 panels。 */
   const [panel, setPanel] = useState<MapPanel | null>(null);
+  /** 目前點開的標記。null = 沒開面板。 */
+  const [sel, setSel] = useState<{
+    cat: string;
+    label: string;
+    idx: number;
+    x: number;
+    y: number;
+    z: number;
+    name: string;
+    lv: number | string;
+    sub: string;
+    collectable: boolean;
+  } | null>(null);
   const [onCats, setOnCats] = useState<Set<string>>(new Set());
   const [poiOpen, setPoiOpen] = useState(false);
   /** 收合起來的分組(預設全開) */
@@ -682,9 +696,22 @@ export function PlayerMap({
                 : `<span style="background:${color}">${icon}</span>`,
             }),
           });
-          if (collectable) {
-            m.on("click", () => toggleCollected(cid));
-          }
+          // 點標記開面板。收集品原本是「點一下就切換已收集」,
+          // 但那樣沒地方看掉落表,也容易誤觸;改成在面板裡按按鈕。
+          m.on("click", () => {
+            setSel({
+              cat: c.category ?? "",
+              label: cat?.label ?? "",
+              idx: (c.index ?? 0) + 1,
+              x: c.x,
+              y: c.y,
+              z: detail?.incidentZ?.[detailKey(c.x, c.y)] ?? zM,
+              name: name ?? "",
+              lv: lv ?? 0,
+              sub: sub ?? "",
+              collectable,
+            });
+          });
           // 標題掛上序號:同一類有上千個點,沒有編號就無法互相指認
           // (「你說的那個寶箱是哪一個?」)。序號是該類別在資料裡的固定順序,重整也不會變。
           // 第一行放「類別 + 序號」(這是拿來互相指認的東西),第二行才是該點的專屬名稱。
@@ -1402,6 +1429,19 @@ export function PlayerMap({
             {t("全螢幕")}
           </div>
         </div>
+
+        {/* 點標記後的詳細面板。疊在地圖右側,不改變地圖尺寸 ——
+            改地圖寬度會觸發 Leaflet 重算與圖磚重載,開關面板就會閃一下。 */}
+        {sel && (
+          <MarkerPanel
+            sel={sel}
+            detail={detail}
+            panel={panel}
+            collected={collected}
+            onToggleCollected={toggleCollected}
+            onClose={() => setSel(null)}
+          />
+        )}
 
         {/* 疊在地圖右下角。Leaflet 自己的控制項 z-index 是 1000,要壓過它才點得到。 */}
         <button
