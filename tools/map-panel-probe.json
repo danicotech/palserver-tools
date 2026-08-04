@@ -1,0 +1,530 @@
+{
+ "翠葉鼠雕像": {
+  "key": "effigy:Carbunclo",
+  "n": 140,
+  "samples": 2,
+  "tried": 4
+ },
+ "棉悠悠雕像": {
+  "key": "effigy:SheepBall",
+  "n": 30,
+  "samples": 2,
+  "tried": 4
+ },
+ "企丸丸雕像": {
+  "key": "effigy:Penguin",
+  "n": 30,
+  "samples": 2,
+  "tried": 4
+ },
+ "肚肚鱷雕像": {
+  "key": "effigy:IceCrocodile",
+  "n": 30,
+  "samples": 2,
+  "tried": 4
+ },
+ "燎火鹿雕像": {
+  "key": "effigy:FlameBambi",
+  "n": 30,
+  "samples": 2,
+  "tried": 4
+ },
+ "達鼠泥雕像": {
+  "key": "effigy:LeafMomonga",
+  "n": 30,
+  "samples": 2,
+  "tried": 4
+ },
+ "新葉猿雕像": {
+  "key": "effigy:Monkey",
+  "n": 30,
+  "samples": 2,
+  "tried": 4
+ },
+ "瞅什魔雕像": {
+  "key": "effigy:NegativeKoala",
+  "n": 30,
+  "samples": 2,
+  "tried": 4
+ },
+ "秘斯媞雅雕像": {
+  "key": "effigy:Mutant",
+  "n": 4,
+  "samples": 2,
+  "tried": 4
+ },
+ "佩克龍雕像": {
+  "key": "effigy:LazyDragon",
+  "n": 4,
+  "samples": 2,
+  "tried": 4
+ },
+ "八雲犬雕像": {
+  "key": "effigy:GuardianDog",
+  "n": 2,
+  "samples": 2,
+  "tried": 4
+ },
+ "古代遺跡": {
+  "key": "lootTower",
+  "n": 106,
+  "samples": 2,
+  "tried": 1,
+  "params": {
+   "kind": "lootTower",
+   "id": "93,-64",
+   "view": "4"
+  },
+  "title": "古代遺跡",
+  "fields": [
+   "kind",
+   "id",
+   "title",
+   "drops"
+  ],
+  "lists": {
+   "drops": 2
+  },
+  "sample": "{\"kind\":\"lootTower\",\"id\":\"93,-64\",\"title\":\"古代遺跡\",\"drops\":[{\"id\":\"Blueprint_OldRevolver_3\",\"rate\":100,\"min\":1,\"max\":1,\"name\":\"古舊左輪手槍設計圖2\",\"iconName\":\"Blueprint\",\"groupName\":\"設計圖\"},{\"id\":\"DogCoin\",\"rate\":100,\"min\":25,\"max\":25,\"name\":\"汪汪幣\",\"iconName\":\"DogCoin\",\"g"
+ },
+ "筆記": {
+  "key": "note",
+  "n": 55,
+  "samples": 2,
+  "tried": 2
+ },
+ "草原蛋": {
+  "key": "egg:grass",
+  "n": 441,
+  "samples": 2,
+  "tried": 4
+ },
+ "沙漠蛋": {
+  "key": "egg:desert",
+  "n": 122,
+  "samples": 2,
+  "tried": 4
+ },
+ "火山蛋": {
+  "key": "egg:volcano",
+  "n": 310,
+  "samples": 2,
+  "tried": 4
+ },
+ "雪原蛋": {
+  "key": "egg:snow",
+  "n": 271,
+  "samples": 2,
+  "tried": 4
+ },
+ "櫻花島蛋": {
+  "key": "egg:sakurajima",
+  "n": 36,
+  "samples": 2,
+  "tried": 4
+ },
+ "天墜蛋": {
+  "key": "egg:darkIsland",
+  "n": 567,
+  "samples": 2,
+  "tried": 4
+ },
+ "天陽鄉蛋": {
+  "key": "egg:skyIsland",
+  "n": 39,
+  "samples": 2,
+  "tried": 4
+ },
+ "組織之塔": {
+  "key": "bossTower",
+  "n": 9,
+  "samples": 2,
+  "tried": 2
+ },
+ "區域頭目": {
+  "key": "fieldBoss",
+  "n": 83,
+  "samples": 2,
+  "tried": 4
+ },
+ "通緝": {
+  "key": "bounty",
+  "n": 33,
+  "samples": 2,
+  "tried": 4
+ },
+ "狂暴": {
+  "key": "predator",
+  "n": 29,
+  "samples": 2,
+  "tried": 4
+ },
+ "敵人營地": {
+  "key": "enemyCamp",
+  "n": 47,
+  "samples": 2,
+  "tried": 1,
+  "params": {
+   "kind": "enemyCamp",
+   "id": "-473,-1351",
+   "view": "4"
+  },
+  "title": "道具",
+  "fields": [
+   "kind",
+   "id",
+   "title",
+   "pools"
+  ],
+  "lists": {},
+  "sample": "{\"kind\":\"enemyCamp\",\"id\":\"-473,-1351\",\"title\":\"道具\",\"pools\":[]}"
+ },
+ "防空砲塔": {
+  "key": "antiAir",
+  "n": 11,
+  "samples": 2,
+  "tried": 2
+ },
+ "事件": {
+  "key": "incident",
+  "n": 88,
+  "samples": 2,
+  "tried": 2
+ },
+ "釣魚點": {
+  "key": "fishingSpot",
+  "n": 529,
+  "samples": 2,
+  "tried": 2
+ },
+ "打撈": {
+  "key": "salvage",
+  "n": 2763,
+  "samples": 2,
+  "tried": 1,
+  "params": {
+   "kind": "salvage",
+   "id": "-881,-277",
+   "view": "4"
+  },
+  "title": "道具",
+  "fields": [
+   "kind",
+   "id",
+   "title",
+   "pools"
+  ],
+  "lists": {},
+  "sample": "{\"kind\":\"salvage\",\"id\":\"-881,-277\",\"title\":\"道具\",\"pools\":[]}"
+ },
+ "快速傳送": {
+  "key": "fastTravel",
+  "n": 137,
+  "samples": 2,
+  "tried": 2
+ },
+ "重生": {
+  "key": "respawn",
+  "n": 8,
+  "samples": 2,
+  "tried": 2
+ },
+ "傳送環": {
+  "key": "skylandWarpAltar",
+  "n": 20,
+  "samples": 2,
+  "tried": 2
+ },
+ "首頁": {
+  "key": "home",
+  "n": 32,
+  "samples": 2,
+  "tried": 2
+ },
+ "瞭望塔": {
+  "key": "watchTower",
+  "n": 20,
+  "samples": 2,
+  "tried": 2
+ },
+ "地區名稱": {
+  "key": "regionName",
+  "n": 120,
+  "samples": 2,
+  "tried": 2
+ },
+ "地牢": {
+  "key": "dungeon",
+  "n": 188,
+  "samples": 2,
+  "tried": 1,
+  "params": {
+   "kind": "dungeon",
+   "id": "362,574",
+   "view": "4"
+  },
+  "title": "道具",
+  "fields": [
+   "kind",
+   "id",
+   "title",
+   "pools"
+  ],
+  "lists": {},
+  "sample": "{\"kind\":\"dungeon\",\"id\":\"362,574\",\"title\":\"道具\",\"pools\":[]}"
+ },
+ "洞穴入口": {
+  "key": "caveEntrance",
+  "n": 17,
+  "samples": 2,
+  "tried": 2
+ },
+ "藏寶圖": {
+  "key": "treasureMap",
+  "n": 42,
+  "samples": 2,
+  "tried": 1,
+  "params": {
+   "kind": "treasureMap",
+   "id": "645,-172",
+   "view": "4"
+  },
+  "title": "藏寶圖",
+  "fields": [
+   "kind",
+   "id",
+   "title",
+   "pools"
+  ],
+  "lists": {
+   "pools": 5
+  },
+  "sample": "{\"kind\":\"treasureMap\",\"id\":\"645,-172\",\"title\":\"藏寶圖\",\"pools\":[{\"id\":\"TreasureMap01:5\",\"label\":\"藏寶圖 · 寶箱 Lv.5\",\"items\":[{\"id\":\"Blueprint_HandGun_Default_5\",\"min\":1,\"max\":1,\"rate\":0.26,\"name\":\"手槍設計圖4\",\"iconName\":\"Blueprint\",\"groupName\":\"設計圖\"},{\"id\":\"Blueprint_Cop"
+ },
+ "溫度": {
+  "key": "heatArea",
+  "n": 20,
+  "samples": 2,
+  "tried": 2
+ },
+ "任務": {
+  "key": "quest",
+  "n": 152,
+  "samples": 2,
+  "tried": 2
+ },
+ "金屬礦石": {
+  "key": "oreMetal",
+  "n": 1438,
+  "samples": 2,
+  "tried": 2
+ },
+ "石炭": {
+  "key": "oreCoal",
+  "n": 520,
+  "samples": 2,
+  "tried": 2
+ },
+ "純水晶": {
+  "key": "oreQuartz",
+  "n": 523,
+  "samples": 2,
+  "tried": 2
+ },
+ "純水晶簇": {
+  "key": "oreQuartzCluster",
+  "n": 11,
+  "samples": 2,
+  "tried": 2
+ },
+ "硫磺": {
+  "key": "oreSulfur",
+  "n": 280,
+  "samples": 2,
+  "tried": 2
+ },
+ "鉻鐵礦": {
+  "key": "chromite",
+  "n": 257,
+  "samples": 2,
+  "tried": 2
+ },
+ "六稜晶礦": {
+  "key": "rainbowCrystal",
+  "n": 349,
+  "samples": 2,
+  "tried": 2
+ },
+ "烈陽金屬": {
+  "key": "skyIslandOre",
+  "n": 208,
+  "samples": 2,
+  "tried": 2
+ },
+ "古代熔岩塊": {
+  "key": "ancientLava",
+  "n": 10,
+  "samples": 2,
+  "tried": 2
+ },
+ "古代樹皮": {
+  "key": "ancientWood",
+  "n": 10,
+  "samples": 2,
+  "tried": 2
+ },
+ "古代獸骨": {
+  "key": "ancientBeastBone",
+  "n": 10,
+  "samples": 2,
+  "tried": 2
+ },
+ "流浪商人": {
+  "key": "npcSalesPerson",
+  "n": 8,
+  "samples": 2,
+  "tried": 4
+ },
+ "帕魯商人": {
+  "key": "npcPalDealer",
+  "n": 10,
+  "samples": 2,
+  "tried": 4
+ },
+ "黑市商人": {
+  "key": "npcDarkTrader",
+  "n": 4,
+  "samples": 2,
+  "tried": 4
+ },
+ "獎章商人": {
+  "key": "npcMedalTrader",
+  "n": 4,
+  "samples": 2,
+  "tried": 2
+ },
+ "帕魯評論家": {
+  "key": "npcPalDisplay",
+  "n": 9,
+  "samples": 2,
+  "tried": 4
+ },
+ "愛的傳教士": {
+  "key": "npcEmote",
+  "n": 17,
+  "samples": 2,
+  "tried": 4
+ },
+ "帕魯馴養師": {
+  "key": "npcPresenter",
+  "n": 1,
+  "samples": 1,
+  "tried": 2
+ },
+ "賞金負責人": {
+  "key": "npcBountyTrader",
+  "n": 3,
+  "samples": 2,
+  "tried": 4
+ },
+ "其他 NPC": {
+  "key": "npcOther",
+  "n": 82,
+  "samples": 2,
+  "tried": 4
+ },
+ "石油鑽井平台寶箱": {
+  "key": "chestOilrig",
+  "n": 45,
+  "samples": 2,
+  "tried": 2
+ },
+ "石油鑽井平台獎勵寶箱": {
+  "key": "chestOilrigGoal",
+  "n": 6,
+  "samples": 2,
+  "tried": 2
+ },
+ "寶箱": {
+  "key": "chest",
+  "n": 1412,
+  "samples": 2,
+  "tried": 2
+ },
+ "屬性寶箱": {
+  "key": "elementChest",
+  "n": 109,
+  "samples": 2,
+  "tried": 2
+ },
+ "隕石": {
+  "key": "supply",
+  "n": 480,
+  "samples": 2,
+  "tried": 1,
+  "params": {
+   "kind": "supply",
+   "id": "-553,-262",
+   "view": "4"
+  },
+  "title": "道具",
+  "fields": [
+   "kind",
+   "id",
+   "title",
+   "pools"
+  ],
+  "lists": {},
+  "sample": "{\"kind\":\"supply\",\"id\":\"-553,-262\",\"title\":\"道具\",\"pools\":[]}"
+ },
+ "殘骸": {
+  "key": "junk",
+  "n": 646,
+  "samples": 2,
+  "tried": 1,
+  "params": {
+   "kind": "junk",
+   "id": "-345,-232",
+   "view": "4"
+  },
+  "title": "道具",
+  "fields": [
+   "kind",
+   "id",
+   "title",
+   "pools"
+  ],
+  "lists": {},
+  "sample": "{\"kind\":\"junk\",\"id\":\"-345,-232\",\"title\":\"道具\",\"pools\":[]}"
+ },
+ "技能果實樹": {
+  "key": "skillFruit",
+  "n": 31,
+  "samples": 2,
+  "tried": 2
+ },
+ "羈絆寶桃": {
+  "key": "peach",
+  "n": 22,
+  "samples": 2,
+  "tried": 2
+ },
+ "美麗花朵": {
+  "key": "beautifulFlower",
+  "n": 27,
+  "samples": 2,
+  "tried": 2
+ },
+ "原油": {
+  "key": "crudeOil",
+  "n": 185,
+  "samples": 2,
+  "tried": 2
+ },
+ "夜星砂": {
+  "key": "nightStone",
+  "n": 271,
+  "samples": 2,
+  "tried": 2
+ }
+}
