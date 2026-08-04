@@ -47,6 +47,7 @@ export interface DetailItem {
   /** 機率(0–1) */ r?: number;
   /** 售價 */ p?: number;
   /** 帕魯代號(蛋的孵化清單用;有這個就顯示帕魯頭像而不是道具圖) */ pal?: string;
+  /** 限購一次 */ once?: boolean;
 }
 
 /** 標記的詳細資料(標題、掉落表、商店品項),由 tools/fetch-map-detail.mjs 產生。 */
@@ -69,6 +70,7 @@ export interface MapDetail {
       /** 任務目標 */ obj?: string[];
       /** 完成獎勵 */ rw?: DetailItem[];
       /** 後續任務標題 */ next?: string[];
+      /** 這個任務的所有位置 [x, y, z] */ locs?: [number, number, number][];
       z?: number;
     }
   >;
@@ -91,8 +93,10 @@ export interface MapPanel {
   panels: Record<string, Record<string, { t?: string; s?: string; d?: string; g?: { l: string; items: DetailItem[] }[] }>>;
   /** 地圖座標 "x,y" → [kind, 資料鍵]。前端只有座標,靠這層轉成資料鍵。 */
   at: Record<string, [string, string]>;
-  /** NPC 商店(沒有座標,靠名稱對應到商人分類) */
+  /** NPC 商店 */
   shops?: { id: string; l: string; cur?: string; items: DetailItem[] }[];
+  /** NPC 代號(points.json 第 5 欄) → 商店 id */
+  shopByNpc?: Record<string, string>;
 }
 
 /** 分類 → 它在 map-panel 裡的 kind。

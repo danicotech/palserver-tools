@@ -2560,5 +2560,8 @@
   "點擊標記為已收集": "Click to mark as collected",
   "點擊取消收集": "Click to unmark",
   "後續": "Next",
-  "完成獎勵": "Rewards"
+  "完成獎勵": "Rewards",
+  "地圖位置": "Map locations",
+  "{n} 個位置": "{n} locations",
+  "限購一次": "Once only"
 }

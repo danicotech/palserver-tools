@@ -58,22 +58,13 @@ function near<T>(table: Record<string, T> | undefined, x: number, y: number): T 
   return undefined;
 }
 
-/** NPC 分類 → 商店名稱。只收名稱能一對一確認的三組 ——
- *  村莊商店、商隊商店 1–25、競技場商店那些對不到特定 NPC,
- *  硬猜會把商品標到錯的人身上,不如不標。 */
-const NPC_SHOP: Record<string, string> = {
-  NpcSalesPerson: "流浪商人商店 1",
-  NpcMedalTrader: "獎章商店 1",
-  NpcBountyTrader: "賞金商店 1",
-};
-
 /** 這個標記有沒有東西可以看?沒有就不該開面板 ——
  *  礦石、原油、夜星砂那些點開只會看到「沒有更多資料」,白費一次點擊。
  *  用 contentOf 實際跑一次而不是維護一份「哪些類別沒資料」的清單:
  *  之後補了資料,面板會自己開始運作,不必記得回來改這裡。 */
 export function hasPanelContent(sel: Selection, detail: MapDetail | null, panel: MapPanel | null): boolean {
   const c = contentOf(sel, detail, panel);
-  return c.groups.length > 0 || !!c.desc || !!c.img || !!c.bullets?.length;
+  return c.groups.length > 0 || !!c.desc || !!c.img || !!c.bullets?.length || !!c.steps?.length;
 }
 
 /** 蒐集這個標記能顯示的所有內容:副標題、說明、分組品項。 */
@@ -81,13 +72,26 @@ function contentOf(
   sel: Selection,
   detail: MapDetail | null,
   panel: MapPanel | null,
-): { title: string; sub?: string; desc?: string; groups: Group[]; img?: string; bullets?: string[] } {
+): {
+  title: string;
+  sub?: string;
+  desc?: string;
+  groups: Group[];
+  img?: string;
+  bullets?: string[];
+  steps?: string[];
+  locs?: [number, number, number][];
+} {
   const groups: Group[] = [];
   let title = sel.name || sel.label;
   let sub: string | undefined;
   let desc: string | undefined;
   let img: string | undefined;
   let bullets: string[] | undefined;
+  /** 有編號的任務目標 */
+  let steps: string[] | undefined;
+  /** 這個任務的所有位置 */
+  let locs: [number, number, number][] | undefined;
 
   // map-panel:頭目 / 釣場 / 地牢 / 打撈 / 隕石 / 組織之塔 / 古代遺跡 / 藏寶圖 / 蛋
   // 一定要比對 kind —— 查表有容差,不比對會抓到隔壁別類標記的資料。
@@ -159,17 +163,19 @@ function contentOf(
     desc = [m.x, m.exp ? `EXP ${m.exp}` : ""].filter(Boolean).join("\n");
   }
 
-  // 商人 NPC:接上對得起來的商店品項(價格放在數量欄旁邊)
-  const shopName = NPC_SHOP[sel.cat];
-  if (shopName && panel?.shops) {
-    const shop = panel.shops.find((x) => x.l === shopName);
+  // 商人 NPC:用 NPC 代號(第 5 欄)對接商店 —— 代號與商店 id 命名一致,
+  // 比用中文分類名去猜精準,同一類的不同商人也能各自對到自己那家店
+  // (SalesPerson_Volcano2 → 火山商店 2)。
+  const shopId = panel?.shopByNpc?.[sel.sub];
+  if (shopId && panel?.shops) {
+    const shop = panel.shops.find((x) => x.id === shopId);
     if (shop?.items.length) {
       sub = sub ?? `${t("貨幣")}:${shop.cur ?? ""}`;
       groups.push({ label: shop.l, items: shop.items });
     }
   }
 
-  return { title, sub, desc, groups, img, bullets };
+  return { title, sub, desc, groups, img, bullets, steps, locs };
 }
 
 export function MarkerPanel({
@@ -200,7 +206,7 @@ export function MarkerPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const { title, sub, desc, groups, img, bullets } = contentOf(sel, detail, panel);
+  const { title, sub, desc, groups, img, bullets, steps, locs } = contentOf(sel, detail, panel);
   // 複製成遊戲內看得懂的格式,方便直接貼到 Discord 報座標
   const copy = () => {
     const text = `${title}  X ${Math.round(sel.x)} · Y ${Math.round(sel.y)} · Z ${sel.z}m`;
@@ -298,6 +304,43 @@ export function MarkerPanel({
 
         {desc && <p className="mb-3 text-[13px] leading-relaxed whitespace-pre-line text-ink-muted">{desc}</p>}
 
+        {/* 目標是有順序的:編號列出來才看得出「尋找 → 擊敗 → 回報」的流程 */}
+        {steps?.length && (
+          <section className="mb-3">
+            <h4 className="mb-1.5 text-xs font-bold text-ink-muted">{t("目標")}</h4>
+            <ol className="space-y-1.5">
+              {steps.map((o, i) => (
+                <li key={i} className="flex gap-2 text-[13px] text-ink">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-card-soft text-[11px] font-bold text-ink-muted ring-1 ring-line">
+                    {i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 pt-0.5">{o}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {/* 多階段任務散在好幾個地點,列出來並可直接跳過去 */}
+        {locs?.length && (
+          <section className="mb-3">
+            <h4 className="mb-1.5 text-xs font-bold text-ink-muted">{t("地圖位置")}</h4>
+            <div className="space-y-1">
+              {locs.map((l, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => onLocate?.(l[0], l[1])}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left font-mono text-xs text-ink-muted tabular-nums ring-1 ring-line transition hover:text-ink hover:ring-pal"
+                >
+                  <span className="font-sans font-bold text-pal">#{i + 1}</span>
+                  X {Math.round(l[0])} · Y {Math.round(l[1])} · Z {l[2]}m
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {bullets?.length && (
           <ul className="mb-3 space-y-1">
             {bullets.map((b, i) => (
@@ -347,7 +390,14 @@ export function MarkerPanel({
                   ) : (
                     <span className="size-7 shrink-0 rounded-md bg-card-soft" />
                   )}
-                  <span className="min-w-0 flex-1 truncate">{it.n}</span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {it.n}
+                    {it.once && (
+                      <span className="ml-1.5 rounded bg-sun/15 px-1 py-0.5 text-[10px] font-semibold text-sun">
+                        {t("限購一次")}
+                      </span>
+                    )}
+                  </span>
                   <span className="w-16 shrink-0 text-right text-ink-muted tabular-nums">
                     {/* 等級本身就是完整寫法(Lv.80),不要再加上表示數量的 × */}
                     {it.q === undefined || it.q === null || String(it.q) === ""

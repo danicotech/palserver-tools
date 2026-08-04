@@ -7,8 +7,10 @@
 //
 // 蛋的座標對應:points.json 的 Eggs 有 k 欄位(grass_01、volcano_02…),
 // 正好就是蛋池的鍵,直接對得上。
-// 商店沒有座標,只能靠「商店數量與 NPC 數量」推不出對應關係,
-// 所以商店資料獨立成一份清單,由前端在 NPC 面板上以列表呈現。
+// 商店沒有座標,但 points.json 的 NPC 代號(第 5 欄)和 shops.json 的 id
+// 命名一致,可以一對一接起來:MedalTrader→Medal_Shop_1、
+// SalesPerson_Volcano2→Volcano_Shop_2、Head_of_Village→Village_Shop_1…
+// 這比用中文分類名去猜精準得多(先前只敢接三家,現在能接十家)。
 //
 // 用法(專案根目錄):node tools/fetch-egg-shop.mjs
 import fs from "node:fs";
@@ -111,15 +113,34 @@ const shops = (shopsRaw.shops ?? []).map((s, i) => {
   return { id: s.id, l: zh?.label ?? s.id, cur: zh?.currencyName ?? s.currency, items };
 });
 
+/** NPC 代號 → 商店 id。兩邊的命名幾乎一一對應,列出來比寫規則清楚,
+ *  也方便日後對照來源檢查。沒列到的(DarkTrader 黑市、PalDealer 帕魯商人)
+ *  在 shops.json 裡本來就沒有對應商店 —— 他們賣的不是一般商品。
+ *  流動商販 Vagrant_Trader 與商隊 Caravan_Shop 沒有固定座標,也接不上。 */
+const NPC_SHOP = {
+  MedalTrader: "Medal_Shop_1",
+  BountyTrader: "Bounty_Shop_1",
+  SalesPerson: "Wander_Shop_1",
+  SalesPerson_Volcano: "Volcano_Shop_1",
+  SalesPerson_Volcano2: "Volcano_Shop_2",
+  SalesPerson_Desert: "Desert_Shop_1",
+  SalesPerson_Desert2: "Desert_Shop_2",
+  Head_of_Village: "Village_Shop_1",
+  NPC_Dungeon_Shop: "Dungeon_Shop_01",
+  ArenaShop: "Arena_Shop_1",
+};
+
 // ── 併入既有的 map-panel.json ────────────────────────────────────
 const prev = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : { panels: {}, at: {} };
 prev.panels.egg = eggPanels;
 prev.at = { ...prev.at, ...at };
 prev.shops = shops;
+prev.shopByNpc = NPC_SHOP;
 prev.version = V;
 fs.writeFileSync(OUT, JSON.stringify(prev));
 
 console.log(`
   蛋池     ${Object.keys(eggPanels).length} 種 → 對上 ${eggHit} 個座標(沒對上 ${eggMiss} 個)
   商店     ${shops.length} 間、品項 ${shops.reduce((a, s) => a + s.items.length, 0)} 個
+  接到 NPC ${Object.keys(NPC_SHOP).length} 家(其餘沒有固定座標或本來就沒商店)
 已寫入 ${path.relative(ROOT, OUT)} — ${Math.round(fs.statSync(OUT).size / 1024)} KB`);

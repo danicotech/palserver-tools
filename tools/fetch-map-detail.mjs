@@ -120,6 +120,13 @@ for (const n of noteRaw.notes) {
 
 const missions = {};
 for (const m of misRaw.missions) {
+  // 一個任務可能有多個位置(最多 11 個),而且順序和 objectives 一一對應 ——
+  // 「尋找 → 擊敗 → 回報」各在不同地點。面板要能一次列出全部,
+  // 所以每個位置都存同一份清單,點哪個標記都看得到完整路線。
+  const locs = (m.locations ?? []).map((l) => {
+    const c = savToMap(l.x, l.y);
+    return [r1(c.x), r1(c.y), l.z != null ? Math.round(l.z / 100) : 0];
+  });
   for (const l of m.locations ?? []) {
     missions[l.key] = {
       t: m.title,
@@ -133,6 +140,8 @@ for (const m of misRaw.missions) {
         ? m.rewards.map((r) => ({ n: r.name, i: r.iconName, q: r.quantity }))
         : undefined,
       next: m.nextMissions?.length ? m.nextMissions.map((n) => n.title).filter(Boolean) : undefined,
+      /** 這個任務的所有位置 [x, y, z];面板列成「地圖位置 #1 #2 …」 */
+      locs: locs.length > 1 ? locs : undefined,
       z: l.z != null ? Math.round(l.z / 100) : undefined,
     };
   }
