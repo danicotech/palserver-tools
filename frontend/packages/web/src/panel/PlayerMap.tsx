@@ -590,10 +590,15 @@ export function PlayerMap({
     };
   }, [world, tiles]);
 
-  // 換世界時整批重來:兩個世界的座標系不同,沿用舊 marker 會滑到錯的位置
+  // 換世界時整批重來:兩個世界的座標系不同,沿用舊東西會停在對不上的位置。
+  // 標記圖層本來就有清,但定位圖釘和詳細面板先前漏了 ——
+  // 圖釘是直接加在地圖上的,面板顯示的則是另一個世界的座標。
   useEffect(() => {
     markersRef.current?.clearLayers();
     markerRegRef.current.clear();
+    pinRef.current?.remove();
+    pinRef.current = null;
+    setSel(null);
   }, [world]);
 
   // ---- 互動地圖標記(POI)----
