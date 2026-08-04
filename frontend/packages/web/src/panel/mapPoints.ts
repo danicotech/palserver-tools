@@ -78,6 +78,8 @@ export interface MapPanel {
   panels: Record<string, Record<string, { t?: string; s?: string; d?: string; g?: { l: string; items: DetailItem[] }[] }>>;
   /** 地圖座標 "x,y" → [kind, 資料鍵]。前端只有座標,靠這層轉成資料鍵。 */
   at: Record<string, [string, string]>;
+  /** NPC 商店(沒有座標,靠名稱對應到商人分類) */
+  shops?: { id: string; l: string; cur?: string; items: DetailItem[] }[];
 }
 
 /** 分類 → 它在 map-panel 裡的 kind。

@@ -3,8 +3,9 @@
 // 為什麼要獨立成面板而不是塞進滑鼠提示:提示只能放三四行,
 // 但藏寶圖有 5 組、每組三十幾項,寶箱與頭目也都有完整掉落表。
 // 提示負責「這是什麼」,面板負責「裡面有什麼」。
+import { useEffect, useState } from "react";
 import type { JSX } from "react";
-import { FiX, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiX, FiEye, FiEyeOff, FiCopy, FiCheck, FiCrosshair } from "react-icons/fi";
 import {
   panelKindOf,
   detailKey,
@@ -50,6 +51,15 @@ function near<T>(table: Record<string, T> | undefined, x: number, y: number): T 
   }
   return undefined;
 }
+
+/** NPC 分類 → 商店名稱。只收名稱能一對一確認的三組 ——
+ *  村莊商店、商隊商店 1–25、競技場商店那些對不到特定 NPC,
+ *  硬猜會把商品標到錯的人身上,不如不標。 */
+const NPC_SHOP: Record<string, string> = {
+  NpcSalesPerson: "流浪商人商店 1",
+  NpcMedalTrader: "獎章商店 1",
+  NpcBountyTrader: "賞金商店 1",
+};
 
 /** 蒐集這個標記能顯示的所有內容:副標題、說明、分組品項。 */
 function contentOf(
@@ -130,6 +140,16 @@ function contentOf(
     desc = [m.x, m.exp ? `EXP ${m.exp}` : ""].filter(Boolean).join("\n");
   }
 
+  // 商人 NPC:接上對得起來的商店品項(價格放在數量欄旁邊)
+  const shopName = NPC_SHOP[sel.cat];
+  if (shopName && panel?.shops) {
+    const shop = panel.shops.find((x) => x.l === shopName);
+    if (shop?.items.length) {
+      sub = sub ?? `${t("貨幣")}:${shop.cur ?? ""}`;
+      groups.push({ label: shop.l, items: shop.items });
+    }
+  }
+
   return { title, sub, desc, groups };
 }
 
@@ -140,6 +160,7 @@ export function MarkerPanel({
   collected,
   onToggleCollected,
   onClose,
+  onLocate,
 }: {
   sel: Selection;
   detail: MapDetail | null;
@@ -147,8 +168,28 @@ export function MarkerPanel({
   collected: Set<string>;
   onToggleCollected: (id: string) => void;
   onClose: () => void;
+  /** 把鏡頭移到這個座標 */
+  onLocate?: (x: number, y: number) => void;
 }): JSX.Element {
+  const [copied, setCopied] = useState(false);
+  // Esc 關閉:面板蓋住地圖右側,滑鼠要移到角落才按得到 ×,鍵盤快一點
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const { title, sub, desc, groups } = contentOf(sel, detail, panel);
+  // 複製成遊戲內看得懂的格式,方便直接貼到 Discord 報座標
+  const copy = () => {
+    const text = `${title}  X ${Math.round(sel.x)} · Y ${Math.round(sel.y)} · Z ${sel.z}m`;
+    void navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
   const cid = `${sel.cat}:${sel.idx - 1}`;
   const done = collected.has(cid);
 
@@ -177,6 +218,26 @@ export function MarkerPanel({
             </div>
           )}
         </div>
+        <button
+          type="button"
+          onClick={copy}
+          aria-label={t("複製座標")}
+          title={t("複製座標")}
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-muted transition hover:bg-card-soft hover:text-ink"
+        >
+          {copied ? <FiCheck size={16} className="text-grass" /> : <FiCopy size={16} />}
+        </button>
+        {onLocate && (
+          <button
+            type="button"
+            onClick={() => onLocate(sel.x, sel.y)}
+            aria-label={t("移到此座標")}
+            title={t("移到此座標")}
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-muted transition hover:bg-card-soft hover:text-ink"
+          >
+            <FiCrosshair size={16} />
+          </button>
+        )}
         <button
           type="button"
           onClick={onClose}
@@ -210,10 +271,14 @@ export function MarkerPanel({
             <h4 className="mb-1.5 text-xs font-bold text-ink-muted">{g.label}</h4>
             {/* 三欄:道具(含圖) / 數量 / 機率。數字靠右對齊才好掃視。 */}
             <div className="overflow-hidden rounded-xl ring-1 ring-line">
+              {/* 第三欄一欄兩用:掉落物放機率、商店商品放售價,標題跟著內容走,
+                  不然商店的價格會被標成「機率」。 */}
               <div className="flex items-center gap-2 bg-card-soft px-3 py-1.5 text-[11px] font-semibold text-ink-muted">
                 <span className="flex-1">{t("道具")}</span>
                 <span className="w-16 text-right">{t("數量")}</span>
-                <span className="w-14 text-right">{t("機率")}</span>
+                <span className="w-14 text-right">
+                  {g.items.some((it) => typeof it.p === "number") ? t("售價") : t("機率")}
+                </span>
               </div>
               {g.items.map((it, i) => (
                 <div
@@ -239,7 +304,12 @@ export function MarkerPanel({
                     {it.q !== undefined && it.q !== null && String(it.q) !== "" ? `×${it.q}` : ""}
                   </span>
                   <span className="w-14 shrink-0 text-right text-ink-muted tabular-nums">
-                    {typeof it.r === "number" ? `${it.r >= 1 ? it.r.toFixed(1) : it.r.toFixed(2)}%` : ""}
+                    {/* 掉落物看機率、商店商品看售價,同一欄兩種用途 */}
+                    {typeof it.r === "number"
+                      ? `${it.r >= 1 ? it.r.toFixed(1) : it.r.toFixed(2)}%`
+                      : typeof it.p === "number"
+                        ? it.p.toLocaleString()
+                        : ""}
                   </span>
                 </div>
               ))}

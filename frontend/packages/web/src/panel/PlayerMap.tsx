@@ -1440,6 +1440,10 @@ export function PlayerMap({
             collected={collected}
             onToggleCollected={toggleCollected}
             onClose={() => setSel(null)}
+            onLocate={(x, y) => {
+              const map = mapRef.current;
+              if (map) map.setView([y, x], Math.max(map.getZoom(), map.getMaxZoom() - 2));
+            }}
           />
         )}
 
