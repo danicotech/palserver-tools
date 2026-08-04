@@ -5,11 +5,15 @@
 //   /api/map-detail-views?kind=<分類鍵>&id=<x,y>&v=<版本>&view=4
 //   id 是「地圖座標」四捨五入到整數(實測前端送 -1186,-829,該點世界座標是十萬等級)
 //
-// 實測 27 種 kind、4935 個座標之後的結論:
-//   有掉落表的只有 lootTower(106)與 treasureMap(42)。
-//   fishing / salvage / dungeon / supply / junk / enemyCamp 雖然回 200,
-//   但 pools 一律是空陣列 —— 參考站本身也沒有內容可顯示,所以不抓。
-//   bounty 回的 title 是 id 本身、drops 為空,同樣沒有可用資料。
+// 關鍵:id 有兩種形態,弄錯就一律回 detail:null(我為此白繞了好幾輪)——
+//   coord 型:lootTower / treasureMap  → id 是地圖座標四捨五入 "x,y"
+//   code  型:其餘                     → id 是 points.json 裡的子型別代號,
+//             例如 fieldBoss=BOSS_Horus_Water、predator=PREDATOR_SifuDog、
+//             bounty=BOSS_Male_NinjaElite、dungeon=Dungeon_Grass_01、
+//             supply=Volcano_Supply、fishing=FishingSpot_A_Ocean_Common
+//
+// code 型的好處是可以大量去重:區域頭目 90 個座標其實只有數十種帕魯,
+// 釣場 529 個座標只對應 108 種釣點,請求數因此少一個量級。
 // 其餘類別的詳細資料在別的端點:寶箱在 chest-views、筆記在 note-views、
 // 任務在 mission-views、事件在 incident-views、技能果實在 skill-fruit-views
 // (都由 tools/fetch-map-detail.mjs 處理);礦石/蛋/雕像本來就沒有掉落資料。
@@ -37,9 +41,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** points.json 的來源類別 → 面板 API 的 kind。
  *  鍵值是從 op.gg 側欄逐一勾選、記錄網址 ?filters= 得到的(見 keys.json)。 */
+/** points.json 類別 → { kind, id 來源 }。
+ *  idFrom = "coord" 用地圖座標;其餘是要拿哪個欄位當代號。 */
 const KIND = {
-  LootTower: "lootTower",
-  TreasureMap: "treasureMap",
+  LootTower: { kind: "lootTower", idFrom: "coord" },
+  TreasureMap: { kind: "treasureMap", idFrom: "coord" },
+  FieldBoss: { kind: "fieldBoss", idFrom: "name", level: true },
+  Predator: { kind: "predator", idFrom: "id", level: true },
+  Bounty: { kind: "bounty", idFrom: "name", level: true },
+  DungeonPortal: { kind: "dungeon", idFrom: "name" },
+  DungeonFixed: { kind: "dungeon", idFrom: "name" },
+  Supply: { kind: "supply", idFrom: "t" },
+  FishingSpot: { kind: "fishing", idFrom: "t" },
+  RareFishingSpot: { kind: "fishing", idFrom: "t" },
 };
 
 const headers = {
@@ -74,19 +88,26 @@ const savToMap = (sx, sy) => ({
 
 const pts = await getJson(`${BASE}/points.json?v=${V}`);
 
-/** 要抓的 (kind, id) 清單。 */
+/** 要抓的 (kind, id) 清單。code 型會大量重複,先去重再抓。 */
 const jobs = [];
 const seen = new Set();
-for (const [cat, kind] of Object.entries(KIND)) {
+for (const [cat, spec] of Object.entries(KIND)) {
   for (const p of pts[cat] ?? []) {
     const loc = p.l ?? p.loc;
     if (!Array.isArray(loc) || loc.length < 2) continue;
-    const { x, y } = savToMap(loc[0], loc[1]);
-    const id = `${Math.round(x)},${Math.round(y)}`;
-    const key = `${kind}:${id}`;
+    let id;
+    if (spec.idFrom === "coord") {
+      const { x, y } = savToMap(loc[0], loc[1]);
+      id = `${Math.round(x)},${Math.round(y)}`;
+    } else {
+      id = p[spec.idFrom];
+      if (typeof id !== "string" || !id) continue;
+    }
+    const lv = spec.level && typeof p.lv === "number" ? p.lv : undefined;
+    const key = `${spec.kind}:${id}:${lv ?? ""}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    jobs.push({ kind, id, lv: typeof p.lv === "number" ? p.lv : undefined });
+    jobs.push({ kind: spec.kind, id, lv });
   }
 }
 console.log(`要抓 ${jobs.length} 筆(${new Set(jobs.map((j) => j.kind)).size} 種 kind)`);

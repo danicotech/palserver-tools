@@ -1,0 +1,190 @@
+[
+ {
+  "kind": "cdn",
+  "url": "https://s-stats-platform-cdn.op.gg/palworld/meta/points.json?v=2026080312",
+  "label": "points.json",
+  "bytes": 720415,
+  "parse": true,
+  "keys": {
+   "AncientBeastBone": "[10]",
+   "AncientLava": "[10]",
+   "AncientWood": "[10]",
+   "AntiAir": "[11]",
+   "BeautifulFlower": "[27]",
+   "BossTower": "[13]",
+   "Bounty": "[33]",
+   "CaveEntrance": "[17]",
+   "Chestbox": "[1501]",
+   "Chromites": "[257]",
+   "CrudeOil": "[185]",
+   "DungeonFixed": "[18]",
+   "DungeonPortal": "[170]",
+   "Eggs": "[1816]",
+   "ElementTreasure": "[109]",
+   "EnemyCamp": "[47]",
+   "FastTravels": "[152]",
+   "FieldBoss": "[90]",
+   "FishingSpot": "[476]",
+   "HeatArea": "[20]",
+   "Home": "[32]",
+   "Incident": "[97]",
+   "Junk": "[670]",
+   "LifmunkEffigy": "[407]",
+   "LootTower": "[106]",
+   "NightStone": "[271]",
+   "Note": "[64]",
+   "OreCoal": "[520]",
+   "OreMetal": "[1438]",
+   "OreQuartz": "[523]",
+   "OreQuartzCluster": "[11]",
+   "OreSulfur": "[280]",
+   "Peach": "[22]",
+   "Predator": "[29]",
+   "Quest": "[166]",
+   "RainbowCrystal": "[349]",
+   "RareFishingSpot": "[130]",
+   "RegionName": "[121]",
+   "Respawn": "[8]",
+   "Salvage": "[2763]",
+   "SkillFruits": "[43]",
+   "SkyIslandOre": "[208]",
+   "SkylandWarpAltar": "[20]",
+   "Supply": "[480]",
+   "TreasureMap": "[42]",
+   "WatchTower": "[22]",
+   "WorldTreeOre": "[80]",
+   "NpcSalesPerson": "[8]",
+   "NpcPalDealer": "[10]",
+   "NpcDarkTrader": "[4]",
+   "NpcMedalTrader": "[4]",
+   "NpcPalDisplay": "[9]",
+   "NpcEmote": "[17]",
+   "NpcPresenter": "[1]",
+   "NpcBountyTrader": "[3]",
+   "NpcOther": "[83]"
+  },
+  "sample": "{\"AncientBeastBone\":[{\"l\":[149940.0,454560.0,-235.65468]},{\"l\":[156470.0,447170.0,-421.2535]},{\"l\":[158940.0,451450.0,-1163.9983]},{\"l\":[161950.0,457670.0,-558."
+ },
+ {
+  "kind": "api",
+  "url": "https://op.gg/zh-tw/palworld/api/incident-views?v=2026080312",
+  "label": "incident-views",
+  "bytes": 354222,
+  "parse": true,
+  "keys": {
+   "incidents": "[168]"
+  },
+  "sample": "{\"incidents\":[{\"id\":\"Salsman_VS_Poacher\",\"slug\":\"pal-merchant-vs-syndicate-thug\",\"canonicalSlug\":\"pal-merchant-vs-syndicate-thug\",\"slugAliases\":[\"comerciante-de"
+ },
+ {
+  "kind": "api",
+  "url": "https://op.gg/zh-tw/palworld/api/chest-views?v=2026080312",
+  "label": "chest-views",
+  "bytes": 353297,
+  "parse": true,
+  "keys": {
+   "chests": "[24]"
+  },
+  "sample": "{\"chests\":[{\"id\":\"grass1\",\"slug\":\"grassland-chest\",\"label\":\"草原寶箱\",\"locations\":173,\"mapLocations\":[{\"index\":1,\"x\":296,\"y\":-254,\"z\":-21,\"category\":\"chest\"},{\"inde"
+ },
+ {
+  "kind": "api",
+  "url": "https://op.gg/zh-tw/palworld/api/mission-views?v=2026080312",
+  "label": "mission-views",
+  "bytes": 100182,
+  "parse": true,
+  "keys": {
+   "missions": "[117]"
+  },
+  "sample": "{\"missions\":[{\"id\":\"Main_UnlockFastTravel\",\"slug\":\"activate-great-eagle-statue\",\"canonicalSlug\":\"activate-great-eagle-statue\",\"slugAliases\":[\"activa-la-estatua-"
+ },
+ {
+  "kind": "api",
+  "url": "https://op.gg/zh-tw/palworld/api/npc-detail-views?v=2026080312",
+  "label": "npc-detail-views",
+  "bytes": 99254,
+  "parse": true,
+  "keys": {
+   "details": "[19]"
+  },
+  "sample": "{\"details\":[{\"id\":\"pal-shop:Test_00\",\"label\":\"帕魯商人 · Lv. 10–15\",\"sections\":[{\"id\":\"pal-shop:Test_00:pals\",\"label\":\"Lv. 10–15\",\"note\":\"5/10\",\"pals\":[{\"id\":\"Chick"
+ },
+ {
+  "kind": "cdn",
+  "url": "https://s-stats-platform-cdn.op.gg/palworld/meta/fishing.json?v=2026080312",
+  "label": "fishing.json",
+  "bytes": 98962,
+  "parse": true,
+  "keys": {
+   "pools": "[18]",
+   "spots": "{108}"
+  },
+  "sample": "{\"pools\": [{\"region\": \"grass\", \"tier\": 1, \"lottery\": \"Grass01_Fishing\", \"grades\": [{\"grade\": 1, \"items\": [{\"id\": \"Ruby\", \"min\": 1, \"max\": 1, \"rate\": 27.66}, {\"i"
+ },
+ {
+  "kind": "cdn",
+  "url": "https://s-stats-platform-cdn.op.gg/palworld/meta/chest-loot.json?v=2026080312",
+  "label": "chest-loot.json",
+  "bytes": 96668,
+  "parse": true,
+  "keys": {
+   "chests": "[24]"
+  },
+  "sample": "{\"chests\":[{\"id\":\"grass1\",\"lottery\":\"Grass01\",\"locations\":173,\"variants\":[{\"weight\":1,\"element\":null,\"grades\":[{\"grade\":1,\"items\":[{\"id\":\"Money\",\"min\":700,\"max\""
+ },
+ {
+  "kind": "api",
+  "url": "https://op.gg/zh-tw/palworld/api/shop-views?v=2026080312",
+  "label": "shop-views",
+  "bytes": 79011,
+  "parse": true,
+  "keys": {
+   "shops": "[38]"
+  },
+  "sample": "{\"shops\":[{\"id\":\"Village_Shop_1\",\"label\":\"村莊商店 1\",\"currency\":\"Money\",\"currencyName\":\"金幣\",\"currencyIconName\":\"Money\",\"items\":[{\"name\":\"長耳髮箍設計圖1\",\"slug\":\"blueprin"
+ },
+ {
+  "kind": "api",
+  "url": "https://op.gg/zh-tw/palworld/api/skill-fruit-views?v=2026080312",
+  "label": "skill-fruit-views",
+  "bytes": 63183,
+  "parse": true,
+  "keys": {
+   "sources": "[9]"
+  },
+  "sample": "{\"sources\":[{\"id\":\"Fruits_Grass_1\",\"slug\":\"grassland\",\"label\":\"技能果實樹 (草原)\",\"locations\":10,\"mapLocations\":[{\"index\":1,\"x\":362,\"y\":-316,\"z\":-19},{\"index\":2,\"x\":-1"
+ },
+ {
+  "kind": "cdn",
+  "url": "https://s-stats-platform-cdn.op.gg/palworld/meta/egg-loot.json?v=2026080312",
+  "label": "egg-loot.json",
+  "bytes": 46359,
+  "parse": true,
+  "keys": {
+   "pools": "{14}"
+  },
+  "sample": "{\"pools\":{\"desert_01\":{\"cooldownMinutes\":180,\"entries\":[{\"pal\":\"CuteMole\",\"rate\":5.82,\"egg\":\"PalEgg_Earth_01\"},{\"pal\":\"DarkCrow\",\"rate\":5.82,\"egg\":\"PalEgg_Dark_"
+ },
+ {
+  "kind": "cdn",
+  "url": "https://s-stats-platform-cdn.op.gg/palworld/meta/shops.json?v=2026080312",
+  "label": "shops.json",
+  "bytes": 46179,
+  "parse": true,
+  "keys": {
+   "shops": "[38]"
+  },
+  "sample": "{\"shops\": [{\"id\": \"Village_Shop_1\", \"currency\": \"Money\", \"products\": [{\"id\": \"Blueprint_Head003_1\", \"num\": 1, \"stock\": 0, \"price\": 0, \"once\": false}, {\"id\": \"Bl"
+ },
+ {
+  "kind": "api",
+  "url": "https://op.gg/zh-tw/palworld/api/note-views?v=2026080312",
+  "label": "note-views",
+  "bytes": 40936,
+  "parse": true,
+  "keys": {
+   "notes": "[64]"
+  },
+  "sample": "{\"notes\":[{\"id\":\"Day-xx\",\"slug\":\"castaway-s-journal-day-xx\",\"category\":\"castaway\",\"order\":0,\"title\":\"漂流者的手記 Day -xx\",\"body\":\"這世界隱藏著某種秘密。\\n去年年底我出於研究目的重新檢視這個世界的地形"
+ }
+]
