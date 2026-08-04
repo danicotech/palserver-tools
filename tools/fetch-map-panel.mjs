@@ -46,14 +46,18 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const KIND = {
   LootTower: { kind: "lootTower", idFrom: "coord" },
   TreasureMap: { kind: "treasureMap", idFrom: "coord" },
-  FieldBoss: { kind: "fieldBoss", idFrom: "name", level: true },
-  Predator: { kind: "predator", idFrom: "id", level: true },
-  Bounty: { kind: "bounty", idFrom: "name", level: true },
-  DungeonPortal: { kind: "dungeon", idFrom: "name" },
-  DungeonFixed: { kind: "dungeon", idFrom: "name" },
-  Supply: { kind: "supply", idFrom: "t" },
-  FishingSpot: { kind: "fishing", idFrom: "t" },
-  RareFishingSpot: { kind: "fishing", idFrom: "t" },
+  FieldBoss: { kind: "fieldBoss", idFrom: ["id", "name"], level: true },
+  Predator: { kind: "predator", idFrom: ["id", "name"], level: true },
+  Bounty: { kind: "bounty", idFrom: ["id", "name"], level: true },
+  DungeonPortal: { kind: "dungeon", idFrom: ["id", "name"] },
+  DungeonFixed: { kind: "dungeon", idFrom: ["id", "name"] },
+  Supply: { kind: "supply", idFrom: ["t", "id"] },
+  FishingSpot: { kind: "fishing", idFrom: ["t", "id"] },
+  RareFishingSpot: { kind: "fishing", idFrom: ["t", "id"] },
+  // 這兩類的 id 要加類別前綴 —— 只送子型別(Rank2 / SnowBoss)會回 null,
+  // 送 Salvage_Rank2 / tower+SnowBoss 才有東西。前綴規則不一致,只能逐類指定。
+  Salvage: { kind: "salvage", idFrom: ["type"], prefix: "Salvage_" },
+  BossTower: { kind: "tower", idFrom: ["bossType"], strip: /^EPalBossType::/ },
 };
 
 const headers = {
@@ -100,8 +104,13 @@ for (const [cat, spec] of Object.entries(KIND)) {
       const { x, y } = savToMap(loc[0], loc[1]);
       id = `${Math.round(x)},${Math.round(y)}`;
     } else {
-      id = p[spec.idFrom];
-      if (typeof id !== "string" || !id) continue;
+      // 依序試候選欄位,取第一個有值的
+      for (const f of spec.idFrom) {
+        if (typeof p[f] === "string" && p[f]) { id = p[f]; break; }
+      }
+      if (!id) continue;
+      if (spec.strip) id = id.replace(spec.strip, "");
+      if (spec.prefix) id = spec.prefix + id;
     }
     const lv = spec.level && typeof p.lv === "number" ? p.lv : undefined;
     const key = `${spec.kind}:${id}:${lv ?? ""}`;
@@ -140,6 +149,14 @@ function compact(d) {
   const groups = [];
   if (Array.isArray(d.drops)) groups.push({ l: "掉落物", items: trimItems(d.drops) });
   for (const pool of d.pools ?? []) groups.push({ l: pool.label ?? "釣獲", items: trimItems(pool.items ?? pool.fishes) });
+  // 組織之塔用 sections:每段可能自帶標題與品項,也可能只是說明文字
+  for (const sec of d.sections ?? []) {
+    const items = trimItems(sec.items ?? sec.drops);
+    if (items.length) groups.push({ l: sec.label ?? sec.title ?? "", items });
+    else if (sec.note || sec.description) {
+      out.d = [out.d, String(sec.note ?? sec.description).replace(/<[^>]+>/g, "").trim()].filter(Boolean).join(String.fromCharCode(10)).slice(0, 600);
+    }
+  }
   if (Array.isArray(d.items)) groups.push({ l: "掉落物", items: trimItems(d.items) });
   for (const g of d.groups ?? []) groups.push({ l: g.label ?? g.element ?? "", items: trimItems(g.items) });
   for (const g of d.grades ?? []) groups.push({ l: `品階 ${g.grade}`, items: trimItems(g.items) });
