@@ -37,13 +37,36 @@ const near = (table, x, y) => {
 };
 
 const P = panel?.panels ?? {};
+
+/** 分類 → map-panel 的 kind;與前端 panelKindOf 一致。 */
+function panelKind(cat) {
+  if (cat.startsWith("FishingSpot") || cat.startsWith("RareFishingSpot")) return "fishing";
+  if (cat.startsWith("Eggs")) return "egg";
+  if (cat.startsWith("Salvage")) return "salvage";
+  if (cat.startsWith("Dungeon")) return "dungeon";
+  return {
+    LootTower: "lootTower", TreasureMap: "treasureMap", FieldBoss: "fieldBoss",
+    Predator: "predator", Bounty: "bounty", BossTower: "tower", Supply: "supply",
+  }[cat] ?? null;
+}
+/** 容差查表,但要求 kind 相符 —— 否則會把隔壁別類標記的資料算進來 */
+const nearKind = (table, x, y, kind) => {
+  if (!table) return false;
+  for (let dx = -1; dx <= 1; dx++)
+    for (let dy = -1; dy <= 1; dy++) {
+      const v = table[key(x + dx, y + dy)];
+      if (v && v[0] === kind) return true;
+    }
+  return false;
+};
 /** 這個分類的座標,有幾個能在某份詳細資料裡查到內容 */
 function contentCount(cat, rows) {
   let n = 0;
   for (const r of rows) {
     const [x, y, , , sub] = r;
-    if (cat === "LootTower" && near(P.lootTower, x, y)) n++;
-    else if (cat === "TreasureMap" && near(P.treasureMap, x, y)) n++;
+    // map-panel 用一份座標索引涵蓋十一種 kind(頭目/釣場/地牢/打撈/蛋…),
+    // 一律先查它;查不到才落到各自的專屬資料
+    if (panelKind(cat) && nearKind(panel?.at, x, y, panelKind(cat))) n++;
     else if ((cat.startsWith("Chestbox") || cat === "ElementTreasure") && near(detail?.chestAt, x, y)) n++;
     else if (cat === "SkillFruits" && near(detail?.fruitAt, x, y)) n++;
     else if (cat === "Incident" && near(detail?.incidentAt, x, y)) n++;
@@ -54,8 +77,16 @@ function contentCount(cat, rows) {
 }
 
 const SOURCE = {
-  LootTower: "map-detail-views",
-  TreasureMap: "map-detail-views",
+  LootTower: "map-panel",
+  TreasureMap: "map-panel",
+  FieldBoss: "map-panel",
+  Predator: "map-panel",
+  Bounty: "map-panel",
+  BossTower: "map-panel",
+  DungeonPortal: "map-panel",
+  Salvage_Rank1: "map-panel",
+  Salvage_Rank2: "map-panel",
+  Supply: "map-panel",
   ChestboxNormal: "chest-views",
   ChestboxOilrig: "chest-views",
   ChestboxOilrigGoal: "chest-views",

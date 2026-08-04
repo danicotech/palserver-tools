@@ -39,6 +39,9 @@ import {
   heatColor,
   type PalSpawns,
   loadMapDetail,
+  loadMapPanel,
+  panelKindOf,
+  type MapPanel,
   detailKey,
   INCIDENT_CATEGORY,
   NOTE_CATEGORY,
@@ -91,16 +94,18 @@ function itemLines(items: DetailItem[], max = 6): string {
  *  筆記與任務用 points.json 第 5 欄的 key 對(比座標穩,不受四捨五入影響)。 */
 function detailFor(
   d: MapDetail | null,
+  pn: MapPanel | null,
   category: string | undefined,
   sub: string | undefined,
   x: number,
   y: number,
 ): { name?: string; extra: string } {
-  if (!d || !category) return { extra: "" };
+  if (!category) return { extra: "" };
   const k = detailKey(x, y);
   /** 容差一格的查表。兩邊的座標各自四捨五入過(來源是整數,points.json 留一位小數),
    *  在整數邊界上會差一格。標記彼此至少隔幾十單位,往鄰格找不會認錯對象。 */
-  const near = <T,>(table: Record<string, T>): T | undefined => {
+  const near = <T,>(table: Record<string, T> | undefined): T | undefined => {
+    if (!table) return undefined;
     const exact = table[k];
     if (exact !== undefined) return exact;
     for (let dx = -1; dx <= 1; dx++) {
@@ -111,6 +116,37 @@ function detailFor(
     }
     return undefined;
   };
+
+  // 先查 map-panel(頭目 / 釣場 / 地牢 / 打撈 / 隕石 / 組織之塔 / 古代遺跡 / 藏寶圖)。
+  // 它是以座標索引的,涵蓋面最廣,查得到就直接用。
+  // 一定要比對 kind:查表有一格容差,不比對就會抓到隔壁別類標記的資料
+  const wantKind = panelKindOf(category);
+  const pk = pn && wantKind ? near(pn.at) : undefined;
+  if (pk && pk[0] === wantKind) {
+    const rec = pn?.panels?.[pk[0]]?.[pk[1]];
+    if (rec) {
+      // 提示只給摘要:藏寶圖有 5 組、每組三十幾項,全列出來會吐三十行蓋掉半張地圖。
+      // 完整掉落表留給右側面板。這裡只顯示第一組的前幾項,其餘用一行帶過。
+      const groups = (rec.g ?? []).filter((g) => g.items.length);
+      const first = groups[0];
+      const total = groups.reduce((a, g) => a + g.items.length, 0);
+      const shown = first ? Math.min(4, first.items.length) : 0;
+      const rest = total - shown;
+      // 只傳前 4 項進去,itemLines 就不會再自己加一行「…還有 N 項」——
+      // 否則會和下面的總計重複成兩行。
+      const secs = first
+        ? `<div style="margin-top:.25em;opacity:.85">${escapeHtml(first.l || "掉落物")}</div>` +
+          itemLines(first.items.slice(0, 4), 4) +
+          (rest > 0
+            ? `<div style="padding-left:.5em;opacity:.6">…共 ${total} 項${groups.length > 1 ? `、${groups.length} 組` : ""}</div>`
+            : "")
+        : "";
+      const desc = rec.d ? `<div style="opacity:.7;max-width:22em;white-space:normal">${escapeHtml(rec.d)}</div>` : "";
+      if (secs || desc || rec.t) return { name: rec.t, extra: desc + secs };
+    }
+  }
+
+  if (!d) return { extra: "" };
 
   if (category === "Incident") {
     const ids = near(d.incidentAt);
@@ -338,6 +374,8 @@ export function PlayerMap({
   /** 標記的名稱與掉落表。獨立一份是因為它比座標大得多(288 KB),
       而且缺了也只是提示少幾行,不該擋住地圖本身顯示。 */
   const [detail, setDetail] = useState<MapDetail | null>(null);
+  /** 頭目 / 釣場 / 地牢 / 打撈… 的掉落表。座標索引在 at,內容在 panels。 */
+  const [panel, setPanel] = useState<MapPanel | null>(null);
   const [onCats, setOnCats] = useState<Set<string>>(new Set());
   const [poiOpen, setPoiOpen] = useState(false);
   /** 收合起來的分組(預設全開) */
@@ -347,6 +385,7 @@ export function PlayerMap({
     let alive = true;
     void loadMapPoints().then((d) => alive && setPoi(d));
     void loadMapDetail().then((d) => alive && setDetail(d));
+    void loadMapPanel().then((d) => alive && setPanel(d));
     return () => {
       alive = false;
     };
@@ -655,7 +694,7 @@ export function PlayerMap({
           const head = `${cat?.label ?? name ?? ""}${seq ? ` ${seq}` : ""}`;
           // 專屬名稱優先用 map-detail 的(事件名、筆記標題、寶箱種類),
           // 沒有才退回 points.json 內建的名稱欄位。
-          const det = detailFor(detail, c.category, sub, c.x, c.y);
+          const det = detailFor(detail, panel, c.category, sub, c.x, c.y);
           const own = det.name ?? (name && name !== cat?.label ? name : "");
           m.bindTooltip(
             `<div style="font-weight:800">${escapeHtml(head)}</div>` +
@@ -704,7 +743,7 @@ export function PlayerMap({
       map.off("moveend zoomend", draw);
       layer.clearLayers();
     };
-  }, [poi, detail, onCats, world, tiles, collected, collectView]);
+  }, [poi, detail, panel, onCats, world, tiles, collected, collectView]);
 
   // ---- 帕魯出生地 ----
   // 一隻帕魯最多幾百個生成點,不需要分群,但仍只畫視野內的,縮到很小時才不會卡。

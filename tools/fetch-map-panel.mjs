@@ -95,6 +95,8 @@ const pts = await getJson(`${BASE}/points.json?v=${V}`);
 /** 要抓的 (kind, id) 清單。code 型會大量重複,先去重再抓。 */
 const jobs = [];
 const seen = new Set();
+/** 地圖座標 "x,y" → [kind, id];前端用座標就能查到對應的面板資料 */
+const atIndex = {};
 for (const [cat, spec] of Object.entries(KIND)) {
   for (const p of pts[cat] ?? []) {
     const loc = p.l ?? p.loc;
@@ -113,6 +115,8 @@ for (const [cat, spec] of Object.entries(KIND)) {
       if (spec.prefix) id = spec.prefix + id;
     }
     const lv = spec.level && typeof p.lv === "number" ? p.lv : undefined;
+    const m = savToMap(loc[0], loc[1]);
+    atIndex[`${Math.round(m.x)},${Math.round(m.y)}`] = [spec.kind, id];
     const key = `${spec.kind}:${id}:${lv ?? ""}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -137,6 +141,11 @@ const trimItems = (items) =>
       c: it.groupName || undefined,
     }));
 
+/** 組織之塔的難度標籤來源自己就不一致 —— 同一類裡混著「一般」與 "hard"。
+ *  這裡統一成中文,不然畫面上會一個中文一個英文。 */
+const SECTION_LABEL = { normal: "一般", hard: "困難", extreme: "極難", easy: "簡單" };
+const label = (v) => SECTION_LABEL[String(v ?? "").toLowerCase()] ?? v ?? "";
+
 function compact(d) {
   if (!d || typeof d !== "object") return null;
   const out = {};
@@ -152,7 +161,7 @@ function compact(d) {
   // 組織之塔用 sections:每段可能自帶標題與品項,也可能只是說明文字
   for (const sec of d.sections ?? []) {
     const items = trimItems(sec.items ?? sec.drops);
-    if (items.length) groups.push({ l: sec.label ?? sec.title ?? "", items });
+    if (items.length) groups.push({ l: label(sec.label ?? sec.title), items });
     else if (sec.note || sec.description) {
       out.d = [out.d, String(sec.note ?? sec.description).replace(/<[^>]+>/g, "").trim()].filter(Boolean).join(String.fromCharCode(10)).slice(0, 600);
     }
@@ -203,10 +212,12 @@ await Promise.all(
 const out = {
   _comment:
     "地圖標記的詳細面板資料(標題 / 副標 / 掉落表)。" +
-    "第一層是 kind(對應 op.gg 的篩選鍵),第二層是世界座標 \"x,y\"。" +
+    "panels 第一層是 kind,第二層是該類的資料鍵(座標或代號);" +
+    "at 是「地圖座標 → [kind, 資料鍵]」的索引,前端用座標查就好。" +
     "掉落項目 {n:名稱, i:圖示代號, q:數量, r:機率%}。由 tools/fetch-map-panel.mjs 產生。",
   version: V,
   panels: result,
+  at: atIndex,
 };
 fs.writeFileSync(OUT, JSON.stringify(out));
 console.log(`\n有內容 ${ok} / 空 ${empty} / 失敗 ${fail}`);

@@ -71,6 +71,45 @@ export interface MapDetail {
   npc: Record<string, string[]>;
 }
 
+/** 面板資料:標題 + 分組的掉落表。由 tools/fetch-map-panel.mjs 產生。 */
+export interface MapPanel {
+  version: string;
+  /** kind → 資料鍵 → 內容 */
+  panels: Record<string, Record<string, { t?: string; s?: string; d?: string; g?: { l: string; items: DetailItem[] }[] }>>;
+  /** 地圖座標 "x,y" → [kind, 資料鍵]。前端只有座標,靠這層轉成資料鍵。 */
+  at: Record<string, [string, string]>;
+}
+
+/** 分類 → 它在 map-panel 裡的 kind。
+ *  查表有一格容差,不比對 kind 的話會抓到隔壁「別類」標記的資料 ——
+ *  金屬礦石旁邊剛好有個打撈點,礦石就會顯示打撈的掉落表。 */
+export function panelKindOf(category: string): string | null {
+  if (category.startsWith("FishingSpot") || category.startsWith("RareFishingSpot")) return "fishing";
+  if (category.startsWith("Eggs")) return "egg";
+  if (category.startsWith("Salvage")) return "salvage";
+  if (category.startsWith("Dungeon")) return "dungeon";
+  const map: Record<string, string> = {
+    LootTower: "lootTower",
+    TreasureMap: "treasureMap",
+    FieldBoss: "fieldBoss",
+    Predator: "predator",
+    Bounty: "bounty",
+    BossTower: "tower",
+    Supply: "supply",
+  };
+  return map[category] ?? null;
+}
+
+let panelCache: Promise<MapPanel | null> | null = null;
+
+/** 載入面板資料;缺檔時回 null,標記照常顯示只是沒有掉落表。 */
+export function loadMapPanel(): Promise<MapPanel | null> {
+  panelCache ??= fetch("/game-data/map-panel.json")
+    .then((r) => (r.ok ? (r.json() as Promise<MapPanel>) : null))
+    .catch(() => null);
+  return panelCache;
+}
+
 let detailCache: Promise<MapDetail | null> | null = null;
 
 /** 載入詳細資料;缺檔時回 null,地圖照常運作只是提示裡沒有名稱與掉落表。 */

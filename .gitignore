@@ -64,3 +64,5 @@ frontend/packages/web/public/game-data/map-detail.json
 
 # 標記詳細面板資料;跑 node tools/fetch-map-panel.mjs 自行產生。
 frontend/packages/web/public/game-data/map-panel.json
+
+# 蛋與商店的面板資料;跑 node tools/fetch-egg-shop.mjs 一併產生。
