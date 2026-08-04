@@ -153,6 +153,44 @@ for (const d of npcViews.details ?? []) {
   });
 }
 
+// ── 其餘 NPC:帕魯評論家 / 愛的傳教士 / 帕魯馴養師 ──────────────────
+// 這三類的資料同樣在 npc-detail-views,但欄位名各不相同 ——
+// requests(要求帶哪隻帕魯來 → 給什麼獎勵)、rewards(依地區的獎勵池)、
+// achievements(達成幾次 → 給什麼)。我先前只看 pals / items 兩個欄位,
+// 三類全都被當成「沒有資料」。
+const rw = (list) =>
+  (list ?? []).slice(0, 30).map((r) => ({
+    n: r.name,
+    i: r.iconName,
+    q: r.minQty === r.maxQty ? r.minQty : `${r.minQty}–${r.maxQty}`,
+    r: r.rate,
+  }));
+
+const npcDetails = {};
+for (const d of npcViews.details ?? []) {
+  if (d.id?.startsWith("pal-shop:")) continue;
+  const groups = [];
+  for (const sec of d.sections ?? []) {
+    // 帕魯評論家:一筆委託 = 帶指定帕魯去 → 換一組獎勵
+    for (const q of sec.requests ?? []) {
+      groups.push({
+        l: `${sec.label} · ${q.pal?.name ?? ""}`,
+        pal: q.pal?.id,
+        items: rw(q.rewards),
+      });
+    }
+    // 帕魯馴養師:達成 N 次 → 獎勵
+    for (const a of sec.achievements ?? []) {
+      groups.push({ l: `${sec.label} ×${a.requireCount}`, items: rw(a.rewards) });
+    }
+    // 愛的傳教士:依地區的獎勵池
+    if (sec.rewards?.length && !sec.requests && !sec.achievements) {
+      groups.push({ l: sec.label, items: rw(sec.rewards) });
+    }
+  }
+  if (groups.length) npcDetails[d.id] = { l: d.label, g: groups.filter((g) => g.items.length) };
+}
+
 // ── 併入既有的 map-panel.json ────────────────────────────────────
 const prev = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : { panels: {}, at: {} };
 prev.panels.egg = eggPanels;
@@ -160,6 +198,15 @@ prev.at = { ...prev.at, ...at };
 prev.shops = shops;
 prev.shopByNpc = NPC_SHOP;
 prev.palShops = palShops;
+prev.npcDetails = npcDetails;
+// NPC 代號 → npcDetails 的鍵。評論家的 A_01…I_01 剛好對上 A1…I1;
+// 愛的傳教士 17 個點共用同一份(來源就叫 all,沒有分點的資料)。
+prev.npcDetailByCode = {
+  Presenter001: "achievement-reward:Presenter001",
+  ...Object.fromEntries(
+    "ABCDEFGHI".split("").map((c) => [`U_Reward_PalDisplay_${c}_01`, `pal-display:${c}1`]),
+  ),
+};
 // 代號前綴 → 帕魯商店 id;沒列到的用等級區間比對
 prev.palShopByCode = { PalDealer_Desert: "Desert_00", PalDealer_Volcano: "Volcano_00" };
 prev.version = V;
@@ -170,4 +217,5 @@ console.log(`
   商店     ${shops.length} 間、品項 ${shops.reduce((a, s) => a + s.items.length, 0)} 個
   接到 NPC ${Object.keys(NPC_SHOP).length} 家(其餘沒有固定座標或本來就沒商店)
   帕魯商店 ${palShops.length} 家、共 ${palShops.reduce((a, s) => a + s.items.length, 0)} 隻帕魯
+  其他 NPC ${Object.keys(npcDetails).length} 筆(評論家委託 / 傳教士獎勵 / 馴養師成就)
 已寫入 ${path.relative(ROOT, OUT)} — ${Math.round(fs.statSync(OUT).size / 1024)} KB`);

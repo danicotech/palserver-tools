@@ -189,6 +189,17 @@ function contentOf(
     }
   }
 
+  // 帕魯評論家 / 帕魯馴養師 / 愛的傳教士。
+  // 前兩者的代號能一對一對到(A_01→A1、Presenter001);
+  // 愛的傳教士來源只有一筆「all」,17 個點共用 —— 沒有分點的資料可用。
+  if (panel?.npcDetails) {
+    const key =
+      panel.npcDetailByCode?.[sel.sub] ??
+      (sel.cat === "NpcEmote" ? "emote-reward:all" : undefined);
+    const rec = key ? panel.npcDetails[key] : undefined;
+    for (const g of rec?.g ?? []) if (g.items.length) groups.push({ label: g.l, items: g.items });
+  }
+
   return { title, sub, desc, groups, img, bullets, steps, locs };
 }
 

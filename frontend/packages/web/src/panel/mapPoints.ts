@@ -101,6 +101,10 @@ export interface MapPanel {
   palShops?: { id: string; l: string; lv?: [number, number]; items: DetailItem[] }[];
   /** NPC 代號 → 帕魯商店 id(沒列到的用等級區間比對) */
   palShopByCode?: Record<string, string>;
+  /** 帕魯評論家委託 / 傳教士獎勵 / 馴養師成就 */
+  npcDetails?: Record<string, { l: string; g: { l: string; pal?: string; items: DetailItem[] }[] }>;
+  /** NPC 代號 → npcDetails 的鍵 */
+  npcDetailByCode?: Record<string, string>;
 }
 
 /** 分類 → 它在 map-panel 裡的 kind。
