@@ -69,3 +69,6 @@ frontend/packages/web/public/game-data/map-panel.json
 
 # 面板用的道具圖示;跑 node tools/fetch-item-icons.mjs 產生。
 frontend/packages/web/public/game-data/item-icons/
+
+# 筆記掃描圖;跑 node tools/fetch-item-icons.mjs 一併下載。
+frontend/packages/web/public/game-data/note-images/

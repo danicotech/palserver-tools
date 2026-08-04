@@ -160,8 +160,13 @@ function compact(d) {
   for (const pool of d.pools ?? []) groups.push({ l: pool.label ?? "釣獲", items: trimItems(pool.items ?? pool.fishes) });
   // 組織之塔用 sections:每段可能自帶標題與品項,也可能只是說明文字
   for (const sec of d.sections ?? []) {
+    const secLabel = label(sec.label ?? sec.title);
+    // characters 是塔主帶的帕魯陣容(含等級)—— 打塔前最想知道的就是這個,
+    // 先前只取 items 把它整段丟掉了。用 pal 欄位讓前端顯示帕魯頭像。
+    const chars = (sec.characters ?? []).map((c) => ({ n: c.name, pal: c.id, q: `Lv.${c.level}` }));
+    if (chars.length) groups.push({ l: `${secLabel} · ${"帕魯陣容"}`, items: chars });
     const items = trimItems(sec.items ?? sec.drops);
-    if (items.length) groups.push({ l: label(sec.label ?? sec.title), items });
+    if (items.length) groups.push({ l: secLabel, items });
     else if (sec.note || sec.description) {
       out.d = [out.d, String(sec.note ?? sec.description).replace(/<[^>]+>/g, "").trim()].filter(Boolean).join(String.fromCharCode(10)).slice(0, 600);
     }

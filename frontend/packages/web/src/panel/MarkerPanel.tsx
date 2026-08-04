@@ -73,7 +73,7 @@ const NPC_SHOP: Record<string, string> = {
  *  之後補了資料,面板會自己開始運作,不必記得回來改這裡。 */
 export function hasPanelContent(sel: Selection, detail: MapDetail | null, panel: MapPanel | null): boolean {
   const c = contentOf(sel, detail, panel);
-  return c.groups.length > 0 || !!c.desc;
+  return c.groups.length > 0 || !!c.desc || !!c.img || !!c.bullets?.length;
 }
 
 /** 蒐集這個標記能顯示的所有內容:副標題、說明、分組品項。 */
@@ -81,11 +81,13 @@ function contentOf(
   sel: Selection,
   detail: MapDetail | null,
   panel: MapPanel | null,
-): { title: string; sub?: string; desc?: string; groups: Group[] } {
+): { title: string; sub?: string; desc?: string; groups: Group[]; img?: string; bullets?: string[] } {
   const groups: Group[] = [];
   let title = sel.name || sel.label;
   let sub: string | undefined;
   let desc: string | undefined;
+  let img: string | undefined;
+  let bullets: string[] | undefined;
 
   // map-panel:頭目 / 釣場 / 地牢 / 打撈 / 隕石 / 組織之塔 / 古代遺跡 / 藏寶圖 / 蛋
   // 一定要比對 kind —— 查表有容差,不比對會抓到隔壁別類標記的資料。
@@ -144,6 +146,8 @@ function contentOf(
       title = n.t;
       sub = NOTE_CATEGORY[n.c] ?? n.c;
       desc = n.x;
+      // 筆記的掃描原圖 —— 這類收集品的樂趣有一半在「看到那張紙」
+      if (n.img) img = `/game-data/note-images/${n.img}.webp`;
     }
   }
 
@@ -165,7 +169,7 @@ function contentOf(
     }
   }
 
-  return { title, sub, desc, groups };
+  return { title, sub, desc, groups, img, bullets };
 }
 
 export function MarkerPanel({
@@ -196,7 +200,7 @@ export function MarkerPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const { title, sub, desc, groups } = contentOf(sel, detail, panel);
+  const { title, sub, desc, groups, img, bullets } = contentOf(sel, detail, panel);
   // 複製成遊戲內看得懂的格式,方便直接貼到 Discord 報座標
   const copy = () => {
     const text = `${title}  X ${Math.round(sel.x)} · Y ${Math.round(sel.y)} · Z ${sel.z}m`;
@@ -279,9 +283,38 @@ export function MarkerPanel({
           </button>
         )}
 
+        {/* 筆記原圖放在說明前面 —— 先看到那張紙,再讀謄錄的文字 */}
+        {img && (
+          <img
+            src={img}
+            alt=""
+            loading="lazy"
+            className="mb-3 w-full rounded-xl ring-1 ring-line"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        )}
+
         {desc && <p className="mb-3 text-[13px] leading-relaxed whitespace-pre-line text-ink-muted">{desc}</p>}
 
-        {groups.map((g, gi) => (
+        {bullets?.length && (
+          <ul className="mb-3 space-y-1">
+            {bullets.map((b, i) => (
+              <li key={i} className="flex gap-1.5 text-[13px] text-ink">
+                <span className="text-pal">・</span>
+                <span className="min-w-0 flex-1">{b}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {groups.map((g, gi) => {
+          // 帕魯陣容那組的第二欄放的是等級而不是數量,標題與格式都要跟著換 ——
+          // 不然會顯示成「×Lv.30」。
+          const isLineup = g.items.every((it) => it.pal && String(it.q ?? "").startsWith("Lv"));
+          const hasPrice = g.items.some((it) => typeof it.p === "number");
+          return (
           <section key={gi} className="mb-4">
             <h4 className="mb-1.5 text-xs font-bold text-ink-muted">{g.label}</h4>
             {/* 三欄:道具(含圖) / 數量 / 機率。數字靠右對齊才好掃視。 */}
@@ -289,11 +322,9 @@ export function MarkerPanel({
               {/* 第三欄一欄兩用:掉落物放機率、商店商品放售價,標題跟著內容走,
                   不然商店的價格會被標成「機率」。 */}
               <div className="flex items-center gap-2 bg-card-soft px-3 py-1.5 text-[11px] font-semibold text-ink-muted">
-                <span className="flex-1">{t("道具")}</span>
-                <span className="w-16 text-right">{t("數量")}</span>
-                <span className="w-14 text-right">
-                  {g.items.some((it) => typeof it.p === "number") ? t("售價") : t("機率")}
-                </span>
+                <span className="flex-1">{isLineup ? t("帕魯") : t("道具")}</span>
+                <span className="w-16 text-right">{isLineup ? t("等級") : t("數量")}</span>
+                <span className="w-14 text-right">{isLineup ? "" : hasPrice ? t("售價") : t("機率")}</span>
               </div>
               {g.items.map((it, i) => (
                 <div
@@ -318,7 +349,12 @@ export function MarkerPanel({
                   )}
                   <span className="min-w-0 flex-1 truncate">{it.n}</span>
                   <span className="w-16 shrink-0 text-right text-ink-muted tabular-nums">
-                    {it.q !== undefined && it.q !== null && String(it.q) !== "" ? `×${it.q}` : ""}
+                    {/* 等級本身就是完整寫法(Lv.80),不要再加上表示數量的 × */}
+                    {it.q === undefined || it.q === null || String(it.q) === ""
+                      ? ""
+                      : isLineup
+                        ? it.q
+                        : `×${it.q}`}
                   </span>
                   <span className="w-14 shrink-0 text-right text-ink-muted tabular-nums">
                     {/* 掉落物看機率、商店商品看售價,同一欄兩種用途 */}
@@ -332,7 +368,8 @@ export function MarkerPanel({
               ))}
             </div>
           </section>
-        ))}
+          );
+        })}
 
         {!groups.length && !desc && (
           <p className="py-6 text-center text-[13px] text-ink-muted">{t("這個標記沒有更多資料")}</p>

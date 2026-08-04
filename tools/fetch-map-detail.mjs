@@ -109,6 +109,9 @@ for (const n of noteRaw.notes) {
     notes[l.key] = {
       t: n.title,
       c: n.category,
+      // 筆記有掃描圖(textureName),面板可以直接把原件顯示出來 ——
+      // 這類收集品的樂趣有一半在「看到那張紙」,只給文字少了味道
+      img: n.textureName || undefined,
       x: (n.excerpt || n.body || "").replace(/<[^>]+>/g, "").trim().slice(0, 300) || undefined,
       z: l.z != null ? Math.round(l.z / 100) : undefined,
     };
@@ -121,8 +124,15 @@ for (const m of misRaw.missions) {
     missions[l.key] = {
       t: m.title,
       y: m.type,
-      x: (m.description || "").replace(/<[^>]+>/g, "").trim().slice(0, 300) || undefined,
+      // 說明不再截短:這是任務唯一的敘事內容,砍到 300 字會斷在句子中間
+      x: (m.description || "").replace(/<[^>]+>/g, "").trim() || undefined,
       exp: m.exp || undefined,
+      // 目標 / 獎勵 / 後續任務 —— 這三組先前整個沒收,面板只剩標題和一行說明
+      obj: m.objectives?.length ? m.objectives : undefined,
+      rw: m.rewards?.length
+        ? m.rewards.map((r) => ({ n: r.name, i: r.iconName, q: r.quantity }))
+        : undefined,
+      next: m.nextMissions?.length ? m.nextMissions.map((n) => n.title).filter(Boolean) : undefined,
       z: l.z != null ? Math.round(l.z / 100) : undefined,
     };
   }

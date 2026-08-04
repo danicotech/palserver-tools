@@ -17,10 +17,13 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WEB = path.join(ROOT, "frontend", "packages", "web", "public", "game-data");
 const DIR = path.join(WEB, "item-icons");
+const NOTE_DIR = path.join(WEB, "note-images");
 const BASE = "https://s-stats-platform-cdn.op.gg/palworld/images/icons";
+const NOTE_BASE = "https://s-stats-platform-cdn.op.gg/palworld/images/notes";
 const CONCURRENCY = 6;
 
 fs.mkdirSync(DIR, { recursive: true });
+fs.mkdirSync(NOTE_DIR, { recursive: true });
 
 /** 從已產生的資料檔裡掃出所有 iconName */
 const names = new Set();
@@ -76,6 +79,42 @@ await Promise.all(
     }
   }),
 );
+
+// ── 筆記的掃描圖 ──────────────────────────────────────────────
+// 和道具圖示不同目錄、不同來源,但抓法一樣:從資料檔掃出 textureName。
+const noteNames = new Set();
+{
+  const p = path.join(WEB, "map-detail.json");
+  if (fs.existsSync(p)) {
+    for (const m of fs.readFileSync(p, "utf8").matchAll(/"img":"([A-Za-z0-9_\-.]+)"/g)) noteNames.add(m[1]);
+  }
+}
+let nOk = 0;
+let nSkip = 0;
+if (noteNames.size) {
+  console.log(`
+筆記掃描圖 ${noteNames.size} 張`);
+  const list2 = [...noteNames];
+  let j = 0;
+  await Promise.all(
+    Array.from({ length: CONCURRENCY }, async () => {
+      while (j < list2.length) {
+        const name = list2[j++];
+        const out = path.join(NOTE_DIR, `${name}.webp`);
+        if (fs.existsSync(out) && fs.statSync(out).size > 200) { nSkip++; continue; }
+        try {
+          const r = await fetch(`${NOTE_BASE}/${name}.webp`, { headers });
+          if (!r.ok) continue;
+          const buf = Buffer.from(await r.arrayBuffer());
+          if (buf.length > 200) { fs.writeFileSync(out, buf); nOk++; }
+        } catch {
+          /* 抓不到就算了,面板會退回只顯示文字 */
+        }
+      }
+    }),
+  );
+  console.log(`  新下載 ${nOk}、已有 ${nSkip}`);
+}
 
 const total = fs.readdirSync(DIR).length;
 const kb = fs

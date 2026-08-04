@@ -58,8 +58,20 @@ export interface MapDetail {
   incidentAt: Record<string, number[]>;
   incidentZ: Record<string, number>;
   /** points.json 第 5 欄的 key → 筆記 */
-  notes: Record<string, { t: string; c: string; x?: string; z?: number }>;
-  missions: Record<string, { t: string; y: string; x?: string; exp?: number; z?: number }>;
+  notes: Record<string, { t: string; c: string; x?: string; img?: string; z?: number }>;
+  missions: Record<
+    string,
+    {
+      t: string;
+      y: string;
+      x?: string;
+      exp?: number;
+      /** 任務目標 */ obj?: string[];
+      /** 完成獎勵 */ rw?: DetailItem[];
+      /** 後續任務標題 */ next?: string[];
+      z?: number;
+    }
+  >;
   chests: Record<string, { l: string; g: { grade: number; items: DetailItem[] }[] }>;
   /** 地圖座標 "x,y" → 寶箱種類 */
   chestAt: Record<string, string>;
