@@ -61,3 +61,6 @@ frontend/packages/web/public/game-data/map-icons/
 frontend/packages/web/public/game-data/pal-spawns.json
 # 標記的名稱與掉落表;跑 node tools/fetch-map-detail.mjs 自行產生。
 frontend/packages/web/public/game-data/map-detail.json
+
+# 標記詳細面板資料;跑 node tools/fetch-map-panel.mjs 自行產生。
+frontend/packages/web/public/game-data/map-panel.json
