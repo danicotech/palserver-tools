@@ -663,13 +663,44 @@ export function PlayerMap({
               if (poi.categories[category]?.group !== "collect") return false;
               return collected.has(`${category}:${i}`) !== (collectView === "done");
             },
+        // 任務不合併:一個任務的六個階段常常落在同一點,
+        // 合併成「×3」之後放到最大也看不出是哪一個。
+        (category) => category === "Quest",
       );
+
+      // 完全重疊的標記(任務尤其多)攤成一個小圓,每一個都點得到。
+      // 不動資料只調畫出來的位置 —— 提示與面板顯示的仍是原始座標。
+      {
+        const bucket = new Map<string, typeof clusters>();
+        for (const c of clusters) {
+          if (c.n !== 1) continue;
+          const k = `${Math.round(c.x)},${Math.round(c.y)}`;
+          const arr = bucket.get(k);
+          if (arr) arr.push(c);
+          else bucket.set(k, [c]);
+        }
+        for (const arr of bucket.values()) {
+          if (arr.length < 2) continue;
+          // 半徑取「螢幕上約 16 像素」,放大時攤得開、縮小時不會亂飛
+          const r = 16 / Math.max(pixelsPerUnit, 1e-6);
+          arr.forEach((c, i) => {
+            const a = (i / arr.length) * Math.PI * 2;
+            c.ox = c.x;
+            c.oy = c.y;
+            c.x += Math.cos(a) * r;
+            c.y += Math.sin(a) * r;
+          });
+        }
+      }
       clusters.forEach((c) => {
         const cat = c.category ? poi.categories[c.category] : undefined;
         const color = cat ? (GROUP_COLOR[cat.group] ?? "#64748b") : "#64748b";
         const icon = cat ? (GROUP_ICON[cat.group] ?? "◆") : "◆";
         const sub = c.point?.[4];
         const zM = c.point?.[3] ?? 0;
+        // 攤開只影響畫在哪;查資料與顯示座標一律用原始值
+        const dx = c.ox ?? c.x;
+        const dy = c.oy ?? c.y;
         // 有對得上的遊戲物品圖就用圖,沒有才退回分組符號 —— 圖比符號好認得多
         const url = c.category ? iconFor(c.category, sub) : null;
         // NPC / 頭目是人物肖像,方形去背會很怪,套圓框才像頭像
@@ -711,9 +742,9 @@ export function PlayerMap({
             cat: c.category ?? "",
             label: cat?.label ?? "",
             idx: (c.index ?? 0) + 1,
-            x: c.x,
-            y: c.y,
-            z: detail?.incidentZ?.[detailKey(c.x, c.y)] ?? zM,
+            x: dx,
+            y: dy,
+            z: detail?.incidentZ?.[detailKey(dx, dy)] ?? zM,
             name: name ?? "",
             lv: lv ?? 0,
             sub: sub ?? "",
@@ -747,15 +778,15 @@ export function PlayerMap({
           const head = `${cat?.label ?? name ?? ""}${seq ? ` ${seq}` : ""}`;
           // 專屬名稱優先用 map-detail 的(事件名、筆記標題、寶箱種類),
           // 沒有才退回 points.json 內建的名稱欄位。
-          const det = detailFor(detail, panel, c.category, sub, c.x, c.y);
+          const det = detailFor(detail, panel, c.category, sub, dx, dy);
           const own = det.name ?? (name && name !== cat?.label ? name : "");
           m.bindTooltip(
             `<div style="font-weight:800">${escapeHtml(head)}</div>` +
               (own ? `<div>${escapeHtml(own)}</div>` : "") +
               (typeof lv === "number" && lv > 0 ? `<div>Lv ${lv}</div>` : "") +
               (typeof lv === "string" && lv ? `<div>${escapeHtml(lv)}</div>` : "") +
-              `<div>${t("座標")} X : ${Math.round(c.x)}, Y : ${Math.round(c.y)}, Z : ${
-                detail?.incidentZ?.[detailKey(c.x, c.y)] ?? zM
+              `<div>${t("座標")} X : ${Math.round(dx)}, Y : ${Math.round(dy)}, Z : ${
+                detail?.incidentZ?.[detailKey(dx, dy)] ?? zM
               }m</div>` +
               det.extra +
               // 雕像點一下就切換收集狀態,提示裡先講清楚,免得以為沒反應

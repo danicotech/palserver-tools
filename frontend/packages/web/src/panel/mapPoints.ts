@@ -171,9 +171,13 @@ export const NOTE_CATEGORY: Record<string, string> = {
 };
 
 export interface Cluster {
-  /** 群心(地圖座標) */
+  /** 群心(地圖座標)。完全重疊的標記會被攤開,所以這是「畫在哪」而不是「實際在哪」。 */
   x: number;
   y: number;
+  /** 原始群心。查資料與顯示座標一律用這個 —— 攤開只是為了讓每個點都點得到,
+   *  拿位移後的座標去查表會查不到(容差只有一格)。 */
+  ox?: number;
+  oy?: number;
   /** 這一群包含幾個點 */
   n: number;
   /** 這一群的代表點(n === 1 時就是唯一那個);用來取名稱與圖示 */
@@ -202,6 +206,9 @@ export function clusterPoints(
    *  只憑代表點無法決定整群的去留(縮小地圖後已收集篩選失效就是這個原因)。
    *  傳索引而不是先過濾陣列,是因為索引就是收集紀錄的身分,過濾會讓它整批位移。 */
   skip?: (category: string, index: number) => boolean,
+  /** 這些分類永遠不合併。任務的多個階段常常落在同一點,
+   *  合併成「×3」之後放到最大也分不出是哪一個階段。 */
+  noCluster?: (category: string) => boolean,
 ): Cluster[] {
   const cell = 44 / Math.max(pixelsPerUnit, 1e-6);
   const grid = new Map<
@@ -215,7 +222,10 @@ export function clusterPoints(
       if (skip?.(category, i)) continue;
       const [x, y] = p;
       if (x < bounds.minX || x > bounds.maxX || y < bounds.minY || y > bounds.maxY) continue;
-      const key = `${Math.floor(x / cell)}:${Math.floor(y / cell)}`;
+      // 不合併的分類:每個點各自成群,用索引當鍵保證不會撞在一起
+      const key = noCluster?.(category)
+        ? `${category}#${i}`
+        : `${Math.floor(x / cell)}:${Math.floor(y / cell)}`;
       const g = grid.get(key);
       if (g) {
         g.sx += x;
