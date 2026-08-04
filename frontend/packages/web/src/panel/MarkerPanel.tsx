@@ -175,6 +175,20 @@ function contentOf(
     }
   }
 
+  // 帕魯商人 / 黑市商人賣的是帕魯不是商品:先用代號分流(沙漠 / 火山各有專屬),
+  // 一般的再用「這位商人的等級落在哪一段」去比對 —— 資料裡的等級剛好都落在某段內。
+  if (panel?.palShops?.length && (sel.cat === "NpcPalDealer" || sel.cat === "NpcDarkTrader")) {
+    const byCode = panel.palShopByCode?.[sel.sub];
+    const lv = typeof sel.lv === "number" ? sel.lv : 0;
+    const prefix = sel.cat === "NpcDarkTrader" ? "Dark" : "Test";
+    const shop =
+      panel.palShops.find((x) => byCode && x.id === byCode) ??
+      panel.palShops.find((x) => x.id.startsWith(prefix) && x.lv && lv >= x.lv[0] && lv <= x.lv[1]);
+    if (shop?.items.length) {
+      groups.push({ label: shop.l, items: shop.items });
+    }
+  }
+
   return { title, sub, desc, groups, img, bullets, steps, locs };
 }
 

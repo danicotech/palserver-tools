@@ -97,6 +97,10 @@ export interface MapPanel {
   shops?: { id: string; l: string; cur?: string; items: DetailItem[] }[];
   /** NPC 代號(points.json 第 5 欄) → 商店 id */
   shopByNpc?: Record<string, string>;
+  /** 帕魯商人 / 黑市商人販售的帕魯 */
+  palShops?: { id: string; l: string; lv?: [number, number]; items: DetailItem[] }[];
+  /** NPC 代號 → 帕魯商店 id(沒列到的用等級區間比對) */
+  palShopByCode?: Record<string, string>;
 }
 
 /** 分類 → 它在 map-panel 裡的 kind。

@@ -61,6 +61,7 @@ const i18n = await getJson(`${CDN}/zh_TW/points_i18n.json?v=2026080312`);
 const eggs = await getJson(`${CDN}/egg-loot.json?v=2026080312`);
 const shopsRaw = await getJson(`${CDN}/shops.json?v=2026080312`);
 const shopViews = await getJson(`${API}/shop-views?v=${V}`);
+const npcViews = await getJson(`${API}/npc-detail-views?v=${V}`);
 
 /** 帕魯代號 → 中文名。points_i18n 的 pal 命名空間就有,不必另外抓。 */
 const palName = (k) => i18n.pal?.[k] ?? k;
@@ -130,12 +131,37 @@ const NPC_SHOP = {
   ArenaShop: "Arena_Shop_1",
 };
 
+// ── 帕魯商人 / 黑市商人 ────────────────────────────────────────────
+// 他們賣的是帕魯不是商品,所以不在 shops.json 裡,而在 npc-detail-views:
+//   pal-shop:Test_01(Lv. 5–10、47 隻)、pal-shop:Dark_03(Lv. 42–48、8 隻)…
+// 對應方式:先用代號分流(PalDealer_Desert → Desert_00),
+// 一般的 PalDealer / DarkTrader 再用「標記等級落在哪個區間」去比對 ——
+// 資料裡的等級剛好都落在某一段內(PalDealer Lv7→5–10、Lv11–14→10–15、
+// DarkTrader Lv43–47→42–48、DarkTrader03 Lv54→50–55)。
+const palShops = [];
+for (const d of npcViews.details ?? []) {
+  if (!d.id?.startsWith("pal-shop:")) continue;
+  const sec = d.sections?.[0];
+  const pals = sec?.pals ?? [];
+  if (!pals.length) continue;
+  const m = /(\d+)\s*[–-]\s*(\d+)/.exec(sec.label ?? "");
+  palShops.push({
+    id: d.id.slice("pal-shop:".length),
+    l: d.label,
+    lv: m ? [Number(m[1]), Number(m[2])] : undefined,
+    items: pals.map((x) => ({ n: x.name, pal: x.id, q: `Lv.${x.minLevel}–${x.maxLevel}` })),
+  });
+}
+
 // ── 併入既有的 map-panel.json ────────────────────────────────────
 const prev = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : { panels: {}, at: {} };
 prev.panels.egg = eggPanels;
 prev.at = { ...prev.at, ...at };
 prev.shops = shops;
 prev.shopByNpc = NPC_SHOP;
+prev.palShops = palShops;
+// 代號前綴 → 帕魯商店 id;沒列到的用等級區間比對
+prev.palShopByCode = { PalDealer_Desert: "Desert_00", PalDealer_Volcano: "Volcano_00" };
 prev.version = V;
 fs.writeFileSync(OUT, JSON.stringify(prev));
 
@@ -143,4 +169,5 @@ console.log(`
   蛋池     ${Object.keys(eggPanels).length} 種 → 對上 ${eggHit} 個座標(沒對上 ${eggMiss} 個)
   商店     ${shops.length} 間、品項 ${shops.reduce((a, s) => a + s.items.length, 0)} 個
   接到 NPC ${Object.keys(NPC_SHOP).length} 家(其餘沒有固定座標或本來就沒商店)
+  帕魯商店 ${palShops.length} 家、共 ${palShops.reduce((a, s) => a + s.items.length, 0)} 隻帕魯
 已寫入 ${path.relative(ROOT, OUT)} — ${Math.round(fs.statSync(OUT).size / 1024)} KB`);
