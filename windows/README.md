@@ -24,9 +24,10 @@
 
 網站在 <http://localhost:9000>,關掉用 `windows\native\stop-all.bat`。
 
-缺的工具(Python / Node.js / Go)會用 **winget 自動安裝**;
-裝完若出現「請重跑一次」就再雙擊一次 `install.bat`(新裝的工具需要新的環境變數)。
-沒有 winget 的話畫面會列出三個官方下載連結。
+缺的工具(Python / Node.js / Go)會自動下載**官方可攜版**到 `windows
+ative	ools\`:
+不動系統、不需要管理員權限、也不需要 winget,下載完當場接著跑 —— **乾淨電腦一鍵到底**,
+不會出現「裝完要關視窗重跑一次」。電腦本來就有裝的話直接沿用,不重複下載。
 
 > 只想要遊戲伺服器、不要網站?那就用 `install.bat` + `start.bat`(不加 `-all`)。
 
