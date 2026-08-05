@@ -1,19 +1,19 @@
 @echo off
-rem 首次啟動自動設定(Windows,純 batch —— 不需要 PowerShell):
-rem   沒有 .env / backend\config.json 時自動產生 —— 預設密碼 + 隨機 token,
-rem   並讓 config.json 的 rcon.password 與 .env 的 ADMIN_PASSWORD 保持一致。
-rem 已存在的檔案一律不動,重複執行安全。
+rem First-run setup (pure batch, no PowerShell needed):
+rem   creates .env and backend\config.json when missing, with default
+rem   passwords + a random API token, keeping config.json rcon.password in
+rem   sync with ADMIN_PASSWORD in .env. Existing files are never touched,
 rem
-rem 編碼:一律 chcp 65001,範本與輸出都是 UTF-8(無 BOM)。
-rem   .env 若帶 BOM,docker compose 會讀不到第一個變數,所以絕對不能加 BOM。
+rem   so re-running is safe. Encoding is always UTF-8 without BOM:
+rem   a BOM in .env makes docker compose miss the first variable.
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 cd /d "%~dp0.."
 set "ROOT=%CD%"
 
-rem ---------- 密碼與 API token ----------
-rem 兩組密碼用好記的固定預設值(自用/區網夠用;要開放外網請自行改 .env)。
-rem API token 是網站後台呼叫排程器用的,沒人會去記,所以仍隨機產生。
+rem ---------- passwords and API token ----------
+rem Both passwords use memorable defaults (fine for LAN/self-hosting; change
+rem them in .env before exposing to the internet). The API token is only used
 set "CHARS=abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 set "ADMINPW=654321"
 set "JOINPW=123456"
@@ -22,13 +22,13 @@ call :rand 32 APITOKEN
 rem ---------- .env ----------
 if exist "%ROOT%\.env" goto :hasenv
 if not exist "%ROOT%\.example.env" goto :noexample
-rem 注意:搜尋字串不能含「=」—— batch 的 !VAR:搜尋=取代! 會從第一個 = 拆開,
-rem 所以這裡只比對佔位符本身(CHANGE_ME_ADMIN),不要連 KEY= 一起寫進去。
+rem by the panel to call the scheduler, so it stays random.
+rem Note: the search string must not contain '=' -- batch !VAR:find=repl!
 call :render "%ROOT%\.example.env" "%ROOT%\.env" "CHANGE_ME_ADMIN" "!ADMINPW!" "CHANGE_ME_JOIN" "!JOINPW!"
 echo 已從 .example.env 產生 .env(使用預設密碼;所有伺服器參數都可在 .env 調整)
 goto :envdone
 :hasenv
-rem 已有 .env → 沿用裡面的 ADMIN_PASSWORD,讓 config.json 的 rcon 密碼跟它一致
+rem splits on the first '=', so match the placeholder alone (CHANGE_ME_ADMIN).
 for /f "usebackq tokens=1,* delims==" %%a in ("%ROOT%\.env") do (
   if /i "%%a"=="ADMIN_PASSWORD" set "ADMINPW=%%b"
   if /i "%%a"=="SERVER_PASSWORD" set "JOINPW=%%b"
@@ -62,8 +62,8 @@ exit /b 1
 echo [X] 找不到 backend\config.example.json,無法產生 config.json
 exit /b 1
 
-rem ---------- 子程序:產生隨機字串 ----------
-rem   %1 = 長度  %2 = 要寫回的變數名
+rem ---------- sub: random string ----------
+rem   %1 = length, %2 = variable name to write back
 :rand
 setlocal enabledelayedexpansion
 set "OUT="
@@ -75,10 +75,10 @@ for /l %%i in (1,1,%N%) do (
 endlocal & set "%~2=%OUT%"
 exit /b 0
 
-rem ---------- 子程序:套範本 ----------
-rem   %1 來源  %2 輸出  %3/%4 第一組取代  %5/%6 第二組取代
-rem   findstr /n 會在每行前加「行號:」,這樣空行才不會被 for /f 吃掉,
-rem   讀進來後再把行號前綴切掉。
+rem ---------- sub: render a template ----------
+rem   %1 src, %2 dst, %3/%4 first replacement, %5/%6 second replacement
+rem   findstr /n prefixes each line with 'N:' so blank lines survive for /f;
+rem   the prefix is stripped after reading.
 :render
 setlocal enabledelayedexpansion
 set "SRC=%~1"
@@ -87,7 +87,7 @@ set "DST=%~2"
   for /f "usebackq delims=" %%L in (`findstr /n "^" "%SRC%"`) do (
     set "LN=%%L"
     set "LN=!LN:*:=!"
-    rem 空行時 LN 會變成未定義,此時再做取代會留下字面值 —— 用 if defined 擋掉
+    rem On blank lines LN is undefined and replacement would emit literals; guard it.
     if defined LN if not "%~3"=="" set "LN=!LN:%~3=%~4!"
     if defined LN if not "%~5"=="" set "LN=!LN:%~5=%~6!"
     echo(!LN!

@@ -1,17 +1,17 @@
 @echo off
 chcp 65001 >nul
 setlocal
-rem 伺服器位置:新版 windows\native\server;舊版(1.0.2 以前)windows\server
+rem Server dir: windows\native\server now, windows\server before 1.0.2
 set "SRVDIR=%~dp0server"
 if not exist "%SRVDIR%\PalServer.exe" if exist "%~dp0..\server\PalServer.exe" set "SRVDIR=%~dp0..\server"
 cd /d "%SRVDIR%"
 title Palworld 伺服器(原生)
 
-rem 同 install.bat:一律單行 + goto,避免多行 if(...) 在非 CRLF 換行時被 cmd 拆爛。
+rem Same rule as install.bat: single-line + goto, never multi-line if(...).
 
 if not exist "PalServer.exe" goto :noserver
 
-rem 第一次啟動:用官方預設檔建立可編輯的設定檔(原生模式不會被覆寫,放心改)
+rem First run: seed an editable config from the official defaults. Native mode
 if exist "Pal\Saved\Config\WindowsServer\PalWorldSettings.ini" goto :run
 mkdir "Pal\Saved\Config\WindowsServer" 2>nul
 copy /y "DefaultPalWorldSettings.ini" "Pal\Saved\Config\WindowsServer\PalWorldSettings.ini" >nul

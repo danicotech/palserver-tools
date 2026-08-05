@@ -5,16 +5,16 @@ cd /d "%~dp0.."
 title 帕魯伺服器 - 一鍵啟動
 call "%~dp0native\ui.bat" "帕魯伺服器全家桶 · 一鍵啟動" "有 Docker 走 Docker 版;沒有就自動改用 SteamCMD 版"
 
-rem 一律單行 + goto:多行 if(...) 區塊只要換行不是 CRLF 就會被 cmd 拆爛。
-rem 流程:有 Docker 就跑 Docker 版(四個容器);
-rem       沒有 Docker 就自動改跑 SteamCMD 版全套(遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站)。
+rem Single-line + goto only: cmd mangles multi-line if(...) without CRLF.
+rem Flow: with Docker, run the Docker stack (four containers);
+rem without Docker, fall back to the SteamCMD stack (same four services).
 
 where docker >nul 2>nul
 if errorlevel 1 goto :nodocker
 
-rem 光有 docker 指令不代表引擎在跑。沒跑的話 docker compose 會噴
-rem 「open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified」
-rem 這種看不懂的訊息,所以這裡先確認引擎、必要時自動幫忙開起來。
+rem Having the docker command does not mean the engine runs. If it does not,
+rem docker compose prints 'open //./pipe/dockerDesktopLinuxEngine: The system
+rem cannot find the file specified', so check first and start it if needed.
 echo %T%[1/3]%R% 檢查 Docker 引擎...
 docker info >nul 2>nul
 if not errorlevel 1 goto :setup

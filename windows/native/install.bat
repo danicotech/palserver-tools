@@ -6,18 +6,18 @@ set "ROOT=%CD%"
 set "NATIVE=%ROOT%\windows\native"
 call "%NATIVE%\ui.bat"
 call "%NATIVE%\use-tools.bat"
-rem 伺服器安裝位置:預設 windows\native\server;
-rem 舊版(1.0.2 以前)裝在 windows\server,偵測到就沿用,免得重下 6 GB。
+rem Server install dir: windows\native\server by default; builds before
+rem 1.0.2 used windows\server -- reuse it if found, to avoid re-downloading 6 GB.
 set "SRVDIR=%NATIVE%\server"
 if exist "%ROOT%\windows\server\PalServer.exe" set "SRVDIR=%ROOT%\windows\server"
 title Palworld SteamCMD 版 - 一次裝好全部
 
-rem 這支把「跑起完整服務」需要的東西一次裝完:
-rem   SteamCMD → 遊戲伺服器 → Python(存檔解析)→ Node(建網站)→ Go(排程器)
-rem   → 建置查詢網站 → 編譯排程器 → 產生設定檔
-rem 缺 Python/Node/Go 會自動下載官方可攜版(見 get-tools.bat),乾淨電腦也能一鍵到底。
-rem 裝完直接雙擊 start-all.bat 就有完整服務。
-rem 一律單行 + goto:多行 if(...) 區塊只要換行不是 CRLF 就會被 cmd 拆爛。
+rem Installs everything needed to run the full stack, in one go:
+rem   SteamCMD -> game server -> Python (save parsing) -> Node (web build)
+rem   -> Go (scheduler) -> build the site -> compile scheduler -> write config.
+rem Missing Python/Node/Go are fetched as official portable builds
+rem (see get-tools.bat), so a clean machine works in one click too.
+rem Single-line commands + goto only: cmd mangles multi-line if(...) blocks
 
 call "%NATIVE%\ui.bat" "Palworld SteamCMD 版:一次裝好" "不需要 Docker;乾淨電腦也行,缺的工具會自動下載可攜版"
 if defined SKIP_STEAM goto :tools
@@ -30,7 +30,7 @@ if exist "%NATIVE%\steamcmd.zip" del /f /q "%NATIVE%\steamcmd.zip"
 curl -L --fail -o "%NATIVE%\steamcmd.zip" "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
 if errorlevel 1 goto :dlfail
 if not exist "%NATIVE%\steamcmd" mkdir "%NATIVE%\steamcmd"
-rem tar 是 Windows 10 1803 之後內建的,不需要 PowerShell
+rem whenever the line endings are not CRLF. tar ships with Win10 1803+.
 tar -xf "%NATIVE%\steamcmd.zip" -C "%NATIVE%\steamcmd"
 if errorlevel 1 goto :unzipfail
 del /f /q "%NATIVE%\steamcmd.zip"
@@ -40,14 +40,14 @@ goto :server
 :hassteamcmd
 echo       %G%已存在,略過%R%
 
-rem ---------- 2. 遊戲伺服器 ----------
+rem ---------- 2. game server ----------
 :server
 echo %T%[2/7]%R% Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)...
-rem 「Missing configuration」有三個已知成因,這裡逐次換招試:
-rem   1. SteamCMD 剛自我更新完 → 再跑一次
-rem   2. appcache 過期(自我更新後最常見)→ 刪掉再跑
-rem   3. 部分版本要 +login 在 +force_install_dir 之前 → 換參數順序
-rem 一律以 PalServer.exe 是否存在判定成功,steamcmd 的 exit code 不可靠。
+rem 'Missing configuration' has three known causes; try each in turn:
+rem   1. SteamCMD just self-updated -> simply run it again
+rem   2. stale appcache (most common after a self-update) -> delete and retry
+rem   3. some builds need +login before +force_install_dir -> swap the order
+rem Success is judged by PalServer.exe existing; steamcmd exit codes lie.
 set "SCMD=%NATIVE%\steamcmd\steamcmd.exe"
 
 echo       嘗試 1/4:標準安裝
@@ -78,24 +78,32 @@ if not exist "%SRVDIR%\PalServer.exe" goto :appfail
 echo       %G%完成%R%
 
 :tools
-rem ---------- 3. Python(存檔解析) ----------
+rem ---------- 3. Python (save parsing) ----------
 echo %T%[3/7]%R% Python(解析存檔,查詢網站的玩家/帕魯資料靠它)...
 call "%NATIVE%\get-tools.bat" python
 if errorlevel 1 goto :toolfail
 
 echo       安裝解析套件...
-python -m pip install --quiet --disable-pip-version-check -r "%ROOT%\backend\tools\palsave\requirements.txt"
+rem No --quiet on purpose: hiding pip's output leaves users with a bare
+rem 'install failed' and nothing to act on.
+call :pipinstall
+if not errorlevel 1 goto :pipok
+echo       %Y%系統的 Python 裝不起來,改用專案內建的 Python 再試一次...%R%
+call "%NATIVE%\get-tools.bat" python force
 if errorlevel 1 goto :pipfail
+call :pipinstall
+if errorlevel 1 goto :pipfail
+:pipok
 echo       %G%完成%R%
 
-rem ---------- 4. Node(建置查詢網站) ----------
+rem ---------- 4. Node (builds the web panel) ----------
 echo %T%[4/7]%R% Node.js(建置查詢網站)...
 call "%NATIVE%\get-tools.bat" node
 if errorlevel 1 goto :toolfail
 set "COREPACK_ENABLE_DOWNLOAD_PROMPT=0"
 set "COREPACK_ENABLE_STRICT=0"
-rem 這一行才是關鍵:pnpm 會照 package.json 的 packageManager 自我切換版本,
-rem 下載不到就報「Failed to switch pnpm to vX」。關掉它,用現有的 pnpm 建置即可。
+rem This line is the important one: pnpm self-switches to the version pinned
+rem in package.json and fails with 'Failed to switch pnpm to vX' when it
 set "npm_config_manage_package_manager_versions=false"
 call corepack enable >nul 2>nul
 pushd "%ROOT%\frontend"
@@ -110,13 +118,13 @@ if errorlevel 1 goto :pnpmfail
 :haspnpm
 echo       %G%完成%R%
 
-rem ---------- 5. Go(編譯排程器) ----------
+rem ---------- 5. Go (compiles the scheduler) ----------
 echo %T%[5/7]%R% Go(編譯排程器)...
 call "%NATIVE%\get-tools.bat" go
 if errorlevel 1 goto :toolfail
 echo       %G%完成%R%
 
-rem ---------- 6. 建置網站 + 編譯排程器 ----------
+rem ---------- 6. build the site + compile the scheduler ----------
 echo %T%[6/7]%R% 建置查詢網站與排程器(第一次比較久)...
 if exist "%ROOT%\frontend\packages\web\dist\index.html" goto :hasdist
 pushd "%ROOT%\frontend"
@@ -135,7 +143,7 @@ popd
 if not exist "%ROOT%\backend\palscheduler.exe" goto :buildfail
 echo       %G%完成%R%
 
-rem ---------- 7. 設定檔 ----------
+rem ---------- 7. config files ----------
 echo %T%[7/7]%R% 設定檔(預設密碼:管理 654321、進服 123456)...
 if exist "%ROOT%\backend\config.json" goto :hasconfig
 call "%ROOT%\windows\setup.bat"
@@ -180,9 +188,18 @@ echo       建議把整個專案搬到 C:\palserver 這種短路徑再重跑
 pause
 exit /b 1
 
+:pipinstall
+python -m pip install --disable-pip-version-check -r "%ROOT%\backend\tools\palsave\requirements.txt"
+exit /b %errorlevel%
+
 :pipfail
-echo %X%[X]%R% 解析套件安裝失敗。手動執行:
-echo       python -m pip install -r backend\tools\palsave\requirements.txt
+echo %X%[X]%R% 解析套件安裝失敗(真正的錯誤在上面幾行)。常見三個成因:
+echo    1. 專案路徑太長 —— Windows 預設上限 260 字元,套件會裝不進去。
+echo       解法:把整個資料夾搬到 C:\palserver 這種短路徑再重跑。
+echo    2. 沒有網路或被防火牆/公司代理擋住 pypi.org。
+echo    3. 系統的 Python 是 32 位元或 Microsoft Store 版,裝不了我們要的套件。
+echo       解法:本檔已自動改用內建 Python 重試過;若仍失敗請手動執行
+echo       windows\native\tools\python\python.exe -m pip install -r backend\tools\palsave\requirements.txt
 pause
 exit /b 1
 

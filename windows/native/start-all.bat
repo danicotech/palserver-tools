@@ -6,14 +6,14 @@ title 帕魯全套服務(SteamCMD 版,不用 Docker)
 call "%~dp0ui.bat" "帕魯全套服務 · SteamCMD 版" "遊戲伺服器 + 排程開關服 + 存檔解析 + 查詢網站"
 call "%~dp0use-tools.bat"
 
-rem 一次帶起「遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站」,完全不需要 Docker。
-rem   palsave    : Python 解析存檔(玩家/帕魯/公會資料的唯一來源)
-rem   scheduler  : Go 排程器,同時提供 http://localhost:9000 的查詢網站與 API
-rem   PalServer  : 由排程器依 backend\config.json 的時段表自動開關
-rem 一律單行 + goto,避免多行 if(...) 區塊在非 CRLF 換行時被 cmd 拆爛。
+rem Brings up game server + scheduler + save parser + web panel. No Docker.
+rem   palsave   : Python save parser (sole source of player/pal/guild data)
+rem   scheduler : Go service; also serves the site + API on localhost:9000
+rem   PalServer : started/stopped by the scheduler per backend\config.json
+rem Single-line + goto only: cmd mangles multi-line if(...) without CRLF.
 
 set "SERVER_DIR=%CD%\windows\native\server"
-rem 舊版(1.0.2 以前)裝在 windows\server,兩個位置都認
+rem Builds before 1.0.2 installed into windows\server; accept both paths.
 if not exist "%SERVER_DIR%\PalServer.exe" if exist "%CD%\windows\server\PalServer.exe" set "SERVER_DIR=%CD%\windows\server"
 set "PANEL_DIR=%CD%\frontend\packages\web\dist"
 set "CONFIG_PATH=%CD%\backend\config.json"
@@ -21,7 +21,7 @@ set "SAVE_ROOT=%SERVER_DIR%"
 set "PRESENCE_PATH=%CD%\backend\data\presence.json"
 set "ROSTER_PATH=%CD%\backend\data\roster.json"
 set "PALS_CACHE_PATH=%CD%\backend\data\pals-cache.json"
-rem Docker 版的預設位址是 compose 內網名稱,本機直跑要指回 127.0.0.1
+rem Docker defaults point at compose service names; running bare needs 127.0.0.1.
 set "PALSAVE_URL=http://127.0.0.1:8213"
 set "REST_HOST=127.0.0.1"
 set "RCON_HOST=127.0.0.1"
@@ -35,7 +35,7 @@ if errorlevel 1 goto :nopython
 python -c "import ooz, palworld_save_tools" >nul 2>nul
 if not errorlevel 1 goto :haspy
 echo     安裝解析套件(只有第一次需要)...
-python -m pip install --quiet --disable-pip-version-check -r "backend\tools\palsave\requirements.txt"
+python -m pip install --disable-pip-version-check -r "backend\tools\palsave\requirements.txt"
 if errorlevel 1 goto :pipfail
 :haspy
 
@@ -46,8 +46,8 @@ if errorlevel 1 goto :nodist
 echo     第一次要先建置網站(需要幾分鐘)...
 set "COREPACK_ENABLE_DOWNLOAD_PROMPT=0"
 set "COREPACK_ENABLE_STRICT=0"
-rem 這一行才是關鍵:pnpm 會照 package.json 的 packageManager 自我切換版本,
-rem 下載不到就報「Failed to switch pnpm to vX」。關掉它,用現有的 pnpm 建置即可。
+rem This line is the important one: pnpm self-switches to the pinned version
+rem and dies with 'Failed to switch pnpm to vX' if it cannot download it.
 set "npm_config_manage_package_manager_versions=false"
 pushd frontend
 call pnpm install --no-frozen-lockfile
@@ -67,7 +67,7 @@ popd
 if not exist "backend\palscheduler.exe" goto :gofail
 :hasbin
 
-rem 沒有設定檔就自己產生(不要叫使用者去手動跑指令)
+rem Generate the config ourselves; never ask the user to run a command.
 if exist "backend\config.json" goto :hascfg
 echo     第一次啟動,產生設定檔(預設密碼:管理 654321、進服 123456)...
 call "%CD%\windows\setup.bat"
@@ -76,9 +76,9 @@ if not exist "backend\config.json" goto :noconfig
 if not exist "backend\data" mkdir "backend\data"
 if not exist "backend\data\logs" mkdir "backend\data\logs"
 
-rem 官方 DefaultPalWorldSettings.ini 預設 RESTAPIEnabled=False、RCONEnabled=False,
-rem 照抄過去的話排程器完全沒辦法跟伺服器講話(廣播/踢人/關機/在線人數全部失敗)。
-rem 這裡在啟動前補開,順便把空的密碼填上 —— 使用者自己改過的值不會被動到。
+rem Official DefaultPalWorldSettings.ini ships with RESTAPIEnabled=False and
+rem RCONEnabled=False; copying that verbatim leaves the scheduler unable to
+rem talk to the server at all (broadcast/kick/shutdown/online count all fail).
 set "ADMINPW="
 set "JOINPW="
 if not exist ".env" goto :nodotenv
@@ -88,23 +88,23 @@ for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="SERVER_PA
 python "backend\tools\ensure_server_ini.py" "%SERVER_DIR%" "%ADMINPW%" "%JOINPW%"
 
 echo %T%[5/5]%R% 啟動服務...
-rem 先確認 9000 沒被佔住 —— 被佔住時排程器會立刻結束,
-rem 直接跑下去只會看到一閃而過的錯誤,不如先講清楚。
+rem Check port 9000 first: if it is taken the scheduler exits immediately and
+rem the user only sees an error flash by. Better to say it up front.
 curl -s -o nul -m 2 http://127.0.0.1:9000/healthz
 if not errorlevel 1 goto :occupied
 
-rem 存檔解析(palsave)改由排程器當子行程帶起來 —— Windows 用 CREATE_NO_WINDOW,
-rem 不會再彈一個黑視窗;它的訊息會直接印在下面這個視窗裡,並落地到 logs\palsave.log。
-rem 排程器本身也跑在「這個」視窗,不再另開 —— 從此全套服務只有一個視窗。
+rem palsave runs as a child of the scheduler using CREATE_NO_WINDOW, so no
+rem extra console pops up; its output lands here and in logs\palsave.log.
+rem The scheduler runs in THIS window too: one window for the whole stack.
 set "PALSAVE_SPAWN=1"
 set "PALSAVE_DIR=%CD%\backend\tools\palsave"
 set "PALSAVE_PORT=8213"
 set "PALSAVE_LOG=%CD%\backend\data\logs\palsave.log"
-rem 瀏覽器由排程器在「真的聽好了」之後自己開,腳本這邊不用瞎等幾秒
+rem The scheduler opens the browser once it is really listening; no blind sleep.
 set "PANEL_URL=http://localhost:9000"
 set "PANEL_OPEN_BROWSER=1"
 
-rem 埠與密碼都在 PalWorldSettings.ini 裡,直接讀出來給使用者看,不用自己去翻
+rem Ports and passwords live in PalWorldSettings.ini; show them so nobody digs.
 call "%~dp0show-info.bat" "%SERVER_DIR%" 9000
 title 帕魯服務執行中(關掉這個視窗＝停止服務)
 echo 這個視窗就是服務本身,下面是即時訊息(存檔解析與排程器都在裡面)。

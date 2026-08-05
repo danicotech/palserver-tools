@@ -1,8 +1,8 @@
 @echo off
-rem 顯示「現在到底用哪個埠、密碼是什麼」——純 batch,不需要 PowerShell。
-rem SteamCMD 版的伺服器設定在 PalWorldSettings.ini(不是 .env),
-rem 所有值都塞在同一行 OptionSettings 裡,這裡用字串切割取出來。
-rem   %1 = 伺服器資料夾  %2 = 查詢網站的埠(預設 9000)
+rem Show which ports and passwords are actually in effect. Pure batch.
+rem In SteamCMD mode the server settings live in PalWorldSettings.ini
+rem (not .env), all packed into one OptionSettings line; split it by hand.
+rem   %1 = server dir, %2 = web panel port (default 9000)
 chcp 65001 >nul
 setlocal enabledelayedexpansion
 set "SRVDIR=%~1"
@@ -10,7 +10,7 @@ set "PANELPORT=%~2"
 if "%PANELPORT%"=="" set "PANELPORT=9000"
 set "INI=%SRVDIR%\Pal\Saved\Config\WindowsServer\PalWorldSettings.ini"
 
-rem 區網 IP(找第一個非 127./169.254. 的 IPv4)
+rem LAN IP: first IPv4 that is not 127.* or 169.254.*
 set "LANIP=你的IP"
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4"') do (
   for /f "tokens=* delims= " %%b in ("%%a") do (
@@ -60,18 +60,18 @@ exit /b 0
 :noini
 goto :show
 
-rem ---------- 子程序:從 OptionSettings 取出某個鍵的值 ----------
-rem   %1 = 鍵名  %2 = 要寫回的變數名
+rem ---------- sub: read one key out of OptionSettings ----------
+rem   %1 = key name, %2 = variable name to write back
 :getval
 setlocal enabledelayedexpansion
 set "V="
 if not defined OPT goto :getdone
-rem 切掉「鍵名」之前的全部內容,剩下 =值,後面還有其他鍵
+rem Drop everything before the key, leaving =value plus the remaining keys
 set "REST=!OPT:*%~1=!"
 if "!REST!"=="!OPT!" goto :getdone
 set "REST=!REST:~1!"
 for /f "tokens=1 delims=,)" %%v in ("!REST!") do set "V=%%v"
-rem 去掉包住值的雙引號
+rem Strip the surrounding double quotes
 if defined V set V=!V:"=!
 :getdone
 endlocal & set "%~2=%V%"
