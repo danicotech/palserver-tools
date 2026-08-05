@@ -3,6 +3,8 @@ chcp 65001 >nul
 setlocal
 cd /d "%~dp0..\.."
 title 帕魯全套服務(SteamCMD 版,不用 Docker)
+rem 吃專案內建的可攜版工具(install.bat 下載的 Python/Node/Go);沒有就沒影響
+call "%~dp0use-tools.bat"
 
 rem 一次帶起「遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站」,完全不需要 Docker。
 rem   palsave    : Python 解析存檔(玩家/帕魯/公會資料的唯一來源)
@@ -137,8 +139,8 @@ exit /b 1
 
 :nopython
 echo [X] 找不到 Python。查詢網站的玩家/帕魯資料需要它來解析存檔。
-echo     安裝(勾選 Add python.exe to PATH):https://www.python.org/downloads/
-echo     或用 winget:winget install -e --id Python.Python.3.12
+echo     雙擊 windows\native\install.bat 就會自動下載可攜版(不動系統、免管理員權限),
+echo     裝好的部分會自動略過,不會重下 6 GB 的伺服器。
 pause
 exit /b 1
 
@@ -150,15 +152,13 @@ exit /b 1
 
 :nodist
 echo [X] 查詢網站尚未建置,而且找不到 pnpm 無法自動建。
-echo     裝好 Node.js(https://nodejs.org/)後執行:
-echo       corepack enable
-echo       cd frontend ^&^& pnpm install ^&^& pnpm build
+echo     雙擊 windows\native\install.bat 就會自動下載 Node 可攜版並建置網站。
 pause
 exit /b 1
 
 :nogo
 echo [X] 找不到排程器執行檔,也沒有 Go 可以編譯。
-echo     裝 Go(https://go.dev/dl/)後重跑本檔,或改用 Docker 版。
+echo     雙擊 windows\native\install.bat 就會自動下載 Go 可攜版並編譯。
 pause
 exit /b 1
 

@@ -72,3 +72,6 @@ frontend/packages/web/public/game-data/item-icons/
 
 # 筆記掃描圖;跑 node tools/fetch-item-icons.mjs 一併下載。
 frontend/packages/web/public/game-data/note-images/
+
+# install.bat 下載的可攜版 Python/Node/Go(每台機器自己抓,不進版控)
+windows/native/tools/
