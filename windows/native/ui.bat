@@ -1,9 +1,11 @@
 @echo off
-rem 共用配色與橫幅(Win10 之後的主控台都支援 VT 逃逸碼)。
-rem 用 prompt $E 技巧取得 ESC 字元;變數名刻意超短 —— 批次檔要守 8KB
-rem (理由見 get-tools.bat 開頭)。本檔不能 setlocal,呼叫者要拿到這些變數。
-rem 用法:call ui.bat            → 只設定顏色變數
-rem       call ui.bat "標題" "副標" → 順便印橫幅
+rem Shared colors + branded banner. Comments are ASCII on purpose:
+rem cmd parses batch files bytewise under codepage 65001 and can split
+rem lines that contain multi-byte characters, executing the tail as a
+rem garbage command. So this file stays ASCII, and all CJK banner text
+rem lives in banner-*.txt printed via "type" (never parsed by cmd).
+rem Usage: call ui.bat            -> set color vars only
+rem        call ui.bat "title" "subtitle" -> also print the banner
 for /f %%a in ('echo prompt $E^|cmd') do set "VT=%%a"
 set "T=%VT%[96m"
 set "H=%VT%[1;97m"
@@ -13,8 +15,8 @@ set "X=%VT%[91m"
 set "K=%VT%[1;93m"
 set "R=%VT%[0m"
 if "%~1"=="" exit /b 0
-echo %T%════════════════════════════════════════════════════════%R%
+type "%~dp0banner-head.txt"
 echo   %H%%~1%R%
 if not "%~2"=="" echo   %~2
-echo %T%════════════════════════════════════════════════════════%R%
+type "%~dp0banner-foot.txt"
 exit /b 0
