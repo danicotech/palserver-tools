@@ -3,7 +3,7 @@ chcp 65001 >nul
 setlocal
 cd /d "%~dp0..\.."
 title 帕魯全套服務(SteamCMD 版,不用 Docker)
-rem 吃專案內建的可攜版工具(install.bat 下載的 Python/Node/Go);沒有就沒影響
+call "%~dp0ui.bat" "帕魯全套服務 · SteamCMD 版" "遊戲伺服器 + 排程開關服 + 存檔解析 + 查詢網站"
 call "%~dp0use-tools.bat"
 
 rem 一次帶起「遊戲伺服器 + 排程器 + 存檔解析 + 查詢網站」,完全不需要 Docker。
@@ -26,10 +26,10 @@ set "PALSAVE_URL=http://127.0.0.1:8213"
 set "REST_HOST=127.0.0.1"
 set "RCON_HOST=127.0.0.1"
 
-echo [1/5] 檢查伺服器本體...
+echo %T%[1/5]%R% 檢查伺服器本體...
 if not exist "%SERVER_DIR%\PalServer.exe" goto :noserver
 
-echo [2/5] 檢查 Python(存檔解析用)...
+echo %T%[2/5]%R% 檢查 Python(存檔解析用)...
 where python >nul 2>nul
 if errorlevel 1 goto :nopython
 python -c "import ooz, palworld_save_tools" >nul 2>nul
@@ -39,7 +39,7 @@ python -m pip install --quiet --disable-pip-version-check -r "backend\tools\pals
 if errorlevel 1 goto :pipfail
 :haspy
 
-echo [3/5] 檢查查詢網站(dist)...
+echo %T%[3/5]%R% 檢查查詢網站(dist)...
 if exist "%PANEL_DIR%\index.html" goto :hasdist
 where pnpm >nul 2>nul
 if errorlevel 1 goto :nodist
@@ -56,7 +56,7 @@ popd
 if not exist "%PANEL_DIR%\index.html" goto :nodist
 :hasdist
 
-echo [4/5] 檢查排程器執行檔...
+echo %T%[4/5]%R% 檢查排程器執行檔...
 if exist "backend\palscheduler.exe" goto :hasbin
 where go >nul 2>nul
 if errorlevel 1 goto :nogo
@@ -87,7 +87,7 @@ for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="SERVER_PA
 :nodotenv
 python "backend\tools\ensure_server_ini.py" "%SERVER_DIR%" "%ADMINPW%" "%JOINPW%"
 
-echo [5/5] 啟動服務...
+echo %T%[5/5]%R% 啟動服務...
 rem 先確認 9000 沒被佔住 —— 被佔住時排程器會立刻結束,
 rem 直接跑下去只會看到一閃而過的錯誤,不如先講清楚。
 curl -s -o nul -m 2 http://127.0.0.1:9000/healthz
@@ -120,14 +120,14 @@ exit /b 0
 
 :occupied
 echo.
-echo [X] 127.0.0.1:9000 已經有服務在跑了,不重複啟動。可能是:
+echo %X%[X]%R% 127.0.0.1:9000 已經有服務在跑了,不重複啟動。可能是:
 echo     1. Docker 版正在跑,佔住同一個埠 —— 先跑 windows\stop.bat 把它停掉
 echo     2. 之前開的 start-all 還在 —— 找找工作列上有沒有另一個「帕魯服務執行中」視窗
 pause
 exit /b 1
 
 :noserver
-echo [X] 找不到伺服器本體(PalServer.exe)。已檢查這兩個位置:
+echo %X%[X]%R% 找不到伺服器本體(PalServer.exe)。已檢查這兩個位置:
 echo       %CD%\windows\native\server\
 echo       %CD%\windows\server\          (1.0.2 以前的舊位置)
 if exist "%CD%\windows\native\steamcmd\steamcmd.exe" echo.
@@ -138,36 +138,36 @@ pause
 exit /b 1
 
 :nopython
-echo [X] 找不到 Python。查詢網站的玩家/帕魯資料需要它來解析存檔。
+echo %X%[X]%R% 找不到 Python。查詢網站的玩家/帕魯資料需要它來解析存檔。
 echo     雙擊 windows\native\install.bat 就會自動下載可攜版(不動系統、免管理員權限),
 echo     裝好的部分會自動略過,不會重下 6 GB 的伺服器。
 pause
 exit /b 1
 
 :pipfail
-echo [X] 解析套件安裝失敗。手動執行:
+echo %X%[X]%R% 解析套件安裝失敗。手動執行:
 echo     python -m pip install -r backend\tools\palsave\requirements.txt
 pause
 exit /b 1
 
 :nodist
-echo [X] 查詢網站尚未建置,而且找不到 pnpm 無法自動建。
+echo %X%[X]%R% 查詢網站尚未建置,而且找不到 pnpm 無法自動建。
 echo     雙擊 windows\native\install.bat 就會自動下載 Node 可攜版並建置網站。
 pause
 exit /b 1
 
 :nogo
-echo [X] 找不到排程器執行檔,也沒有 Go 可以編譯。
+echo %X%[X]%R% 找不到排程器執行檔,也沒有 Go 可以編譯。
 echo     雙擊 windows\native\install.bat 就會自動下載 Go 可攜版並編譯。
 pause
 exit /b 1
 
 :gofail
-echo [X] 排程器編譯失敗,請截圖上方訊息求助。
+echo %X%[X]%R% 排程器編譯失敗,請截圖上方訊息求助。
 pause
 exit /b 1
 
 :noconfig
-echo [X] 產生 backend\config.json 失敗。手動執行 windows\setup.bat 後再試。
+echo %X%[X]%R% 產生 backend\config.json 失敗。手動執行 windows\setup.bat 後再試。
 pause
 exit /b 1

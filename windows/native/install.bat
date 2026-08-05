@@ -4,7 +4,7 @@ setlocal
 cd /d "%~dp0..\.."
 set "ROOT=%CD%"
 set "NATIVE=%ROOT%\windows\native"
-rem 可攜版工具目錄排進 PATH(見 use-tools.bat;還沒下載也無妨)
+call "%NATIVE%\ui.bat"
 call "%NATIVE%\use-tools.bat"
 rem 伺服器安裝位置:預設 windows\native\server;
 rem 舊版(1.0.2 以前)裝在 windows\server,偵測到就沿用,免得重下 6 GB。
@@ -19,14 +19,12 @@ rem 缺 Python/Node/Go 會自動下載官方可攜版(見 get-tools.bat),乾淨�
 rem 裝完直接雙擊 start-all.bat 就有完整服務。
 rem 一律單行 + goto:多行 if(...) 區塊只要換行不是 CRLF 就會被 cmd 拆爛。
 
-echo ==================================================
-echo   Palworld SteamCMD 版:一次裝好
-echo   不需要 Docker,裝完就能開服 + 開網站
-echo ==================================================
+call "%NATIVE%\ui.bat" "Palworld SteamCMD 版:一次裝好" "不需要 Docker;乾淨電腦也行,缺的工具會自動下載可攜版"
+if defined SKIP_STEAM goto :tools
 echo.
 
 rem ---------- 1. SteamCMD ----------
-echo [1/7] SteamCMD...
+echo %T%[1/7]%R% SteamCMD...
 if exist "%NATIVE%\steamcmd\steamcmd.exe" goto :hassteamcmd
 if exist "%NATIVE%\steamcmd.zip" del /f /q "%NATIVE%\steamcmd.zip"
 curl -L --fail -o "%NATIVE%\steamcmd.zip" "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip"
@@ -37,14 +35,14 @@ tar -xf "%NATIVE%\steamcmd.zip" -C "%NATIVE%\steamcmd"
 if errorlevel 1 goto :unzipfail
 del /f /q "%NATIVE%\steamcmd.zip"
 if not exist "%NATIVE%\steamcmd\steamcmd.exe" goto :unzipfail
-echo       已下載
+echo       %G%已下載%R%
 goto :server
 :hassteamcmd
-echo       已存在,略過
+echo       %G%已存在,略過%R%
 
 rem ---------- 2. 遊戲伺服器 ----------
 :server
-echo [2/7] Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)...
+echo %T%[2/7]%R% Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)...
 rem 「Missing configuration」有三個已知成因,這裡逐次換招試:
 rem   1. SteamCMD 剛自我更新完 → 再跑一次
 rem   2. appcache 過期(自我更新後最常見)→ 刪掉再跑
@@ -77,20 +75,21 @@ robocopy "%NATIVE%\steamcmd\steamapps\common\PalServer" "%SRVDIR%" /E /MOVE /NFL
 if not exist "%SRVDIR%\PalServer.exe" goto :appfail
 
 :appok
-echo       完成
+echo       %G%完成%R%
 
+:tools
 rem ---------- 3. Python(存檔解析) ----------
-echo [3/7] Python(解析存檔,查詢網站的玩家/帕魯資料靠它)...
+echo %T%[3/7]%R% Python(解析存檔,查詢網站的玩家/帕魯資料靠它)...
 call "%NATIVE%\get-tools.bat" python
 if errorlevel 1 goto :toolfail
 
 echo       安裝解析套件...
 python -m pip install --quiet --disable-pip-version-check -r "%ROOT%\backend\tools\palsave\requirements.txt"
 if errorlevel 1 goto :pipfail
-echo       完成
+echo       %G%完成%R%
 
 rem ---------- 4. Node(建置查詢網站) ----------
-echo [4/7] Node.js(建置查詢網站)...
+echo %T%[4/7]%R% Node.js(建置查詢網站)...
 call "%NATIVE%\get-tools.bat" node
 if errorlevel 1 goto :toolfail
 set "COREPACK_ENABLE_DOWNLOAD_PROMPT=0"
@@ -109,16 +108,16 @@ call npm install -g pnpm >nul 2>nul
 call pnpm --version >nul 2>nul
 if errorlevel 1 goto :pnpmfail
 :haspnpm
-echo       完成
+echo       %G%完成%R%
 
 rem ---------- 5. Go(編譯排程器) ----------
-echo [5/7] Go(編譯排程器)...
+echo %T%[5/7]%R% Go(編譯排程器)...
 call "%NATIVE%\get-tools.bat" go
 if errorlevel 1 goto :toolfail
-echo       完成
+echo       %G%完成%R%
 
 rem ---------- 6. 建置網站 + 編譯排程器 ----------
-echo [6/7] 建置查詢網站與排程器(第一次比較久)...
+echo %T%[6/7]%R% 建置查詢網站與排程器(第一次比較久)...
 if exist "%ROOT%\frontend\packages\web\dist\index.html" goto :hasdist
 pushd "%ROOT%\frontend"
 call pnpm install --no-frozen-lockfile
@@ -134,44 +133,44 @@ go build -o palscheduler.exe ./cmd/scheduler
 if errorlevel 1 popd & goto :buildfail
 popd
 if not exist "%ROOT%\backend\palscheduler.exe" goto :buildfail
-echo       完成
+echo       %G%完成%R%
 
 rem ---------- 7. 設定檔 ----------
-echo [7/7] 設定檔(預設密碼:管理 654321、進服 123456)...
+echo %T%[7/7]%R% 設定檔(預設密碼:管理 654321、進服 123456)...
 if exist "%ROOT%\backend\config.json" goto :hasconfig
 call "%ROOT%\windows\setup.bat"
 if errorlevel 1 goto :setupfail
 :hasconfig
 if not exist "%ROOT%\backend\data" mkdir "%ROOT%\backend\data"
-echo       完成
+echo       %G%完成%R%
 
 echo.
 echo ==================================================
-echo   全部裝好了!
-echo   接著雙擊 start-all.bat 啟動全部服務
-echo   網站: http://localhost:9000
-echo   遊戲: 你的IP:8211
+echo   %G%全部裝好了!%R%
+echo   接著雙擊 %K%start-all.bat%R% 啟動全部服務
+echo   網站: %K%http://localhost:9000%R%
+echo   遊戲: %K%你的IP:8211%R%
 echo ==================================================
 pause
 exit /b 0
 
 :toolfail
-echo [X] 工具安裝失敗(原因見上方訊息)。處理後重跑本檔,已完成的部分會自動略過。
+echo %X%[X]%R% 工具安裝失敗(原因見上方訊息)。處理後重跑本檔,已完成的部分會自動略過。
 pause
 exit /b 1
 
 :dlfail
-echo [X] SteamCMD 下載失敗,請檢查網路後重跑本檔。
+echo %X%[X]%R% SteamCMD 下載失敗,請檢查網路後重跑本檔。
 pause
 exit /b 1
 
 :unzipfail
-echo [X] SteamCMD 解壓縮失敗。刪掉 windows\native\steamcmd 與 steamcmd.zip 後重跑。
+echo %X%[X]%R% SteamCMD 解壓縮失敗。刪掉 windows\native\steamcmd 與 steamcmd.zip 後重跑。
 pause
 exit /b 1
 
 :appfail
-echo [X] 伺服器安裝失敗。常見原因:
+echo %X%[X]%R% 伺服器安裝失敗。常見原因:
 echo     - 磁碟空間不足(伺服器本體約 6 GB,請留 10 GB 以上)
 echo     - 網路中斷 / Steam CDN 不穩 —— 重跑本檔會從中斷處續傳
 echo     - Missing configuration:本檔已試過四種解法(重跑、清快取、換參數順序、
@@ -182,19 +181,19 @@ pause
 exit /b 1
 
 :pipfail
-echo [X] 解析套件安裝失敗。手動執行:
+echo %X%[X]%R% 解析套件安裝失敗。手動執行:
 echo       python -m pip install -r backend\tools\palsave\requirements.txt
 pause
 exit /b 1
 
 :pnpmfail
-echo [X] 裝不起 pnpm(建置查詢網站需要它)。手動執行後重跑本檔:
+echo %X%[X]%R% 裝不起 pnpm(建置查詢網站需要它)。手動執行後重跑本檔:
 echo       npm install -g pnpm
 pause
 exit /b 1
 
 :buildfail
-echo [X] 建置失敗。若訊息是「Failed to switch pnpm to vX」,執行下面兩行再重跑本檔:
+echo %X%[X]%R% 建置失敗。若訊息是「Failed to switch pnpm to vX」,執行下面兩行再重跑本檔:
 echo       npm install -g pnpm
 echo       set COREPACK_ENABLE_STRICT=0
 echo     其他錯誤請截圖上方訊息求助。
@@ -202,7 +201,7 @@ pause
 exit /b 1
 
 :setupfail
-echo [X] 設定檔產生失敗。手動執行:
+echo %X%[X]%R% 設定檔產生失敗。手動執行:
 echo       windows\setup.bat
 pause
 exit /b 1

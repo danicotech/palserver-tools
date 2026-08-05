@@ -75,3 +75,6 @@ frontend/packages/web/public/game-data/note-images/
 
 # install.bat 下載的可攜版 Python/Node/Go(每台機器自己抓,不進版控)
 windows/native/tools/
+
+# Linux 版可攜工具(get-tools.sh 下載)
+linux/native/tools/

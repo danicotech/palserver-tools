@@ -3,6 +3,7 @@ chcp 65001 >nul
 setlocal
 cd /d "%~dp0.."
 title 帕魯伺服器 - 一鍵啟動
+call "%~dp0native\ui.bat" "帕魯伺服器全家桶 · 一鍵啟動" "有 Docker 走 Docker 版;沒有就自動改用 SteamCMD 版"
 
 rem 一律單行 + goto:多行 if(...) 區塊只要換行不是 CRLF 就會被 cmd 拆爛。
 rem 流程:有 Docker 就跑 Docker 版(四個容器);
@@ -14,7 +15,7 @@ if errorlevel 1 goto :nodocker
 rem 光有 docker 指令不代表引擎在跑。沒跑的話 docker compose 會噴
 rem 「open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified」
 rem 這種看不懂的訊息,所以這裡先確認引擎、必要時自動幫忙開起來。
-echo [1/3] 檢查 Docker 引擎...
+echo %T%[1/3]%R% 檢查 Docker 引擎...
 docker info >nul 2>nul
 if not errorlevel 1 goto :setup
 
@@ -36,18 +37,18 @@ goto :waitdocker
 echo     Docker 引擎已就緒。
 
 :setup
-echo [2/3] 檢查設定檔(第一次會自動產生密碼)...
+echo %T%[2/3]%R% 檢查設定檔(第一次會自動產生密碼)...
 call "windows\setup.bat"
 if errorlevel 1 goto :setupfail
 
-echo [3/3] 啟動所有服務(第一次要下載映像,可能需要幾分鐘)...
+echo %T%[3/3]%R% 啟動所有服務(第一次要下載映像,可能需要幾分鐘)...
 docker compose up -d --build
 if errorlevel 1 goto :upfail
 
 echo.
-echo 完成!
-echo   查詢網站:http://localhost   (用瀏覽器打開)
-echo   遊戲連線:你的IP:8211
+echo %G%完成!%R%
+echo   查詢網站:%K%http://localhost%R%   (用瀏覽器打開)
+echo   遊戲連線:%K%你的IP:8211%R%
 echo.
 start http://localhost
 pause
@@ -75,7 +76,7 @@ exit /b 1
 
 :dockerdead
 echo.
-echo [X] 等了 2 分鐘,Docker 引擎還是沒起來。
+echo %X%[X]%R% 等了 2 分鐘,Docker 引擎還是沒起來。
 echo     可以先手動處理(打開 Docker Desktop、等鯨魚圖示不再轉動、必要時啟用 WSL 2 並重開機),
 echo     或者直接改用不需要 Docker 的 SteamCMD 版。
 echo.
@@ -90,13 +91,13 @@ pause
 exit /b 1
 
 :setupfail
-echo [X] 設定產生失敗
+echo %X%[X]%R% 設定產生失敗
 pause
 exit /b 1
 
 :upfail
 echo.
-echo [X] 啟動失敗。若訊息裡出現 "dockerDesktopLinuxEngine" 或 "cannot find the file specified",
+echo %X%[X]%R% 啟動失敗。若訊息裡出現 "dockerDesktopLinuxEngine" 或 "cannot find the file specified",
 echo     代表 Docker 引擎中途停了 —— 打開 Docker Desktop 等它就緒後重跑本檔。
 echo     其他錯誤請截圖上方訊息求助。
 pause

@@ -4,6 +4,8 @@
 #   沒有 Docker → 自動改用 SteamCMD 版:同樣四項服務,只是不透過容器
 set -e
 cd "$(dirname "$0")/.."
+. linux/native/ui.sh
+banner "Palworld 伺服器全家桶 · 一鍵啟動"        "有 Docker 走 Docker 版;沒有就自動改用 SteamCMD 版"
 
 fallback_native() {
   echo

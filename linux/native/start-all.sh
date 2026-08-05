@@ -6,6 +6,9 @@
 set -e
 cd "$(dirname "$0")/../.."
 ROOT="$PWD"
+# 配色與可攜版工具 PATH(install.sh 下載的 Node/Go;沒有就沒影響)
+. "$ROOT/linux/native/ui.sh"
+. "$ROOT/linux/native/use-tools.sh"
 
 # 舊版裝在 linux/server,兩個位置都認
 export SERVER_DIR="$ROOT/linux/native/server"
@@ -20,7 +23,7 @@ export PALSAVE_URL="http://127.0.0.1:8213"
 export REST_HOST="127.0.0.1"
 export RCON_HOST="127.0.0.1"
 
-echo "[1/5] 檢查伺服器本體..."
+step "[1/5]" "檢查伺服器本體..."
 [ -x "$SERVER_DIR/PalServer.sh" ] || {
   echo "[X] 找不到伺服器本體(PalServer.sh)。已檢查這兩個位置:"
   echo "      $ROOT/linux/native/server/"
@@ -31,9 +34,9 @@ echo "[1/5] 檢查伺服器本體..."
   exit 1
 }
 
-echo "[2/5] 檢查 Python(存檔解析用)..."
+step "[2/5]" "檢查 Python(存檔解析用)..."
 command -v python3 >/dev/null || {
-  echo "[X] 找不到 python3。Debian/Ubuntu:sudo apt install -y python3 python3-pip"
+  err "找不到 python3。執行 bash linux/native/install.sh 會自動補齊(已裝好的部分會略過)。"
   exit 1
 }
 python3 -c "import ooz, palworld_save_tools" >/dev/null 2>&1 || {
@@ -42,11 +45,11 @@ python3 -c "import ooz, palworld_save_tools" >/dev/null 2>&1 || {
     python3 -m pip install --quiet --break-system-packages -r backend/tools/palsave/requirements.txt
 }
 
-echo "[3/5] 檢查查詢網站(dist)..."
+step "[3/5]" "檢查查詢網站(dist)..."
 if [ ! -f "$PANEL_DIR/index.html" ]; then
   command -v pnpm >/dev/null || {
-    echo "[X] 查詢網站尚未建置,而且找不到 pnpm。裝好 Node.js 後執行:"
-    echo "      corepack enable && cd frontend && pnpm install && pnpm build"
+    err "查詢網站尚未建置,而且找不到 pnpm。"
+    err "執行 bash linux/native/install.sh 會自動下載 Node 可攜版並建置網站。"
     exit 1
   }
   export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
@@ -57,10 +60,11 @@ if [ ! -f "$PANEL_DIR/index.html" ]; then
   (cd frontend && pnpm install --no-frozen-lockfile && pnpm build)
 fi
 
-echo "[4/5] 檢查排程器執行檔..."
+step "[4/5]" "檢查排程器執行檔..."
 if [ ! -x backend/palscheduler ]; then
   command -v go >/dev/null || {
-    echo "[X] 找不到排程器執行檔,也沒有 Go 可以編譯。裝 Go(https://go.dev/dl/)後重跑。"
+    err "找不到排程器執行檔,也沒有 Go 可以編譯。"
+    err "執行 bash linux/native/install.sh 會自動下載 Go 可攜版並編譯。"
     exit 1
   }
   echo "    編譯排程器(只有第一次需要)..."
@@ -83,7 +87,7 @@ if [ -f .env ]; then
 fi
 python3 backend/tools/ensure_server_ini.py "$SERVER_DIR" "$ADMINPW" "$JOINPW" || true
 
-echo "[5/5] 啟動存檔解析與排程器..."
+step "[5/5]" "啟動存檔解析與排程器..."
 mkdir -p backend/data/logs
 ( cd backend/tools/palsave && SAVE_ROOT="$SERVER_DIR" PORT=8213 \
     nohup python3 server.py >"$ROOT/backend/data/logs/palsave.log" 2>&1 & echo $! >"$ROOT/backend/data/palsave.pid" )
