@@ -26,8 +26,11 @@ bash linux/native/start-all.sh   # 一次啟動:遊戲伺服器 + 排程開關�
 
 網站在 <http://localhost:9000>,關掉用 `bash linux/native/stop-all.sh`。
 
-`install.sh` 會自己認出 apt / dnf / pacman / zypper / apk 並安裝缺少的系統套件
-(需要 sudo);Go 若發行版版本太舊,依畫面提示到 <https://go.dev/dl/> 裝新版再重跑。
+`install.sh` 會自己認出 apt / dnf / pacman / zypper / apk 並補齊系統套件
+(root 直接跑、非 root 自動用 sudo),SteamCMD 需要的 32 位元函式庫也會自動裝。
+Node / Go 發行版版本常太舊(Debian 12 的 Go 是 1.19、Ubuntu 22.04 的 Node 是 12),
+會改抓**官方可攜版**到 `linux/native/tools/` —— 版本鎖定、不動系統,**乾淨機器一鍵到底**
+(已在全新的 Ubuntu 24.04 容器驗證:從零裝到網站建置完成,零手動介入)。
 
 > 只想要遊戲伺服器、不要網站?那就用 `install.sh` + `start.sh`(不加 `-all`)。
 
