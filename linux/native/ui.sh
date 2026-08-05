@@ -22,12 +22,11 @@ fi
 # 也不畫右側框線,理由相同。
 banner() {
   echo "${C_LINE}════════════════════════════════════════════════════════${C_RESET}"
-  echo "${C_KEY}"'      .-"""""-.'"${C_RESET}"
-  echo "${C_KEY}"'     / /\   /\ \'"${C_RESET}"
-  echo "${C_KEY}"'    |   o   o   |'"${C_RESET}      ${C_TITLE}狗仔狗仔 出品${C_RESET}"
-  echo "${C_KEY}"'    |     w     |'"${C_RESET}      ${C_LINE}────────────────────────────${C_RESET}"
-  echo "${C_KEY}"'  (\ \  ,___,  / /)'"${C_RESET}"
-  echo "${C_KEY}"'   \_) '"'"'-...-'"'"' (_/'"${C_RESET}"
+  echo "${C_KEY}"'    n______n'"${C_RESET}"
+  echo "${C_KEY}"'   ( o    o )'"${C_RESET}    ${C_TITLE}狗仔狗仔 出品${C_RESET}"
+  echo "${C_KEY}"'   (  (__)  )'"${C_RESET}    ${C_LINE}────────────────────────${C_RESET}"
+  echo "${C_KEY}"'    '"'"'-.__.-'"'"''"${C_RESET}"
+  echo "${C_KEY}"'        U'"${C_RESET}"
   echo "  ${C_TITLE}$1${C_RESET}"
   [ -n "${2:-}" ] && echo "  ${C_DIM}$2${C_RESET}"
   echo "${C_LINE}════════════════════════════════════════════════════════${C_RESET}"
