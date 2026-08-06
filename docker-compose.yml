@@ -29,6 +29,18 @@ services:
     restart: unless-stopped
     ports:
       - "80:80" # 本機瀏覽器開 http://localhost
+    volumes:
+      # 瀏覽統計落地。nginx 預設只把 log 寫進容器,容器一重建就全沒了
+      # (2026-08-04 重建前端時就這樣掉了六天紀錄)。掛出來之後重建也不影響。
+      # 只有 hits.log 會長大,一天幾十 KB,可以永久留著;用 tools/site-stats.ps1 看。
+      - ./logs/nginx:/var/log/nginx
+    logging:
+      # 完整存取紀錄(含圖磚、靜態檔)留在 docker logs 供除錯用,
+      # 給上限自動輪替,不會無限吃磁碟。
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       - scheduler
     networks:

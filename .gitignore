@@ -78,3 +78,6 @@ windows/native/tools/
 
 # Linux 版可攜工具(get-tools.sh 下載)
 linux/native/tools/
+
+# nginx 瀏覽統計(每台機器自己的流量紀錄,含訪客 IP,絕對不進版控)
+logs/

@@ -10,6 +10,34 @@
   <body>
     <div id="root" class="notranslate"></div>
     <script>
+      // 快取自救：如果瀏覽器（或任何中間層）沿用了舊的 index.html，它會指向已被
+      // 新版刪掉的 /assets/index-舊hash.js，主程式 404 → 整頁空白，使用者只能自己
+      // 想到按 F5。伺服器端已用 no-cache 治本（見 frontend/nginx.conf），這裡是保險：
+      // 攔到主程式載入失敗就自動重新整理一次，讓瀏覽器重新驗證 HTML。
+      // sessionStorage 記號避免「重整後還是壞的」變成無限迴圈。
+      (function () {
+        var KEY = "palserver:reloaded-stale-assets";
+        window.addEventListener(
+          "error",
+          function (e) {
+            var el = e.target;
+            if (!el || (el.tagName !== "SCRIPT" && el.tagName !== "LINK")) return;
+            if (sessionStorage.getItem(KEY)) return; // 已經救過一次，別再迴圈
+            sessionStorage.setItem(KEY, "1");
+            location.reload();
+          },
+          true // 資源載入錯誤不冒泡，只能在捕獲階段攔
+        );
+        // 確認 App 真的掛起來了才清記號，否則下次又壞掉時會失去自救機會。
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            var root = document.getElementById("root");
+            if (root && root.childElementCount > 0) sessionStorage.removeItem(KEY);
+          }, 3000);
+        });
+      })();
+    </script>
+    <script>
       // 防禦性 DOM patch：瀏覽器翻譯外掛（如沉浸式翻譯 / Google 翻譯）會替換文字節點，
       // 導致 React 更新時對「已被外掛移動的節點」呼叫 removeChild/insertBefore 而拋
       // NotFoundError，使整個畫面崩成白屏。這裡讓這兩個操作在節點已不在原位時安全略過。
