@@ -9,6 +9,9 @@ Go 無法直接解析 GVAS 存檔，故用這個 Python 服務處理。
     GET /players               玩家清單摘要（含 UUID，不含每隻帕魯）
     GET /pals                  全部玩家的帕魯（結構同 extract_pals 的輸出）
     GET /pals?uuid=<UUID|名稱>  只回符合的玩家（存檔內 UUID 或名稱，部分比對）
+    GET /source                存檔來源資訊（根目錄、目前世界、偵測到的世界清單）
+    POST /source               切換存檔根目錄，body: {"root": "<絕對路徑>"}
+    POST /analyze              解析「上傳上來的」存檔位元組（body 即整份 Level.sav）
 
 環境變數：
     SAVE_ROOT   存檔根目錄（掛入的 palworld-data），預設 /palworld
@@ -17,6 +20,7 @@ Go 無法直接解析 GVAS 存檔，故用這個 Python 服務處理。
 解析結果會依 Level.sav 的 mtime 快取，存檔沒變就不重解。
 """
 import os
+import sys
 import json
 import time
 import threading
@@ -24,8 +28,16 @@ import http.server
 import socketserver
 import urllib.parse
 
+# 先把「本檔所在目錄」放進 sys.path,再 import 同目錄的 extract_pals。
+# 一般 Python 會自動這麼做,但 Windows 的「可攜版」(embeddable) 因為帶了 ._pth,
+# 既不會加入腳本目錄、也會忽略 PYTHONPATH —— 少了這行就是
+# ModuleNotFoundError: No module named 'extract_pals',整個服務起不來。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from extract_pals import unknown_struct_summary, load_gvas, extract, load_maps, extract_guilds  # 匯入時會套用相容性 monkeypatch
 
+# SAVE_ROOT 可在執行期由 POST /source 切換(排程器的 /api/palsave/source 會轉過來),
+# 所以包成 list 當可變容器 —— 換路徑不必重開整個服務。
 SAVE_ROOT = os.environ.get("SAVE_ROOT", "/palworld")
 PORT = int(os.environ.get("PORT", "8213"))
 GUILDS_TTL = int(os.environ.get("GUILDS_TTL", "120"))  # 公會/據點重解最短間隔(秒)
@@ -66,13 +78,29 @@ def get_guilds(path, mtime):
         return _guilds["list"]
 
 
-def find_level_sav():
+def list_worlds(root=None):
+    """列出這個根目錄底下所有含 Level.sav 的世界資料夾(含大小與最後存檔時間)。
+    供面板顯示「你指到的路徑裡有哪些世界」,設定路徑時才不用盲猜。"""
+    root = root or SAVE_ROOT
+    base = os.path.join(root, "Pal", "Saved", "SaveGames", "0")
+    out = []
+    if os.path.isdir(base):
+        for d in sorted(os.listdir(base)):
+            p = os.path.join(base, d, "Level.sav")
+            if os.path.exists(p):
+                st = os.stat(p)
+                out.append({"id": d, "size": st.st_size, "mtime": int(st.st_mtime)})
+    return out
+
+
+def find_level_sav(root=None):
     """找出目前世界的 Level.sav：優先用 GameUserSettings 的 DedicatedServerName，
     否則挑最近修改的一份。"""
-    base = os.path.join(SAVE_ROOT, "Pal", "Saved", "SaveGames", "0")
+    SAVE_ROOT_LOCAL = root or SAVE_ROOT
+    base = os.path.join(SAVE_ROOT_LOCAL, "Pal", "Saved", "SaveGames", "0")
     # Docker 版是 LinuxServer，SteamCMD 版(Windows)是 WindowsServer —— 兩個都要找，
     # 只寫死 LinuxServer 的話 Windows 會退回「挑最新的 Level.sav」，多開一個世界就會選錯。
-    cfg = os.path.join(SAVE_ROOT, "Pal", "Saved", "Config")
+    cfg = os.path.join(SAVE_ROOT_LOCAL, "Pal", "Saved", "Config")
     wid = None
     for host in ("LinuxServer", "WindowsServer"):
         try:
@@ -125,6 +153,24 @@ def get_data():
         return data
 
 
+# 上傳上限。存檔通常幾十 MB;給到 512 MB 足夠涵蓋玩很久的大世界,
+# 又不至於讓人一次丟一個 GB 級檔案把記憶體吃光。
+MAX_UPLOAD = int(os.environ.get("PALSAVE_MAX_UPLOAD", str(512 * 1024 * 1024)))
+
+
+def source_info():
+    """目前的存檔來源:根目錄、選中的世界、以及這個根目錄底下有哪些世界。"""
+    info = {"root": SAVE_ROOT, "exists": os.path.isdir(SAVE_ROOT),
+            "worlds": list_worlds(), "current": "", "mtime": 0}
+    try:
+        path = find_level_sav()
+        info["current"] = os.path.relpath(path, SAVE_ROOT)
+        info["mtime"] = int(os.path.getmtime(path))
+    except Exception:
+        pass  # 還沒有任何存檔是正常狀態(伺服器剛裝好)
+    return info
+
+
 def filter_player(data, q):
     ql = q.lower()
     players = [p for p in data["players"]
@@ -145,6 +191,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/healthz":
             return self._json(200, {"ok": True})
+        if parsed.path == "/source":
+            return self._json(200, source_info())
         if parsed.path in ("/pals", "/players"):
             try:
                 data = get_data()
@@ -173,6 +221,84 @@ class Handler(http.server.BaseHTTPRequestHandler):
                                             for p in data["players"]]}
             return self._json(200, data)
         return self._json(404, {"ok": False, "error": "not found"})
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/source":
+            return self._set_source()
+        if parsed.path == "/analyze":
+            return self._analyze()
+        return self._json(404, {"ok": False, "error": "not found"})
+
+    def _read_body(self, limit):
+        n = int(self.headers.get("Content-Length") or 0)
+        if n <= 0:
+            raise ValueError("沒有收到內容")
+        if n > limit:
+            raise ValueError(f"檔案太大({n // 1048576} MB),上限 {limit // 1048576} MB")
+        buf = bytearray()
+        while len(buf) < n:
+            chunk = self.rfile.read(min(1 << 20, n - len(buf)))
+            if not chunk:
+                break
+            buf.extend(chunk)
+        return bytes(buf)
+
+    def _set_source(self):
+        """切換存檔根目錄。只接受「看起來真的是存檔目錄」的路徑 ——
+        這個端點能讀任意路徑,限制成必須含 Pal/Saved/SaveGames 可擋掉大部分誤用。"""
+        global SAVE_ROOT
+        try:
+            body = json.loads(self._read_body(64 * 1024) or b"{}")
+        except Exception as e:
+            return self._json(400, {"ok": False, "error": f"body 需為 JSON:{e}"})
+        root = (body.get("root") or "").strip()
+        if not root:
+            return self._json(400, {"ok": False, "error": "需要 root(存檔根目錄的絕對路徑)"})
+        root = os.path.abspath(os.path.expanduser(root))
+        if not os.path.isdir(root):
+            return self._json(400, {"ok": False, "error": f"找不到資料夾:{root}"})
+        if not os.path.isdir(os.path.join(root, "Pal", "Saved", "SaveGames")):
+            return self._json(400, {"ok": False, "error":
+                              "這個資料夾底下沒有 Pal/Saved/SaveGames,不像是存檔根目錄"})
+        with _lock:
+            SAVE_ROOT = root
+            _cache.update(path=None, mtime=None, data=None)  # 換世界了,舊快取一律作廢
+        with _guilds_lock:
+            _guilds.update(mtime=None, at=0.0, list=[], running=False)
+        print(f"[palsave] 存檔根目錄已切換:{root}", flush=True)
+        return self._json(200, {"ok": True, **source_info()})
+
+    def _analyze(self):
+        """解析上傳上來的存檔。整份存檔只存在記憶體,不寫任何檔案 ——
+        使用者是把自己的單機存檔丟上來看數據,不該在別人的機器上留下副本。"""
+        try:
+            blob = self._read_body(MAX_UPLOAD)
+        except ValueError as e:
+            return self._json(400, {"ok": False, "error": str(e)})
+        t0 = time.time()
+        try:
+            # 與定時解析互斥:extract_guilds 會暫時改動模組層狀態,不可交錯執行
+            with _lock:
+                data = extract(load_gvas(blob), MAPS)
+                try:
+                    guilds = extract_guilds(blob)
+                except Exception as e:
+                    print(f"[palsave] 上傳存檔的公會解析失敗(不影響主資料):{e}", flush=True)
+                    guilds = []
+        except ValueError as e:
+            return self._json(400, {"ok": False, "error": str(e)})
+        except Exception as e:
+            return self._json(500, {"ok": False, "error": f"解析失敗:{e}"})
+        uid2name = {p["uid"]: p["name"] for p in data.get("players", [])}
+        data = {**data, "source": "(上傳的存檔)", "uploaded": True, "guilds": [
+            {**gd, "players": [{"uid": u, "name": uid2name.get(u, "")}
+                               for u in gd["member_uids"]]}
+            for gd in guilds
+        ]}
+        print(f"[palsave] 上傳存檔解析完成:{len(data.get('players', []))} 位玩家、"
+              f"{data.get('total_pals', 0)} 隻帕魯,耗時 {time.time() - t0:.1f}s", flush=True)
+        return self._json(200, data)
 
     def log_message(self, fmt, *args):
         pass  # 靜音預設存取日誌

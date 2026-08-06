@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import type { JSX } from "react";
 import type { Pal, Player } from "./types";
-import { useDataset } from "./data";
+import { useDataset, isLocalMode, setLocalSave, restoreLocalSave, onLocalModeChange } from "./data";
+import { SaveUpload, SaveSourceBar } from "./SaveUpload";
 import { useThemeMode, useSystemDark, isDarkNow, setThemeMode } from "./theme";
 import { PalDetailModal } from "./PalDetailModal";
 import { Dashboard } from "./Dashboard";
@@ -59,6 +60,19 @@ export function PanelApp(): JSX.Element {
   const [selectedPal, setSelectedPal] = useState<{ pal: Pal; owner?: Player } | null>(null);
   const [speciesFilter, setSpeciesFilter] = useState<{ trait?: string; work?: string; query?: string; nonce: number } | null>(null);
   const [playerQuery, setPlayerQuery] = useState<{ q: string; pal?: string; nonce: number } | null>(null);
+
+  // 分頁瀏覽計數:SPA 切分頁不會產生新的頁面請求,nginx 只看得到進站那一次,
+  // 所以主動送一個信標讓它記進 hits.log(見 frontend/nginx.conf 的 /_hit)。
+  // 同源、純本機,不連任何外部統計服務;沒有這個端點時就靜靜地失敗,
+  // 離線自架或舊版 nginx 設定都不受影響。
+  useEffect(() => {
+    try {
+      navigator.sendBeacon(`/_hit?p=${tab}`);
+    } catch {
+      /* 統計是附加功能,壞了不能影響查詢 */
+    }
+  }, [tab]);
+
   const openPal = (pal: Pal, owner?: Player) => setSelectedPal({ pal, owner });
 
   // 從帕魯詳情跳轉到「帕魯查詢」並套用技能/工作篩選
@@ -73,6 +87,14 @@ export function PanelApp(): JSX.Element {
     setSelectedPal(null);
     setTab("player");
   };
+  // 上傳頁是「蓋在分頁之上」的一層,不佔用 TABS —— 它不是常用功能,
+  // 而且切進去之後所有分頁都改吃上傳的存檔,做成分頁反而讓人以為是並列的內容。
+  const [showUpload, setShowUpload] = useState(false);
+  const [localNonce, setLocalNonce] = useState(0);
+  useEffect(() => {
+    restoreLocalSave(); // 重新整理後接回上一份,不必重傳
+    return onLocalModeChange(() => setLocalNonce((n) => n + 1));
+  }, []);
   const { data, loading, refreshing, error, reload } = useDataset();
 
   // 漢堡選單開啟時鎖背景捲動、ESC 關閉。
@@ -107,6 +129,15 @@ export function PanelApp(): JSX.Element {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <SaveSourceBar
+              key={localNonce}
+              onOpenUpload={() => setShowUpload(true)}
+              onSwitchToServer={() => {
+                setLocalSave(null);
+                setShowUpload(false);
+                reload();
+              }}
+            />
             <HeaderAvatar players={data?.players ?? []} />
             <LangSelect />
             <RefreshControl loading={loading || refreshing} onReload={reload} />
@@ -183,10 +214,21 @@ export function PanelApp(): JSX.Element {
           </div>
         )}
 
+        {/* 上傳自己的存檔:蓋在分頁內容之上。成功後 setLocalSave 會讓
+            所有分頁自動改吃這份資料,所以這裡只要關掉這一層即可。 */}
+        {showUpload && (
+          <SaveUpload
+            onLoaded={() => {
+              setShowUpload(false);
+              reload();
+            }}
+          />
+        )}
+
         {/* 內容(「配種表」查靜態配方資料,不依賴存檔資料集,載入中/失敗都照常顯示) */}
-        {tab === "breeding" && <BreedingQuery dataset={data} />}
-        {tab !== "breeding" && loading && <ContentSkeleton />}
-        {tab !== "breeding" && error && (
+        {!showUpload && tab === "breeding" && <BreedingQuery dataset={data} />}
+        {!showUpload && tab !== "breeding" && loading && <ContentSkeleton />}
+        {!showUpload && tab !== "breeding" && error && (
           <div className="rounded-cute bg-berry/15 px-4 py-3 text-berry ring-1 ring-berry/30">
             {error}
             <button onClick={reload} className="ml-2 underline">
@@ -197,9 +239,12 @@ export function PanelApp(): JSX.Element {
         {/* 全新伺服器：存檔裡一個玩家都沒有。各分頁的統計都假設「至少有一位玩家」
             （排行榜要取第一名當長條基準…），直接進去會崩。在這裡一次攔下來。
             「配種表」不吃存檔資料（查的是靜態配方），上面已經先渲染過，不受影響。 */}
-        {!error && data && data.players.length === 0 && tab !== "breeding" && <NoDataYet onRetry={reload} />}
-        {!error && data && data.players.length > 0 && (
-          <>
+        {!showUpload && !error && data && data.players.length === 0 && tab !== "breeding" && <NoDataYet onRetry={reload} />}
+        {/* key 綁 localNonce:切換「伺服器 ↔ 上傳的存檔」時強制整段重掛載。
+            分頁元件裡有 useEffect(..., []) 在抓伺服器即時資料(在線人數、FPS、
+            上線時數),不重掛載的話切回伺服器後那些卡片不會回來。 */}
+        {!showUpload && !error && data && data.players.length > 0 && (
+          <div key={`mode-${localNonce}`}>
             {tab === "dashboard" && <Dashboard data={data} onPalClick={openPal} onOwnerPlayerClick={jumpToPlayer} />}
             {tab === "player" && (
               <PlayerQuery
@@ -223,7 +268,7 @@ export function PanelApp(): JSX.Element {
             {tab === "boss" && <BossProgress data={data} onOwnerPlayerClick={jumpToPlayer} />}
             {tab === "ranking" && <Rankings data={data} onPalClick={openPal} />}
             {tab === "online" && <OnlineAnalysis data={data} />}
-          </>
+          </div>
         )}
 
         <SiteFooter />

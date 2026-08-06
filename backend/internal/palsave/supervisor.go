@@ -37,7 +37,10 @@ type Supervisor struct {
 }
 
 // NewFromEnv 依環境變數決定是否啟用；未啟用時回 nil（呼叫端直接略過）。
-func NewFromEnv() *Supervisor {
+//
+// saveRoot 若非空就蓋過環境變數 SAVE_ROOT —— 讓 config.json 的 palsave.saveRoot
+// 成為單一權威來源,不必為了換一份存檔去改批次檔或 compose。
+func NewFromEnv(saveRoot ...string) *Supervisor {
 	if os.Getenv("PALSAVE_SPAWN") != "1" {
 		return nil
 	}
@@ -57,10 +60,14 @@ func NewFromEnv() *Supervisor {
 	if port == "" {
 		port = "8213"
 	}
+	root := os.Getenv("SAVE_ROOT")
+	if len(saveRoot) > 0 && saveRoot[0] != "" {
+		root = saveRoot[0]
+	}
 	return &Supervisor{
 		python:   python,
 		dir:      dir,
-		saveRoot: os.Getenv("SAVE_ROOT"),
+		saveRoot: root,
 		port:     port,
 		logPath:  os.Getenv("PALSAVE_LOG"),
 	}
@@ -111,7 +118,10 @@ func (s *Supervisor) launch() (*exec.Cmd, chan error, error) {
 	cmd.Env = append(os.Environ(), "SAVE_ROOT="+s.saveRoot, "PORT="+s.port,
 		// Python 預設會把 stdout 緩衝起來，透過 pipe 讀時訊息會卡住不出現，
 		// 讓人以為解析當掉了。關掉緩衝才能即時看到「解析完成:N 位玩家」。
-		"PYTHONUNBUFFERED=1", "PYTHONIOENCODING=utf-8")
+		"PYTHONUNBUFFERED=1", "PYTHONIOENCODING=utf-8",
+		// 一般 Python 用得到；可攜版(embeddable)因為帶 ._pth 會忽略它，
+		// 所以 server.py 另外自己把腳本目錄插進 sys.path（兩邊都保險）。
+		"PYTHONPATH="+s.dir)
 	hideWindow(cmd) // Windows：不要再彈一個黑視窗出來
 
 	// 自己開 pipe 而不用 cmd.StdoutPipe()：後者的 Wait() 會在看到行程結束時

@@ -7,7 +7,7 @@ import {
 } from "react-icons/fi";
 import type { Pal, Player } from "./types";
 import type { Dataset, OwnedPal } from "./data";
-import { isPerfectIv } from "./data";
+import { isPerfectIv, isLocalMode } from "./data";
 import { bossKey, getBossRoster, palInfo, palName, localizedName, paldexId, paldexTotal, randomPalAvatar } from "./paldex";
 import { useRoster } from "./rosterCtx";
 import { getMetrics, getStatus, getPresence, type ServerMetrics, type ServerStatus, type PresenceData } from "./api";
@@ -259,6 +259,16 @@ export function Dashboard({
 
   useEffect(() => {
     let alive = true;
+    // 看「自己上傳的存檔」時不去問伺服器即時狀態。
+    // 在線人數、FPS、遊戲天數、上線時數講的都是「架這個面板的那台伺服器」,
+    // 跟使用者手上這份存檔毫無關係,擺在一起只會讓人誤以為是自己世界的數字。
+    // metrics 為 null 時下面的 KPI 會自動改成從存檔算出來的玩家數/帕魯總數/物種數。
+    if (isLocalMode()) {
+      setMetrics(null);
+      setStatus(null);
+      setPresence(null);
+      return;
+    }
     getMetrics().then((m) => alive && setMetrics(m));
     getStatus().then((s) => alive && setStatus(s));
     getPresence().then((p) => alive && setPresence(p));

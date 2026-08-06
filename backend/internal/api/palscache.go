@@ -48,6 +48,17 @@ func (p *palsCache) Get() ([]byte, time.Time) {
 	return p.body, p.fetchedAt
 }
 
+// Invalidate 立刻作廢目前快取並在背景重抓一次。
+// 換了存檔來源之後一定要呼叫 —— 否則面板會繼續顯示上一個世界的玩家,
+// 而且要等到下一次排程(預設 10 分鐘)才會換過來。
+func (p *palsCache) Invalidate() {
+	p.mu.Lock()
+	p.body = nil
+	p.fetchedAt = time.Time{}
+	p.mu.Unlock()
+	go p.refresh()
+}
+
 // Run 先載入上次落地的快取(讓重啟後立刻有資料可回),
 // 接著立即抓一次,之後每 interval 抓一次,直到 stop 關閉。
 func (p *palsCache) Run(stop <-chan struct{}) {

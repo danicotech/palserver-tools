@@ -229,10 +229,17 @@ def load_maps(here):
     }
 
 
-def decompress_save(path):
-    """讀檔並解壓成 GVAS 原始位元組(PlM/PlZ/CNK 三種容器)。"""
-    with open(path, "rb") as f:
-        data = f.read()
+def decompress_save(src):
+    """解壓成 GVAS 原始位元組(PlM/PlZ/CNK 三種容器)。
+
+    src 可以是檔案路徑,也可以直接是位元組 —— 後者用在「網頁上傳存檔」:
+    整份存檔只存在記憶體裡,不會在伺服器上落地成檔案。
+    """
+    if isinstance(src, (bytes, bytearray, memoryview)):
+        data = bytes(src)
+    else:
+        with open(src, "rb") as f:
+            data = f.read()
     ulen = int.from_bytes(data[0:4], "little")
     clen = int.from_bytes(data[4:8], "little")
     magic = data[8:11]
@@ -245,14 +252,18 @@ def decompress_save(path):
         import zlib
         raw = zlib.decompress(data[24:])
     else:
-        sys.exit(f"未知存檔格式 magic={magic!r}")
+        # 這裡原本用 sys.exit —— 在伺服器情境下它會丟 SystemExit,
+        # 既接不到(不是 Exception 子類)又可能終止整個執行緒。
+        # 使用者上傳一個不是存檔的檔案是很正常的事,要能好好回報錯誤。
+        raise ValueError(f"未知存檔格式 magic={magic!r}(這看起來不是 Palworld 存檔)")
     if raw[:4] != b"GVAS":
-        sys.exit(f"解壓後不是 GVAS：{raw[:8]!r}")
+        raise ValueError(f"解壓後不是 GVAS 格式:{raw[:8]!r}")
     return raw
 
 
-def load_gvas(path, full=False):
-    raw = decompress_save(path)
+def load_gvas(src, full=False):
+    """src 同 decompress_save:檔案路徑或存檔位元組。"""
+    raw = decompress_save(src)
     # 只掛 character 的 custom decoder;Group/BaseCamp 的官方 decoder 跟不上 v1.0 格式
     # 會整段解析失敗,改由 _decode_guild_raw/_decode_basecamp_raw 自行解 raw bytes。
     wanted = {k: v for k, v in PALWORLD_CUSTOM_PROPERTIES.items()

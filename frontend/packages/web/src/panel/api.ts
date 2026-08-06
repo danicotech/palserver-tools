@@ -240,3 +240,84 @@ export async function getPlayer(query: string): Promise<Player[]> {
     (p) => p.name.toLowerCase().includes(q) || p.uid.toLowerCase().includes(q),
   );
 }
+
+// ── 存檔來源(功能一:指定絕對路徑)────────────────────────────────
+// 後端讀哪一份存檔原本綁在啟動環境(Docker 掛載 / SAVE_ROOT),
+// 要換就得改 compose 或批次檔再重開。改用 API 之後隨時可切,面板也看得到現況。
+
+export interface SaveWorld {
+  id: string; // 世界資料夾名(一長串 GUID)
+  size: number; // Level.sav 位元組數
+  mtime: number; // 最後存檔時間(Unix 秒)
+}
+
+export interface SaveSource {
+  root: string; // 存檔根目錄(絕對路徑)
+  exists: boolean;
+  current: string; // 目前選中的 Level.sav(相對於 root)
+  mtime: number;
+  worlds: SaveWorld[];
+}
+
+/** 目前的存檔來源與這個根目錄底下有哪些世界。 */
+export function getSaveSource(): Promise<SaveSource> {
+  return request<SaveSource>("/api/palsave/source");
+}
+
+/** 改用指定的絕對路徑當存檔根目錄。失敗時丟出帶原因的 ApiError。 */
+export async function setSaveSource(root: string): Promise<SaveSource> {
+  const conn = loadConnection();
+  const base = conn?.baseUrl ?? "";
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (conn?.token) headers["Authorization"] = `Bearer ${conn.token}`;
+  const res = await fetch(base + "/api/palsave/source", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ root }),
+  });
+  const body = (await res.json().catch(() => ({}))) as Partial<SaveSource> & { error?: string };
+  if (!res.ok) throw new ApiError(res.status, body.error || t("設定存檔路徑失敗"));
+  return body as SaveSource;
+}
+
+// ── 上傳存檔分析(功能二:單機玩家看自己的存檔)──────────────────
+// 存檔只在記憶體裡走一遍:瀏覽器直接把檔案串上去,後端轉給解析服務,
+// 解析完回 JSON —— 伺服器磁碟上不會留下任何副本。
+
+/** 上傳 Level.sav 並解析,回傳與 /api/pals 相同結構。
+ *  onProgress 回報上傳進度(0–1);解析階段沒有進度可回報,會停在 1。 */
+export function analyzeSave(file: File, onProgress?: (ratio: number) => void): Promise<PalsResponse> {
+  const conn = loadConnection();
+  const base = conn?.baseUrl ?? "";
+  // 用 XMLHttpRequest 而不是 fetch:只有它能回報上傳進度。
+  // 存檔可能上百 MB,沒有進度條使用者會以為當掉了。
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", base + "/api/pals/analyze");
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    if (conn?.token) xhr.setRequestHeader("Authorization", `Bearer ${conn.token}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      let body: (PalsResponse & { error?: string }) | null = null;
+      try {
+        body = JSON.parse(xhr.responseText) as PalsResponse & { error?: string };
+      } catch {
+        /* 非 JSON 回應(例如 nginx 的錯誤頁)由下面統一處理 */
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && body) return resolve(body);
+      // 413 / 429 是 nginx 擋下來的,回的是 HTML 錯誤頁而不是 JSON,
+      // 直接顯示「存檔解析失敗」使用者會不知道發生什麼事,這裡各給一句能理解的說明。
+      const fallback =
+        xhr.status === 413
+          ? t("檔案太大（上限 512 MB）")
+          : xhr.status === 429
+            ? t("上傳太頻繁，請等一下再試")
+            : t("存檔解析失敗");
+      reject(new ApiError(xhr.status, body?.error || fallback));
+    };
+    xhr.onerror = () => reject(new ApiError(0, t("上傳失敗（網路中斷或後端未連線）")));
+    xhr.send(file);
+  });
+}

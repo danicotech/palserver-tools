@@ -50,6 +50,12 @@ func (r RESTConfig) IsEnabled() bool { return r.Enabled == nil || *r.Enabled }
 type PalSaveConfig struct {
 	Enabled *bool  `json:"enabled,omitempty"` // 省略視為 true
 	URL     string `json:"url,omitempty"`     // 省略預設 http://palsave:8213（compose 內網）
+	// SaveRoot 是存檔根目錄的絕對路徑（底下要有 Pal/Saved/SaveGames）。
+	// 省略時沿用啟動環境的 SAVE_ROOT：Docker 版是掛進去的 backend/palworld-data，
+	// SteamCMD 版是伺服器安裝目錄。設了這個就不必再靠掛載或環境變數，
+	// 想讀哪一份存檔就填哪個路徑；也可以在執行中用 POST /api/palsave/source 改。
+	// Docker 版要注意：這是「容器內」的路徑，主機資料夾得先掛進容器才看得到。
+	SaveRoot string `json:"saveRoot,omitempty"`
 	// RefreshMinutes 是「背景定時預熱存檔快取」的間隔（分鐘）。
 	// 解析大存檔要十幾秒，先在背景解好，訪客開網站就不必等。
 	// 省略＝10 分鐘；設 0 關閉（改回每次請求都即時代理）。

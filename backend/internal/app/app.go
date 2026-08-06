@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"palscheduler/internal/api"
+	"palscheduler/internal/config"
 	"palscheduler/internal/palsave"
 	"palscheduler/internal/scheduler"
 )
@@ -16,11 +17,12 @@ import (
 type App struct {
 	sch *scheduler.Scheduler
 	api *api.Server
+	cfg *config.Config
 }
 
 // New 由 Wire 注入建立。
-func New(sch *scheduler.Scheduler, apiServer *api.Server) *App {
-	return &App{sch: sch, api: apiServer}
+func New(sch *scheduler.Scheduler, apiServer *api.Server, cfg *config.Config) *App {
+	return &App{sch: sch, api: apiServer, cfg: cfg}
 }
 
 // Run 啟動排程器與 API，並在收到中止訊號時優雅關閉。
@@ -37,7 +39,7 @@ func (a *App) Run() error {
 
 	// SteamCMD 版：存檔解析由我們自己帶起來，畫面上就不必再多一個視窗。
 	// Docker 版 palsave 是獨立容器，NewFromEnv 會回 nil，這段自動跳過。
-	if sup := palsave.NewFromEnv(); sup != nil {
+	if sup := palsave.NewFromEnv(a.cfg.PalSave.SaveRoot); sup != nil {
 		go sup.Run(stop)
 	}
 

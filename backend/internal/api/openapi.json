@@ -25,6 +25,28 @@
       }
     },
     "schemas": {
+      "SaveSource": {
+        "type": "object",
+        "properties": {
+          "root": { "type": "string", "description": "目前的存檔根目錄（絕對路徑）" },
+          "exists": { "type": "boolean", "description": "這個資料夾現在是否存在" },
+          "current": { "type": "string", "description": "正在讀的 Level.sav（相對 root）" },
+          "mtime": { "type": "integer", "description": "該存檔的最後修改時間（Unix 秒）" },
+          "worlds": {
+            "type": "array",
+            "description": "root 底下找得到的世界",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "description": "世界資料夾名（那串英數）" },
+                "path": { "type": "string", "description": "Level.sav 的相對路徑" },
+                "size": { "type": "integer", "description": "Level.sav 大小（bytes）" },
+                "mtime": { "type": "integer", "description": "最後修改時間（Unix 秒）" }
+              }
+            }
+          }
+        }
+      },
       "Status": {
         "type": "object",
         "properties": {
@@ -174,6 +196,62 @@
   },
   "security": [{ "TokenAuth": [] }],
   "paths": {
+    "/api/pals/analyze": {
+      "post": {
+        "tags": ["palsave"],
+        "summary": "解析上傳的存檔（不落地）",
+        "description": "把一份 Level.sav 的位元組直接送上來解析，回傳與 /api/pals 相同的結構。\n\n整份存檔只會在記憶體裡走一遍（Go 這層串流轉發、palsave 那層從 bytes 解析），伺服器磁碟上不會留下任何副本，也不會動到這台伺服器自己的存檔或快取。\n\n給單機／自架玩家用：他們沒辦法把面板架起來，但手上就有存檔。上限 512 MB；公開入口（nginx）另外對這條路徑限流 3 次/分。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": { "schema": { "type": "string", "format": "binary" } },
+            "multipart/form-data": { "schema": { "type": "object", "properties": { "file": { "type": "string", "format": "binary" } } } }
+          }
+        },
+        "responses": {
+          "200": { "description": "解析結果（多了 source=\"(上傳的存檔)\" 與 uploaded=true）", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PalsResult" } } } },
+          "400": { "description": "不是有效的 Palworld 存檔，或沒有收到內容" },
+          "413": { "description": "檔案超過 512 MB" },
+          "429": { "description": "上傳太頻繁（由 nginx 限流）" },
+          "503": { "description": "存檔解析未啟用（config.json 的 palsave.enabled=false）" }
+        }
+      }
+    },
+    "/api/palsave/source": {
+      "get": {
+        "tags": ["palsave"],
+        "summary": "查詢目前的存檔來源",
+        "description": "回報現在讀的是哪個資料夾、選中哪個世界，以及這個根目錄底下有哪些世界可選。",
+        "responses": {
+          "200": { "description": "來源資訊", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SaveSource" } } } },
+          "502": { "description": "呼叫 palsave 失敗" },
+          "503": { "description": "存檔解析未啟用" }
+        }
+      },
+      "post": {
+        "tags": ["palsave"],
+        "summary": "改用指定的絕對路徑當存檔根目錄",
+        "description": "不必再依賴 backend/palworld-data，可以直接指到伺服器上任一存檔資料夾，之後的定時監控與面板資料都改讀那裡。\n\n⚠️ 這是管理者操作，公開入口（nginx）刻意擋掉這條路徑，只能直接打排程器的 9000 埠並帶 API token。\n\n路徑是在「跑排程器的那台機器」上解析的 —— Docker 版要注意那是容器內的路徑，主機資料夾必須先掛進容器。只接受底下含 Pal/Saved/SaveGames 的資料夾；切換成功會立刻作廢預熱快取並重抓。要永久生效請一併寫進 config.json 的 palsave.saveRoot。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["root"],
+                "properties": { "root": { "type": "string", "description": "存檔根目錄的絕對路徑", "example": "/palworld" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "已切換", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SaveSource" } } } },
+          "400": { "description": "找不到資料夾，或底下沒有 Pal/Saved/SaveGames" },
+          "502": { "description": "呼叫 palsave 失敗" },
+          "503": { "description": "存檔解析未啟用" }
+        }
+      }
+    },
     "/healthz": {
       "get": {
         "tags": ["docs"],

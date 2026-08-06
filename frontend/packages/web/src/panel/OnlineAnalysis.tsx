@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { JSX } from "react";
 import type { Dataset } from "./data";
+import { isLocalMode } from "./data";
 import { getPresence, type PresenceData, type PresencePlayer } from "./api";
 import { SwitchChart } from "./charts";
 import { OnlineDot, RankBar } from "./ui";
@@ -52,6 +53,13 @@ export function OnlineAnalysis({ data }: { data: Dataset }): JSX.Element {
   const { avatarUrlFor } = useRoster(); // 玩家自訂頭像(沒設就用固定隨機帕魯頭像)
 
   useEffect(() => {
+    // 上線時數是「這台伺服器」每分鐘取樣累積出來的,存檔裡沒有這種資料。
+    // 使用者在看自己上傳的存檔時,拉這份紀錄只會把別人伺服器的玩家名單列出來。
+    if (isLocalMode()) {
+      setPresence(null);
+      setLoaded(true);
+      return;
+    }
     getPresence().then((p) => {
       setPresence(p);
       setLoaded(true);
@@ -146,7 +154,14 @@ export function OnlineAnalysis({ data }: { data: Dataset }): JSX.Element {
   const toHr = (s: number) => Math.round((s / 3600) * 10) / 10;
 
   if (!loaded) return <div className="rounded-cute bg-card px-6 py-16 text-center text-ink-muted ring-1 ring-line">{t("載入上線資料中…")}</div>;
-  if (!presence) return <div className="rounded-cute bg-card px-6 py-16 text-center text-ink-muted ring-1 ring-line">{t("後端未提供上線資料（需啟用 REST 追蹤）。")}</div>;
+  if (!presence)
+    return (
+      <div className="rounded-cute bg-card px-6 py-16 text-center text-ink-muted ring-1 ring-line">
+        {isLocalMode()
+          ? t("上線時數是伺服器持續取樣才有的資料，存檔裡沒有；切回伺服器資料即可查看。")
+          : t("後端未提供上線資料（需啟用 REST 追蹤）。")}
+      </div>
+    );
 
   const since = new Date(presence.trackingSince * 1000).toLocaleString("zh-TW", { dateStyle: "short", timeStyle: "short" });
 

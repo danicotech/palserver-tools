@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { JSX } from "react";
 import type { Pal, Player } from "./types";
 import type { Dataset } from "./data";
+import { isLocalMode } from "./data";
 import { paldexId } from "./paldex";
 import { getRestPlayers, livePositionsOf, type LivePosition } from "./api";
 import { PlayerCard } from "./PlayerCard";
@@ -39,6 +40,10 @@ export function PlayerQuery({
 
   useEffect(() => {
     let alive = true;
+    // 上傳的存檔是一份靜態快照,沒有「現在誰在線上」這回事。
+    // 這裡若照打 REST,拿到的是本面板那台伺服器的在線名單,
+    // 名字剛好對上就會把別人標成在線,還會蓋掉存檔裡的座標。
+    if (isLocalMode()) return;
     getRestPlayers().then((rows) => {
       if (!alive) return;
       setOnline(new Set(rows.map((r) => (r.name ?? "").trim().toLowerCase()).filter(Boolean)));

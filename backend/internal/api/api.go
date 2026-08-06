@@ -139,6 +139,13 @@ func New(cfg *config.Config, sch *scheduler.Scheduler) *Server {
 		g.GET("/pals/players", s.handlePalsPlayers) // 玩家清單摘要（含 UID，不含每隻帕魯）
 		g.GET("/pals", s.handlePals)                // ?q=<名稱|UID> 全部或單一玩家的完整帕魯
 
+		// 存檔來源:改用指定的絕對路徑,不必再依賴 backend/palworld-data
+		g.GET("/palsave/source", s.handleSaveSourceGet)  // 目前根目錄與可用世界清單
+		g.POST("/palsave/source", s.handleSaveSourceSet) // JSON {"root":"<絕對路徑>"}
+
+		// 上傳自己的 Level.sav 直接分析(不落地、不影響伺服器本身的資料)
+		g.POST("/pals/analyze", s.handlePalsAnalyze)
+
 		// 上線時數/次數統計（後端定時輪詢累計，自啟用起）
 		g.GET("/presence", s.handlePresence)
 	}

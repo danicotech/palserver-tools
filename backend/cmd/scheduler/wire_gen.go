@@ -20,6 +20,6 @@ func InitializeApp() (*app.App, error) {
 	serverController := provideServerController(cfg)
 	sch := scheduler.New(cfg, serverController)
 	apiServer := api.New(cfg, sch)
-	application := app.New(sch, apiServer)
+	application := app.New(sch, apiServer, cfg)
 	return application, nil
 }

@@ -123,7 +123,76 @@ function buildDataset(resp: PalsResponse): Dataset {
 // 模組層快取：多個分頁共用同一次抓取。
 let cache: Promise<Dataset> | null = null;
 
+// ── 本地存檔模式 ─────────────────────────────────────────────────
+// 單機玩家把自己的 Level.sav 拖進網頁後,解析結果就放在這裡,
+// 蓋過「跟伺服器要的資料」。所有分頁吃的都是同一個 Dataset,
+// 因此不必改任何分頁就能直接看自己的存檔。
+//
+// 只存在記憶體 + sessionStorage:關掉分頁就消失,不會留在硬碟上,
+// 也不會送去伺服器儲存(解析是即時的,伺服器端不落地)。
+const SS_KEY = "palpanel.localSave";
+
+let localResp: PalsResponse | null = null;
+let localDataset: Promise<Dataset> | null = null;
+const localListeners = new Set<() => void>();
+
+/** 目前是否在看「上傳的存檔」而不是伺服器資料。 */
+export function isLocalMode(): boolean {
+  return localResp !== null;
+}
+
+/** 訂閱本地/伺服器模式的切換(給 UI 重新渲染用)。 */
+export function onLocalModeChange(fn: () => void): () => void {
+  localListeners.add(fn);
+  return () => localListeners.delete(fn);
+}
+
+function notifyLocal() {
+  for (const fn of localListeners) fn();
+}
+
+/** 切換成「看上傳的存檔」。傳 null 則切回伺服器資料。 */
+export function setLocalSave(resp: PalsResponse | null) {
+  localResp = resp;
+  localDataset = null;
+  if (resp) {
+    // sessionStorage 讓「重新整理」不會白白丟掉剛解析好的結果。
+    // 大存檔的 JSON 可能好幾十 MB 而配額只有幾 MB —— 存不下就算了,
+    // 記憶體那份仍然有效,只是重新整理後要重傳。
+    try {
+      sessionStorage.setItem(SS_KEY, JSON.stringify(resp));
+    } catch {
+      /* 超過配額:略過持久化,不影響目前這一份 */
+    }
+  } else {
+    sessionStorage.removeItem(SS_KEY);
+  }
+  notifyLocal();
+}
+
+/** 頁面載入時把 sessionStorage 裡的上一份接回來(重新整理不必重傳)。 */
+export function restoreLocalSave(): boolean {
+  if (localResp) return true;
+  try {
+    const raw = sessionStorage.getItem(SS_KEY);
+    if (!raw) return false;
+    localResp = JSON.parse(raw) as PalsResponse;
+    notifyLocal();
+    return true;
+  } catch {
+    sessionStorage.removeItem(SS_KEY);
+    return false;
+  }
+}
+
 export function loadDataset(force = false): Promise<Dataset> {
+  // 本地模式優先:有上傳的存檔就完全不去打伺服器
+  if (localResp) {
+    if (force) localDataset = null;
+    const resp = localResp;
+    localDataset ??= loadPaldex().then(() => buildDataset(resp));
+    return localDataset;
+  }
   if (force) cache = null;
   if (!cache) {
     // 同時載入帕魯資料與圖鑑對照（頭像/正確繁中名），確保建表時對照已就緒。
