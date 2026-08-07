@@ -54,8 +54,9 @@ where node >nul 2>nul
 if errorlevel 1 goto :nodeget
 rem Presence is not enough - the version matters. The pnpm we install needs
 rem Node >= 22.13; on an older Node, npm installs pnpm with only a warning and
-rem then pnpm cannot run at all. Symptom: '裝不起 pnpm' right after
-rem 'corepack 取不到指定版本的 pnpm'.
+rem then pnpm cannot run at all, so the install dies at step 4 saying it
+rem could not install pnpm. Comments stay ASCII: under codepage 65001 cmd
+rem splits lines holding multi-byte characters and runs the tail.
 set "_nodemaj=0"
 for /f "tokens=1 delims=.v" %%v in ('node -p "process.versions.node"') do set "_nodemaj=%%v"
 if %_nodemaj% GEQ 22 exit /b 0
