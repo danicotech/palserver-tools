@@ -69,35 +69,17 @@ worlds_of() {
   done
 }
 
-CANDS=()
-CDESC=()
-add_cand() {
-  local d="$1" desc c
-  desc=$(describe "$d") || return 0
-  # 正規化成絕對路徑,../ 這種寫法才比得起來,同一個資料夾不會列兩次
-  d=$(cd "$d" 2>/dev/null && pwd) || return 0
-  for c in ${CANDS+"${CANDS[@]}"}; do [ "$c" = "$d" ] && return 0; done
-  CANDS+=("$d")
-  CDESC+=("$desc")
-}
-
-scan() {
-  CANDS=()
-  CDESC=()
-  add_cand "$ROOT/linux/native/server"
-  add_cand "$ROOT/linux/server"
-  add_cand "$(dirname "$ROOT")"
-  # 常見的 SteamCMD / Steam 版面。掃這幾條比讓使用者自己找路徑實際得多。
-  local base
-  for base in "$HOME" /opt /srv /data /home/* /mnt/* /media/*; do
-    [ -d "$base" ] || continue
-    add_cand "$base/PalServer"
-    add_cand "$base/palworld/PalServer"
-    add_cand "$base/palworld-server"
-    add_cand "$base/Steam/steamapps/common/PalServer"
-    add_cand "$base/.steam/steam/steamapps/common/PalServer"
-    add_cand "$base/steamcmd/steamapps/common/PalServer"
+# auto_detect —— 自動模式只認這個安裝推得出來的兩個位置:
+#   1. 這個專案自己下載的伺服器
+#   2. 專案所在的上一層(面板常常就放在伺服器資料夾裡面)
+# 刻意不去掃各個磁碟猜別人的 Steam 版面:猜出來的路徑印在畫面上會被當成
+# 「我們找到了這個」,比老實問一句還糟。找不到就走手動。
+auto_detect() {
+  local d
+  for d in "$ROOT/linux/native/server" "$ROOT/linux/server" "$(dirname "$ROOT")"; do
+    if describe "$d" >/dev/null 2>&1; then (cd "$d" && pwd); return 0; fi
   done
+  return 1
 }
 
 CUR=""
@@ -125,39 +107,30 @@ fi
 
 if [ -z "$CUR" ]; then
   echo
-  echo "  ${C_STEP}請選擇你的帕魯伺服器資料夾${C_RESET}"
+  echo "  ${C_STEP}要用哪個帕魯伺服器資料夾?${C_RESET}"
   echo "    就是放著 PalServer.sh 和 Pal/Saved 的那一層。"
   echo "    選好之後,排程器會直接開關那台伺服器、面板也讀它的存檔 —— 不會搬動任何檔案。"
   echo
-  echo "    搜尋常見安裝位置中..."
-  scan
-  echo
-  [ "${#CANDS[@]}" = 0 ] && warn "這台機器上沒有自動找到,請直接貼上資料夾路徑。"
-  i=1
-  for c in ${CANDS+"${CANDS[@]}"}; do
-    echo "    ${C_KEY}[$i]${C_RESET} $c"
-    echo "        ${CDESC[$((i - 1))]}"
-    i=$((i + 1))
-  done
-  echo "    ${C_KEY}[M]${C_RESET} 我自己輸入路徑"
+  AUTO=$(auto_detect || true)
+  if [ -n "$AUTO" ]; then
+    echo "    ${C_KEY}[A]${C_RESET} 自動偵測到的"
+    echo "        ${C_KEY}$AUTO${C_RESET}"
+    echo "        $(describe "$AUTO")"
+    echo "    ${C_KEY}[M]${C_RESET} 我自己輸入路徑"
+  else
+    warn "自動偵測沒有找到伺服器(這台還沒裝過,或裝在別的地方)。"
+  fi
 
   while [ -z "$CUR" ]; do
     echo
-    echo "    不在上面的話,直接把資料夾路徑貼進來就好"
-    echo "    (例如 /opt/palworld/PalServer 或 /mnt/d/steamcmd/steamapps/common/PalServer)"
-    echo "    貼到裡面幾層(甚至貼到 Level.sav)也沒關係,會自動往上對正。"
-    if [ "${#CANDS[@]}" = 0 ]; then
-      printf "  請貼上資料夾完整路徑: "
+    if [ -n "$AUTO" ]; then
+      printf "  按 Enter 用自動偵測的,輸入 M 自己填,或直接貼上路徑: "
+      read -r sel || sel=""
+      [ -n "$sel" ] || sel=A
+      case "$sel" in A | a) CUR="$AUTO"; continue ;; esac
     else
-      printf "  輸入編號、M、或直接貼上路徑(按 Enter = 1): "
+      sel=M
     fi
-    read -r sel || sel=""
-    # 沒有輸入 = 用第一個候選;完全沒有候選時就只能再問一次
-    if [ -z "$sel" ]; then
-      [ "${#CANDS[@]}" = 0 ] && { err "沒有輸入任何路徑。"; continue; }
-      sel=1
-    fi
-    # 選 M = 我要自己輸入,再問一次路徑就好
     case "$sel" in
       M | m)
         echo
@@ -171,29 +144,17 @@ if [ -z "$CUR" ]; then
     # 貼進來常帶引號或結尾斜線,先清乾淨
     sel="${sel%\"}"; sel="${sel#\"}"; sel="${sel%\'}"; sel="${sel#\'}"
     [ "$sel" != "/" ] && sel="${sel%/}"
-    case "$sel" in
-      # 純數字 = 選單編號,其餘一律當成路徑
-      '' | *[!0-9]*)
-        if found=$(resolve "$sel"); then
-          CUR=$(cd "$found" && pwd)
-          [ "$CUR" != "$sel" ] && warn "你輸入的不是伺服器那一層,已自動對正到:$CUR"
-        elif [ ! -e "$sel" ]; then
-          err "這個路徑不存在:$sel"
-        else
-          err "這條路徑上下都找不到 PalServer.sh:$sel"
-          echo "      已經檢查過:這個資料夾本身、往上每一層、以及往下三層。"
-          echo "      請指到伺服器安裝的那一層 —— 裡面看得到 PalServer.sh 和 Pal 資料夾。"
-          echo "      還沒安裝過伺服器的話,先跑 bash linux/native/install.sh。"
-        fi
-        ;;
-      *)
-        if [ "$sel" -ge 1 ] && [ "$sel" -le "${#CANDS[@]}" ]; then
-          CUR="${CANDS[$((sel - 1))]}"
-        else
-          err "沒有編號 $sel,請輸入 1 到 ${#CANDS[@]} 之間的編號,或直接貼路徑。"
-        fi
-        ;;
-    esac
+    if found=$(resolve "$sel"); then
+      CUR=$(cd "$found" && pwd)
+      [ "$CUR" != "$sel" ] && warn "你輸入的不是伺服器那一層,已自動對正到:$CUR"
+    elif [ ! -e "$sel" ]; then
+      err "這個路徑不存在:$sel"
+    else
+      err "這條路徑上下都找不到 PalServer.sh:$sel"
+      echo "      已經檢查過:這個資料夾本身、往上每一層、以及往下三層。"
+      echo "      請指到伺服器安裝的那一層 —— 裡面看得到 PalServer.sh 和 Pal 資料夾。"
+      echo "      還沒安裝過伺服器的話,先跑 bash linux/native/install.sh。"
+    fi
   done
 fi
 
