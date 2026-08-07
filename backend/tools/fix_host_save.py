@@ -74,7 +74,19 @@ def uid_from_steam(s):
 
 
 def guid_bytes(text):
-    return uuid.UUID(text).bytes_le
+    """UE 的 GUID 位元組:四段 32-bit 各自 little-endian。
+
+    不能用 Python 的 uuid.bytes_le —— 它只把前三段轉成 little-endian,最後
+    8 bytes 維持原順序。兩者只有在「尾段不是 0」時才看得出差別,而單機主機的
+    00000000-0000-0000-0000-000000000001 剛好就是那個情況:
+        UE 實際存的  00000000 00000000 00000000 01000000
+        bytes_le 給的 00000000 00000000 00000000 00000001
+    差這一下,搜尋主機 UID 會一處都找不到,看起來就像「這個世界沒有單機角色」。
+    一般玩家 UID(3EC9D66B-0000-...)尾段全是 0,兩種算法結果相同,所以這個
+    錯誤在那些存檔上完全不會顯現 —— 實測真實存檔才抓到。
+    """
+    h = uuid.UUID(text).hex          # 32 個十六進位字元,已去掉 dash
+    return b"".join(int(h[i:i + 8], 16).to_bytes(4, "little") for i in (0, 8, 16, 24))
 
 
 def patch(raw, old, new):
