@@ -16,7 +16,7 @@ rem use it and skip the 6 GB download instead of making a second copy.
 rem We never run steamcmd against it: validate can overwrite files on a server
 rem that has been running for months. Updating it is what update.bat is for.
 set "PICKED="
-if exist "%ROOT%ackend\data\server-dir.txt" for /f "usebackq delims=" %%a in ("%ROOT%ackend\data\server-dir.txt") do set "PICKED=%%~a"
+if exist "%ROOT%\backend\data\server-dir.txt" for /f "usebackq delims=" %%a in ("%ROOT%\backend\data\server-dir.txt") do set "PICKED=%%~a"
 if defined PICKED if exist "%PICKED%\PalServer.exe" set "SRVDIR=%PICKED%"
 title Palworld SteamCMD 版 - 一次裝好全部
 
