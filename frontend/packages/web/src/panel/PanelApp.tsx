@@ -75,21 +75,30 @@ export function PanelApp(): JSX.Element {
 
   const openPal = (pal: Pal, owner?: Player) => setSelectedPal({ pal, owner });
 
+  // 上傳頁是「蓋在分頁之上」的一層,不佔用 TABS —— 它不是常用功能,
+  // 而且切進去之後所有分頁都改吃上傳的存檔,做成分頁反而讓人以為是並列的內容。
+  const [showUpload, setShowUpload] = useState(false);
+
+  // 切分頁一律先離開上傳頁。
+  // 所有內容區塊都被 !showUpload 擋著,只設 tab 不關這層的話,分頁列點了會亮、
+  // 畫面卻還停在上傳頁,看起來就像整個面板卡死回不去。
+  const goTab = (key: Tab) => {
+    setShowUpload(false);
+    setTab(key);
+  };
+
   // 從帕魯詳情跳轉到「帕魯查詢」並套用技能/工作篩選
   const jumpToSpecies = (f: { trait?: string; work?: string; query?: string }) => {
     setSpeciesFilter({ ...f, nonce: (speciesFilter?.nonce ?? 0) + 1 });
     setSelectedPal(null);
-    setTab("species");
+    goTab("species");
   };
   // 跳轉到「玩家查詢」：搜尋玩家名，並可選擇只顯示指定帕魯（pal）
   const jumpToPlayer = (name: string, pal?: string) => {
     setPlayerQuery({ q: name, pal, nonce: (playerQuery?.nonce ?? 0) + 1 });
     setSelectedPal(null);
-    setTab("player");
+    goTab("player");
   };
-  // 上傳頁是「蓋在分頁之上」的一層,不佔用 TABS —— 它不是常用功能,
-  // 而且切進去之後所有分頁都改吃上傳的存檔,做成分頁反而讓人以為是並列的內容。
-  const [showUpload, setShowUpload] = useState(false);
   const [localNonce, setLocalNonce] = useState(0);
   useEffect(() => {
     restoreLocalSave(); // 重新整理後接回上一份,不必重傳
@@ -154,7 +163,11 @@ export function PanelApp(): JSX.Element {
           aria-expanded={menuOpen}
         >
           <span className="text-xl leading-none">☰</span>
-          <span className="min-w-0 flex-1 truncate">{activeTab ? tabLabel(activeTab) : ""}</span>
+          {/* 手機版這顆是「目前在哪」的唯一指示,停在上傳頁時要照實講,
+              不然它會亮著「總覽」但畫面是上傳頁。 */}
+          <span className="min-w-0 flex-1 truncate">
+            {showUpload ? `📄 ${t("分析我自己的存檔")}` : activeTab ? tabLabel(activeTab) : ""}
+          </span>
           <span className="shrink-0 text-xs font-medium text-ink-muted">{t("切換分頁")}</span>
         </button>
 
@@ -163,9 +176,9 @@ export function PanelApp(): JSX.Element {
           {TABS.map((tb) => (
             <button
               key={tb.key}
-              onClick={() => setTab(tb.key)}
+              onClick={() => goTab(tb.key)}
               className={`min-h-11 flex-1 whitespace-nowrap rounded-t-lg px-3 py-2.5 text-center text-sm font-medium transition ${
-                tab === tb.key
+                tab === tb.key && !showUpload
                   ? "border-b-2 border-pal text-pal"
                   : "text-ink-muted hover:bg-card-soft hover:text-ink"
               }`}
@@ -197,11 +210,11 @@ export function PanelApp(): JSX.Element {
                   <button
                     key={tb.key}
                     onClick={() => {
-                      setTab(tb.key);
+                      goTab(tb.key);
                       setMenuOpen(false);
                     }}
                     className={`flex min-h-12 w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-base font-semibold transition ${
-                      tab === tb.key
+                      tab === tb.key && !showUpload
                         ? "bg-pal text-white shadow-cute"
                         : "text-ink hover:bg-card-soft"
                     }`}
