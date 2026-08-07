@@ -51,23 +51,17 @@ linux/native/steamcmd/
 # 離線開發素材：從真實伺服器匯出的玩家/帕魯資料，絕對不可進版控
 frontend/packages/web/public/pals_fixture.json
 
+# 互動地圖標記與帕魯出沒點(map-points / map-detail / map-panel / pal-spawns、
+# 約 3.6 MB)也一起進版控。以前排除在外的結果是:從壓縮檔安裝的人地圖上
+# 完全沒有座標、篩選也是空的,而唯一的取得方式是自己去跑抓取腳本。
+
 # 高解析地圖圖磚(5461 檔 / 15.8 MB)現在直接進版控。
 # 以前排除在外,結果是每個從壓縮檔安裝的人都沒有圖磚 —— 而且 native 版還會
 # 因為 SPA fallback 把缺檔回成 index.html,讓「退回單張全圖」那條路走不到,
 # 地圖整片空白。與其依賴第三方站台臨時下載,不如一起發佈。
 
-# 互動地圖標記(56 類、14,013 筆,373 KB)。資料來源是 op.gg 整理的成果,
-# 不隨專案散布;要用就跑 node tools/fetch-map-points.mjs 自行產生。
-frontend/packages/web/public/game-data/map-points.json
 
-# 地圖標記用的 NPC 頭像(10 張,由 fetch-map-points.mjs 一併取得)
-frontend/packages/web/public/game-data/map-icons/
-frontend/packages/web/public/game-data/pal-spawns.json
-# 標記的名稱與掉落表;跑 node tools/fetch-map-detail.mjs 自行產生。
-frontend/packages/web/public/game-data/map-detail.json
 
-# 標記詳細面板資料;跑 node tools/fetch-map-panel.mjs 自行產生。
-frontend/packages/web/public/game-data/map-panel.json
 
 # 蛋與商店的面板資料;跑 node tools/fetch-egg-shop.mjs 一併產生。
 
