@@ -20,6 +20,7 @@ Docker 版沒這問題（compose 帶的設定本來就開著），所以只有 S
     python ensure_server_ini.py <伺服器資料夾> [管理密碼] [進服密碼]
 離開碼一律 0（設定不是啟動的必要條件，不該因為這裡失敗就擋住整個啟動流程）。
 """
+import collections
 import io
 import json
 import os
@@ -74,13 +75,17 @@ def read_option_line(path):
     return lines, -1
 
 
-def warn_pw(fields, want, cfg_path):
-    """伺服器的 AdminPassword 和面板要用的那組對不上時,講清楚要改哪裡。
+def sync_pw(fields, want, cfg_path):
+    """密碼對不上時,把 config.json 對齊伺服器的 AdminPassword。
 
-    只警告不覆蓋:那是使用者伺服器上正在用的密碼,改掉會把所有管理員擋在外面。
+    哪一邊該讓步很清楚:ini 的 AdminPassword 是遊戲伺服器的事實,玩家拿它進
+    管理員模式,改掉會影響真人;config.json 是這個面板自己的檔,改它不影響任何人。
+    所以面板去配合伺服器 —— 而不是印一段「二選一」讓服主自己想辦法,那對他來說
+    等於沒解決:他看到的只是面板一直 401。
+
+    反過來的情況(ini 的 AdminPassword 是空的)由 force(..., only_if_empty=True)
+    處理,會把面板這組填進去。
     """
-    if not want:
-        return
     have = ""
     for k, v in fields:
         if k == "AdminPassword":
@@ -88,12 +93,30 @@ def warn_pw(fields, want, cfg_path):
             break
     if have == want:
         return
-    print("[ini] [!] 伺服器的 AdminPassword 和面板要用的密碼不一樣 —— 面板會一直 401,")
-    print("[ini]   在線人數、廣播、踢人、優雅關服都會失效。二選一:")
-    print("[ini]   1. 把 %s 的 rcon.password 改成伺服器現在這組" % (cfg_path or "backend/config.json"))
-    print("[ini]   2. 或把伺服器 ini 的 AdminPassword 改成面板這組,再重開伺服器")
     if not have:
-        print("[ini]   (伺服器現在是空密碼 —— 空密碼的話官方 REST 一律拒絕連線)")
+        # 伺服器沒設密碼:官方 REST 一律拒絕,面板不可能連得上。
+        # 這種情況要填的是 ini 那邊,交給 force() 做,這裡只出聲。
+        print("[ini] [!] 伺服器的 AdminPassword 是空的 —— 官方 REST 一律拒絕連線,已補上面板這組")
+        return
+    if not cfg_path:
+        print("[ini] [!] 伺服器的 AdminPassword 和面板不一樣,但沒有給 --config,無法自動對齊")
+        return
+    try:
+        with io.open(cfg_path, encoding="utf-8") as f:
+            cfg = json.load(f, object_pairs_hook=collections.OrderedDict)
+        cfg.setdefault("rcon", collections.OrderedDict())["password"] = have
+        bak = cfg_path + ".bak"
+        if not os.path.exists(bak):
+            shutil.copyfile(cfg_path, bak)
+        tmp = cfg_path + ".tmp"
+        with io.open(tmp, "w", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n")
+        os.replace(tmp, cfg_path)
+        print("[ini] 面板密碼與伺服器不一致,已把 %s 的 rcon.password 對齊伺服器"
+              % os.path.basename(cfg_path))
+    except Exception as e:
+        print("[ini] [!] 想自動對齊 %s 但失敗了(%s)" % (cfg_path, e))
+        print("[ini]   請手動把它的 rcon.password 改成伺服器 ini 的 AdminPassword")
 
 
 def main():
@@ -217,7 +240,7 @@ def main():
     if join_pw:
         force("ServerPassword", '"%s"' % join_pw, only_if_empty=True)
 
-    warn_pw(fields, admin_pw, cfg_path)
+    sync_pw(fields, admin_pw, cfg_path)
 
     if not changed and not truncated:
         print("[ini] REST/RCON 已是開啟狀態，不需要調整")
