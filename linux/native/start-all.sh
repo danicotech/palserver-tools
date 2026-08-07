@@ -85,7 +85,17 @@ if [ -f .env ]; then
   ADMINPW=$(sed -n 's/^ADMIN_PASSWORD=//p' .env | head -1)
   JOINPW=$(sed -n 's/^SERVER_PASSWORD=//p' .env | head -1)
 fi
-python3 backend/tools/ensure_server_ini.py "$SERVER_DIR" "$ADMINPW" "$JOINPW" || true
+# --config 讓面板的 config.json 成為管理密碼的唯一來源。原本密碼寫在 .env、
+# 面板卻是拿 config.json 的 rcon.password 去連,兩邊一漂開就整串 401,
+# 而伺服器只會說 "AdminPassword is empty" —— 指不到任何一個檔案。
+python3 backend/tools/ensure_server_ini.py "$SERVER_DIR" "$ADMINPW" "$JOINPW" \
+  --config "$CONFIG_PATH" || true
+
+# 從別台複製進來的存檔不會因為「放在那裡」就被載入:伺服器只認
+# GameUserSettings.ini 指定的世界,名字對不上就默默開一個全新的。
+# 而面板是掃過所有世界資料夾,於是面板顯示你的存檔、遊戲卻是空世界,
+# 看起來像面板在騙人。啟動前先把兩邊對齊。
+python3 backend/tools/ensure_world.py "$SERVER_DIR" || true
 
 step "[5/5]" "啟動存檔解析與排程器..."
 mkdir -p backend/data/logs

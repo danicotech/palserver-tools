@@ -20,6 +20,8 @@ Docker 版沒這問題（compose 帶的設定本來就開著），所以只有 S
     python ensure_server_ini.py <伺服器資料夾> [管理密碼] [進服密碼]
 離開碼一律 0（設定不是啟動的必要條件，不該因為這裡失敗就擋住整個啟動流程）。
 """
+import io
+import json
 import os
 import shutil
 import sys
@@ -72,13 +74,55 @@ def read_option_line(path):
     return lines, -1
 
 
+def warn_pw(fields, want, cfg_path):
+    """伺服器的 AdminPassword 和面板要用的那組對不上時,講清楚要改哪裡。
+
+    只警告不覆蓋:那是使用者伺服器上正在用的密碼,改掉會把所有管理員擋在外面。
+    """
+    if not want:
+        return
+    have = ""
+    for k, v in fields:
+        if k == "AdminPassword":
+            have = v.strip().strip('"')
+            break
+    if have == want:
+        return
+    print("[ini] ⚠ 伺服器的 AdminPassword 和面板要用的密碼不一樣 —— 面板會一直 401,")
+    print("[ini]   在線人數、廣播、踢人、優雅關服都會失效。二選一:")
+    print("[ini]   1. 把 %s 的 rcon.password 改成伺服器現在這組" % (cfg_path or "backend/config.json"))
+    print("[ini]   2. 或把伺服器 ini 的 AdminPassword 改成面板這組,再重開伺服器")
+    if not have:
+        print("[ini]   (伺服器現在是空密碼 —— 空密碼的話官方 REST 一律拒絕連線)")
+
+
 def main():
     if len(sys.argv) < 2:
         print("[ini] 用法：ensure_server_ini.py <伺服器資料夾> [管理密碼] [進服密碼]")
         return 0
     server_dir = sys.argv[1]
-    admin_pw = sys.argv[2] if len(sys.argv) > 2 else ""
-    join_pw = sys.argv[3] if len(sys.argv) > 3 else ""
+    args = [a for a in sys.argv[2:] if not a.startswith("--")]
+    admin_pw = args[0] if len(args) > 0 else ""
+    join_pw = args[1] if len(args) > 1 else ""
+
+    # --config <path>:以面板的 config.json 為準。
+    # 面板連伺服器用的是 rcon.password,伺服器認的是 ini 裡的 AdminPassword;
+    # 兩邊由不同檔案各自維護,只要有一邊沒填就是 401,而錯誤訊息
+    # (Unauthorized: AdminPassword is empty)完全看不出是誰跟誰沒對上。
+    # 這裡直接讓「面板要用的那組」成為唯一權威來源。
+    cfg_pw = ""
+    cfg_path = ""
+    for i, a in enumerate(sys.argv):
+        if a == "--config" and i + 1 < len(sys.argv):
+            cfg_path = sys.argv[i + 1]
+    if cfg_path:
+        try:
+            with io.open(cfg_path, encoding="utf-8") as f:
+                cfg_pw = (json.load(f).get("rcon") or {}).get("password") or ""
+        except Exception as e:
+            print("[ini] 讀不到 %s(%s),改用命令列給的密碼" % (cfg_path, e))
+    if cfg_pw:
+        admin_pw = cfg_pw
 
     if not os.path.isdir(server_dir):
         print("[ini] 找不到伺服器資料夾，略過：%s" % server_dir)
@@ -145,6 +189,8 @@ def main():
         force("AdminPassword", '"%s"' % admin_pw, only_if_empty=True)
     if join_pw:
         force("ServerPassword", '"%s"' % join_pw, only_if_empty=True)
+
+    warn_pw(fields, admin_pw, cfg_path)
 
     if not changed:
         print("[ini] REST/RCON 已是開啟狀態，不需要調整")

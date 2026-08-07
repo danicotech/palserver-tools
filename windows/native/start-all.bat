@@ -93,7 +93,19 @@ if not exist ".env" goto :nodotenv
 for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="ADMIN_PASSWORD" set "ADMINPW=%%b"
 for /f "usebackq tokens=1,* delims==" %%a in (".env") do if /i "%%a"=="SERVER_PASSWORD" set "JOINPW=%%b"
 :nodotenv
-python "backend\tools\ensure_server_ini.py" "%SERVER_DIR%" "%ADMINPW%" "%JOINPW%"
+rem --config makes the panel's config.json the single source of truth for the
+rem admin password. It used to come from .env while the panel connected with
+rem config.json's rcon.password; whenever those two drifted apart every REST
+rem and RCON call came back 401 and the server only said "AdminPassword is
+rem empty", which points at neither file.
+python "backend\tools\ensure_server_ini.py" "%SERVER_DIR%" "%ADMINPW%" "%JOINPW%" --config "%CONFIG_PATH%"
+
+rem A save copied in from another machine is not loaded just because it is
+rem there: the server only reads the world named in GameUserSettings.ini and
+rem silently starts a brand new one when the name does not match. The panel
+rem scans every world folder, so it shows the copied save while the game runs
+rem an empty world - which looks like the panel is lying. Line them up first.
+python "backend\tools\ensure_world.py" "%SERVER_DIR%"
 
 echo %T%[5/5]%R% 啟動服務...
 rem Check port 9000 first: if it is taken the scheduler exits immediately and
