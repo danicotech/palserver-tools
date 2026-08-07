@@ -88,7 +88,7 @@ def warn_pw(fields, want, cfg_path):
             break
     if have == want:
         return
-    print("[ini] ⚠ 伺服器的 AdminPassword 和面板要用的密碼不一樣 —— 面板會一直 401,")
+    print("[ini] [!] 伺服器的 AdminPassword 和面板要用的密碼不一樣 —— 面板會一直 401,")
     print("[ini]   在線人數、廣播、踢人、優雅關服都會失效。二選一:")
     print("[ini]   1. 把 %s 的 rcon.password 改成伺服器現在這組" % (cfg_path or "backend/config.json"))
     print("[ini]   2. 或把伺服器 ini 的 AdminPassword 改成面板這組,再重開伺服器")
@@ -158,11 +158,38 @@ def main():
 
     line = lines[idx]
     lp, rp = line.find("("), line.rfind(")")
-    if lp < 0 or rp < lp:
-        print("[ini] OptionSettings 格式看不懂，不動它")
+    if lp < 0:
+        print("[ini] OptionSettings 沒有 \"(\"，格式看不懂，不動它")
         return 0
 
-    fields = split_fields(line[lp + 1:rp])
+    truncated = rp < lp
+    if truncated:
+        # 被截斷的檔案(實際遇過:停在 ServerPassword=\"...\", 就沒了)。
+        # 少了結尾的 ")" 之外,RCONEnabled / RESTAPIEnabled 這些也一起不見了 ——
+        # 伺服器把不存在的開關當成 False,面板就永遠 401,而且和密碼無關。
+        # 以前這裡直接放棄,等於自動修正對最需要修的檔案沒作用。
+        print("[ini] [!] OptionSettings 沒有收尾的 \")\"，這一行被截斷了 —— 自動修復")
+        fields = split_fields(line[lp + 1:].rstrip().rstrip(","))
+    else:
+        fields = split_fields(line[lp + 1:rp])
+
+    # 截斷會連鍵一起吃掉,從官方範本把缺的補回來(使用者已有的值一律不動)
+    if truncated:
+        have_keys = {k for k, _ in fields}
+        dlines, didx2 = read_option_line(default_ini)
+        if didx2 >= 0:
+            dline = dlines[didx2]
+            dlp, drp = dline.find("("), dline.rfind(")")
+            if dlp >= 0 and drp > dlp:
+                restored = []
+                for k, v in split_fields(dline[dlp + 1:drp]):
+                    if k not in have_keys:
+                        fields.append((k, v))
+                        restored.append(k)
+                if restored:
+                    print("[ini]   從官方範本補回 %d 個被截掉的設定:%s%s"
+                          % (len(restored), "、".join(restored[:6]),
+                             "…" if len(restored) > 6 else ""))
     have = {k for k, _ in fields}
     changed = []
 
@@ -192,7 +219,7 @@ def main():
 
     warn_pw(fields, admin_pw, cfg_path)
 
-    if not changed:
+    if not changed and not truncated:
         print("[ini] REST/RCON 已是開啟狀態，不需要調整")
         return 0
 
