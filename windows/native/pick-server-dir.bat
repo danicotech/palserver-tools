@@ -67,18 +67,30 @@ call :addcand "%CD%\windows\server"
 for %%i in ("%CD%\..") do call :addcand "%%~fi"
 for %%d in (C D E F G H I J) do call :probedrive %%d
 echo.
-if "%N%"=="0" echo   %Y%這台電腦上沒有自動找到,請直接貼上資料夾路徑。%R%
+if "%N%"=="0" echo   %Y%這台電腦上沒有自動找到,請自己輸入路徑。%R%
 for /l %%i in (1,1,%N%) do call :showcand %%i
+echo     %K%[M]%R% 我自己輸入路徑
 
 :prompt
 echo.
-echo     不在上面的話,直接把資料夾路徑貼進來就好
-echo     (檔案總管對著資料夾 Shift+右鍵 -^> 複製路徑;例如 D:\steamcmd\steamapps\common\PalServer)
 set "SEL="
-if not "%N%"=="0" set /p "SEL=  輸入編號或路徑(直接按 Enter = 1): "
-if "%N%"=="0" set /p "SEL=  請貼上資料夾完整路徑: "
-if not defined SEL if not "%N%"=="0" set "SEL=1"
+if not "%N%"=="0" set /p "SEL=  輸入編號、M、或直接貼上路徑(按 Enter = 1): "
+if "%N%"=="0" goto :manual
+if not defined SEL set "SEL=1"
+if /i "!SEL!"=="M" goto :manual
+goto :clean
+
+:manual
+echo.
+echo     請輸入伺服器安裝資料夾的完整路徑。
+echo     在檔案總管對著資料夾按 Shift+右鍵 -^> 「複製路徑」再貼上最快。
+echo     例如 D:\steamcmd\steamapps\common\PalServer
+echo     貼到裡面幾層(甚至貼到 Level.sav)也沒關係,會自動往上對正。
+set "SEL="
+set /p "SEL=  路徑: "
 if not defined SEL goto :nopath
+
+:clean
 rem Explorer's "Copy as path" wraps the path in quotes; strip them and any
 rem trailing backslash so the checks below see a clean path.
 set SEL=!SEL:"=!
@@ -91,10 +103,15 @@ if not defined CUR goto :badsel
 goto :done
 
 :aspath
-set "CUR=!SEL!"
-call :describe "!CUR!"
-if errorlevel 2 goto :noexe
-if errorlevel 1 goto :nodir
+rem Accept anything that leads to a server: the folder itself, something inside
+rem it (Pal\Saved\...\Level.sav is a very easy thing to copy by mistake), or a
+rem folder holding it (D:\steamcmd -> steamapps\common\PalServer).
+call :resolve "!SEL!"
+if not defined RESOLVED goto :nofound
+set "CUR=!RESOLVED!"
+if /i "!CUR!"=="!SEL!" goto :done
+echo   %Y%[!]%R% 你輸入的不是伺服器那一層,已自動對正到:
+echo       %K%"!CUR!"%R%
 goto :done
 
 :badsel
@@ -106,34 +123,93 @@ goto :prompt
 echo   %X%[X]%R% 沒有輸入任何路徑。
 goto :prompt
 
-:nodir
-echo   %X%[X]%R% 找不到這個資料夾:
-echo       "!CUR!"
-set "CUR="
-goto :prompt
-
-:noexe
-echo   %X%[X]%R% 這個資料夾裡沒有 PalServer.exe:
-echo       "!CUR!"
-echo       要指到伺服器安裝的那一層(裡面看得到 PalServer.exe 和 Pal 資料夾),
-echo       不是 Pal\Saved\SaveGames 那一層,也不是 Level.sav 本身。
+:nofound
+echo.
+if not exist "!SEL!" echo   %X%[X]%R% 這個路徑不存在:"!SEL!"
+if exist "!SEL!" echo   %X%[X]%R% 這條路徑上下都找不到 PalServer.exe:"!SEL!"
+echo       已經檢查過:這個資料夾本身、往上每一層、以及往下三層。
+echo       請指到伺服器安裝的那一層 —— 裡面看得到 PalServer.exe 和 Pal 資料夾。
+echo       還沒安裝過伺服器的話,先跑 windows
+ative\install.bat。
 set "CUR="
 goto :prompt
 
 :done
+rem Say what was actually found before committing to it. A path that merely
+rem "looks right" is the thing that wastes an evening: the server starts, the
+rem panel stays empty, and nobody can tell which of the two points elsewhere.
+call :describe "!CUR!"
+echo.
+echo   %H%檢查結果%R%
+echo     資料夾        %G%OK%R%  "!CUR!"
+echo     PalServer.exe %G%OK%R%
+if not exist "!CUR!\Pal\Saved\SaveGames" echo     存檔資料夾    %Y%尚未產生%R%  第一次開服後才會出現,這是正常的
+if exist "!CUR!\Pal\Saved\SaveGames" echo     存檔資料夾    %G%OK%R%  找到 !W! 個世界
+for /l %%i in (1,1,!W!) do call :showworld %%i
 rem Written with quotes so paths containing ^& survive; start-all strips them
 rem again with %%~a when it reads the file back.
 >"%STORE%" echo "!CUR!"
-call :describe "!CUR!"
 echo.
-echo   %G%[OK]%R% 使用這個資料夾:%K%"!CUR!"%R%
-echo         !DESC!
-echo         下次啟動會直接沿用;要換的話在上面那一步輸入 C。
+echo   %G%[OK]%R% 就用這個資料夾啟動,不會搬動裡面任何檔案。
+echo         記在 backend\data\server-dir.txt,下次直接沿用;要換就在提問時輸入 C。
 endlocal
 exit /b 0
 
 rem Paths are echoed inside quotes on purpose: an unquoted ^& ends the echo and
 rem cmd then tries to run the rest of the path as a command.
+
+rem resolve <path> -> RESOLVED = the folder that actually holds PalServer.exe.
+rem People paste whatever they happen to have: the install folder, a save file
+rem deep inside it, or the folder above it. Walking up and then down turns all
+rem three into the one answer we need, instead of bouncing them back with a
+rem bare "not found" and no hint about which level was wrong.
+rem Up wins over down when both could match: a path pasted from inside an
+rem install is far more common than one that happens to sit above another.
+:resolve
+set "RESOLVED="
+set "P=%~1"
+if "%P%"=="" exit /b 1
+set "UP=0"
+:rup
+if exist "%P%\PalServer.exe" goto :rfound
+set /a UP+=1
+if %UP% gtr 8 goto :rdown
+for %%i in ("%P%") do set "P=%%~dpi"
+if "%P:~-1%"=="\" set "P=%P:~0,-1%"
+if "%P%"=="" goto :rdown
+rem Stop at the drive root. Asking for the parent of a bare "C:" gives that
+rem drive's CURRENT directory, not the root, so one more step would wander into
+rem wherever this script was launched from and match an unrelated server.
+rem (Do not write the tilde-path operator in a comment either - cmd expands it
+rem inside rem lines too and fails with "invalid usage of the path operator".)
+if "%P:~-1%"==":" goto :rdown
+goto :rup
+:rfound
+set "RESOLVED=%P%"
+exit /b 0
+
+rem Three levels down covers D:\steamcmd -> steamapps\common\PalServer, and is
+rem bounded on purpose: a recursive scan of a whole drive would hang for minutes.
+:rdown
+for /d %%a in ("%~1\*") do if exist "%%a\PalServer.exe" set "RESOLVED=%%~fa"
+if defined RESOLVED exit /b 0
+for /d %%a in ("%~1\*") do for /d %%b in ("%%a\*") do if exist "%%b\PalServer.exe" set "RESOLVED=%%~fb"
+if defined RESOLVED exit /b 0
+for /d %%a in ("%~1\*") do for /d %%b in ("%%a\*") do for /d %%c in ("%%b\*") do if exist "%%c\PalServer.exe" set "RESOLVED=%%~fc"
+if defined RESOLVED exit /b 0
+exit /b 1
+
+:showworld
+echo       - !WORLD_%~1!
+exit /b 0
+
+rem addworld <dir> -> count one world and remember its name and last save time,
+rem so the user can recognise their own world instead of trusting a bare count.
+:addworld
+set /a W+=1
+for %%d in ("%~1") do set "WNAME=%%~nxd"
+for %%f in ("%~1\Level.sav") do set "WORLD_!W!=!WNAME!  最後存檔 %%~tf"
+exit /b 0
 
 rem ---- helpers ----------------------------------------------------------
 
@@ -146,7 +222,7 @@ if "%D%"=="" exit /b 1
 if not exist "%D%\" exit /b 1
 if not exist "%D%\PalServer.exe" exit /b 2
 set "W=0"
-if exist "%D%\Pal\Saved\SaveGames\0\" for /d %%s in ("%D%\Pal\Saved\SaveGames\0\*") do if exist "%%s\Level.sav" set /a W+=1
+if exist "%D%\Pal\Saved\SaveGames\0\" for /d %%s in ("%D%\Pal\Saved\SaveGames\0\*") do if exist "%%s\Level.sav" call :addworld "%%s"
 set "DESC=有伺服器本體"
 if "%W%"=="0" set "DESC=%DESC% · 還沒有存檔(第一次開服後才會產生)"
 if not "%W%"=="0" set "DESC=%DESC% · %W% 個世界存檔"

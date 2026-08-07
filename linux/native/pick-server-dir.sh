@@ -37,6 +37,38 @@ describe() {
   return 0
 }
 
+# resolve <path> —— 找出真正放著 PalServer.sh 的那一層。
+# 使用者手上有什麼就貼什麼:安裝資料夾本身、裡面深處的某個存檔、或它的上一層。
+# 往上走再往下走,三種都收斂成同一個答案,不必把人擋回去叫他自己找。
+# 上下都命中時以「往上」為準:貼在安裝裡面,遠比貼在另一個安裝之上常見。
+resolve() {
+  local p="$1" n=0 d
+  [ -n "$p" ] || return 1
+  # 貼到檔案(最常見的是 Level.sav)就從它所在的資料夾開始往上找
+  [ -f "$p" ] && p=$(dirname "$p")
+  while [ -n "$p" ] && [ "$p" != "/" ] && [ "$n" -lt 8 ]; do
+    if [ -f "$p/PalServer.sh" ]; then printf '%s\n' "$p"; return 0; fi
+    p=$(dirname "$p")
+    n=$((n + 1))
+  done
+  # 往下最多三層:夠涵蓋 /opt/steamcmd -> steamapps/common/PalServer,
+  # 又不會變成整顆磁碟的遞迴搜尋而卡住好幾分鐘。
+  [ -d "$1" ] || return 1
+  d=$(find "$1" -maxdepth 3 -name PalServer.sh -type f -print -quit 2>/dev/null)
+  [ -n "$d" ] || return 1
+  printf '%s\n' "$(dirname "$d")"
+}
+
+# 列出每個世界的名稱與最後存檔時間 —— 讓人認得出是不是自己的世界,而不是只看到數字。
+worlds_of() {
+  local d="$1" s
+  for s in "$d"/Pal/Saved/SaveGames/0/*/Level.sav; do
+    [ -f "$s" ] || continue
+    printf '      - %s  最後存檔 %s\n' "$(basename "$(dirname "$s")")" \
+      "$(date -r "$s" '+%Y-%m-%d %H:%M' 2>/dev/null || echo '?')"
+  done
+}
+
 CANDS=()
 CDESC=()
 add_cand() {
@@ -107,15 +139,17 @@ if [ -z "$CUR" ]; then
     echo "        ${CDESC[$((i - 1))]}"
     i=$((i + 1))
   done
+  echo "    ${C_KEY}[M]${C_RESET} 我自己輸入路徑"
 
   while [ -z "$CUR" ]; do
     echo
     echo "    不在上面的話,直接把資料夾路徑貼進來就好"
     echo "    (例如 /opt/palworld/PalServer 或 /mnt/d/steamcmd/steamapps/common/PalServer)"
+    echo "    貼到裡面幾層(甚至貼到 Level.sav)也沒關係,會自動往上對正。"
     if [ "${#CANDS[@]}" = 0 ]; then
       printf "  請貼上資料夾完整路徑: "
     else
-      printf "  輸入編號或路徑(直接按 Enter = 1): "
+      printf "  輸入編號、M、或直接貼上路徑(按 Enter = 1): "
     fi
     read -r sel || sel=""
     # 沒有輸入 = 用第一個候選;完全沒有候選時就只能再問一次
@@ -123,20 +157,33 @@ if [ -z "$CUR" ]; then
       [ "${#CANDS[@]}" = 0 ] && { err "沒有輸入任何路徑。"; continue; }
       sel=1
     fi
+    # 選 M = 我要自己輸入,再問一次路徑就好
+    case "$sel" in
+      M | m)
+        echo
+        echo "    請輸入伺服器安裝資料夾的完整路徑。"
+        echo "    貼到裡面幾層(甚至貼到 Level.sav)也沒關係,會自動往上對正。"
+        printf "  路徑: "
+        read -r sel || sel=""
+        [ -n "$sel" ] || { err "沒有輸入任何路徑。"; continue; }
+        ;;
+    esac
     # 貼進來常帶引號或結尾斜線,先清乾淨
     sel="${sel%\"}"; sel="${sel#\"}"; sel="${sel%\'}"; sel="${sel#\'}"
     [ "$sel" != "/" ] && sel="${sel%/}"
     case "$sel" in
       # 純數字 = 選單編號,其餘一律當成路徑
       '' | *[!0-9]*)
-        if desc=$(describe "$sel"); then
-          CUR=$(cd "$sel" && pwd)
-        elif [ ! -d "$sel" ]; then
-          err "找不到這個資料夾:$sel"
+        if found=$(resolve "$sel"); then
+          CUR=$(cd "$found" && pwd)
+          [ "$CUR" != "$sel" ] && warn "你輸入的不是伺服器那一層,已自動對正到:$CUR"
+        elif [ ! -e "$sel" ]; then
+          err "這個路徑不存在:$sel"
         else
-          err "這個資料夾裡沒有 PalServer.sh:$sel"
-          echo "      要指到伺服器安裝的那一層(裡面看得到 PalServer.sh 和 Pal 資料夾),"
-          echo "      不是 Pal/Saved/SaveGames 那一層,也不是 Level.sav 本身。"
+          err "這條路徑上下都找不到 PalServer.sh:$sel"
+          echo "      已經檢查過:這個資料夾本身、往上每一層、以及往下三層。"
+          echo "      請指到伺服器安裝的那一層 —— 裡面看得到 PalServer.sh 和 Pal 資料夾。"
+          echo "      還沒安裝過伺服器的話,先跑 bash linux/native/install.sh。"
         fi
         ;;
       *)
@@ -150,8 +197,19 @@ if [ -z "$CUR" ]; then
   done
 fi
 
+# 採用之前先把查到的東西講清楚。一條「看起來對」的路徑最浪費時間:
+# 伺服器起來了、面板卻是空的,而且看不出是哪一邊指到別的地方去。
 printf '%s\n' "$CUR" >"$STORE"
 echo
-ok "使用這個資料夾:$CUR"
-echo "      $(describe "$CUR")"
-echo "      下次啟動會直接沿用;要換的話在上面那一步輸入 C。"
+echo "  ${C_STEP}檢查結果${C_RESET}"
+echo "    資料夾        ${C_OK}OK${C_RESET}  $CUR"
+echo "    PalServer.sh  ${C_OK}OK${C_RESET}"
+if [ -d "$CUR/Pal/Saved/SaveGames" ]; then
+  echo "    存檔資料夾    ${C_OK}OK${C_RESET}  $(describe "$CUR")"
+  worlds_of "$CUR"
+else
+  echo "    存檔資料夾    ${C_WARN}尚未產生${C_RESET}  第一次開服後才會出現,這是正常的"
+fi
+echo
+ok "就用這個資料夾啟動,不會搬動裡面任何檔案。"
+echo "      記在 backend/data/server-dir.txt,下次直接沿用;要換就在提問時輸入 C。"
