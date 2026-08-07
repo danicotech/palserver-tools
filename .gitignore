@@ -11,6 +11,9 @@ docker-compose.override.yml
 
 # ==== 本機設定(從 config.example.json 複製起手)====
 backend/config.json
+# 手動複製出來的變體(config-test.json 等)一樣含 token 與密碼。
+# 註解只能自成一行 —— 寫在 pattern 後面會被當成 pattern 的一部分,規則就失效。
+backend/config-*.json
 
 # ==== 建置產物 / 相依 ====
 node_modules/

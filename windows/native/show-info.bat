@@ -1,78 +1,35 @@
 @echo off
-rem Show which ports and passwords are actually in effect. Pure batch.
-rem In SteamCMD mode the server settings live in PalWorldSettings.ini
-rem (not .env), all packed into one OptionSettings line; split it by hand.
+rem Print the connection info (URL, port, passwords) that is actually in effect.
+rem
+rem This used to be pure batch. It printed a lot of CJK, interpolated variables,
+rem and used goto/call - and that combination breaks under codepage 65001:
+rem cmd resumes a goto by BYTE OFFSET, the multi-byte text earlier in the file
+rem shifts those offsets, and execution lands in the middle of a line. The tail
+rem then runs as a command:
+rem
+rem     'xxxxx' is not recognized as an internal or external command
+rem
+rem ui.bat dodges this by keeping CJK in .txt files printed with "type", but
+rem here the text has to embed live values, so type is not enough. The whole
+rem body moved to backend\tools\show_info.py and this file stays pure ASCII.
 rem   %1 = server dir, %2 = web panel port (default 9000)
 chcp 65001 >nul
-setlocal enabledelayedexpansion
-set "SRVDIR=%~1"
+setlocal
 set "PANELPORT=%~2"
 if "%PANELPORT%"=="" set "PANELPORT=9000"
-set "INI=%SRVDIR%\Pal\Saved\Config\WindowsServer\PalWorldSettings.ini"
 
-rem LAN IP: first IPv4 that is not 127.* or 169.254.*
-set "LANIP=你的IP"
-for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4"') do (
-  for /f "tokens=* delims= " %%b in ("%%a") do (
-    if "!LANIP!"=="你的IP" if not "%%b"=="127.0.0.1" set "LANIP=%%b"
-  )
-)
-
-set "PORT=8211"
-set "PW="
-set "ADMINPW="
-set "SRVNAME="
-set "RESTON="
-if not exist "%INI%" goto :noini
-for /f "usebackq delims=" %%L in (`findstr /c:"OptionSettings" "%INI%"`) do set "OPT=%%L"
-call :getval PublicPort PORT
-call :getval ServerPassword PW
-call :getval AdminPassword ADMINPW
-call :getval ServerName SRVNAME
-call :getval RESTAPIEnabled RESTON
-if "%PORT%"=="" set "PORT=8211"
-
-:show
-echo.
-echo ==================================================
-echo   連線資訊
-echo ==================================================
-echo   查詢網站   http://localhost:%PANELPORT%   (區網 http://%LANIP%:%PANELPORT%)
-echo   遊戲連線   %LANIP%:%PORT%   (UDP,同一台可用 127.0.0.1:%PORT%)
-if "%PW%"=="" (echo   進服密碼   (沒有設密碼,直接連^)) else (echo   進服密碼   %PW%)
-if "%ADMINPW%"=="" (echo   管理密碼   (沒有設^)) else (echo   管理密碼   %ADMINPW%)
-if not "%SRVNAME%"=="" echo   伺服器名稱 %SRVNAME%
-echo --------------------------------------------------
-if not exist "%INI%" goto :hint_noini
-echo   改密碼/埠/倍率就編輯這個檔,存檔後重開伺服器:
-echo     %INI%
-if /i not "%RESTON%"=="True" echo   提示:RESTAPIEnabled=False —— 網站看不到在線玩家與即時位置,建議改成 True。
-goto :done
-:hint_noini
-echo   設定檔還沒產生(伺服器第一次啟動後才會出現):
-echo     %INI%
-echo   在那之前是官方預設值:無密碼、埠 8211。
-:done
-echo ==================================================
-echo.
+where python >nul 2>nul
+if errorlevel 1 goto :nopython
+python "%~dp0..\..\backend\tools\show_info.py" "%~1" "%PANELPORT%"
 exit /b 0
 
-:noini
-goto :show
-
-rem ---------- sub: read one key out of OptionSettings ----------
-rem   %1 = key name, %2 = variable name to write back
-:getval
-setlocal enabledelayedexpansion
-set "V="
-if not defined OPT goto :getdone
-rem Drop everything before the key, leaving =value plus the remaining keys
-set "REST=!OPT:*%~1=!"
-if "!REST!"=="!OPT!" goto :getdone
-set "REST=!REST:~1!"
-for /f "tokens=1 delims=,)" %%v in ("!REST!") do set "V=%%v"
-rem Strip the surrounding double quotes
-if defined V set V=!V:"=!
-:getdone
-endlocal & set "%~2=%V%"
+:nopython
+rem No Python: fall back to the bare minimum, ASCII only.
+echo.
+echo ==================================================
+echo   Panel : http://localhost:%PANELPORT%
+echo   Game  : this machine, UDP port 8211 by default
+echo   Settings: %~1\Pal\Saved\Config\WindowsServer\PalWorldSettings.ini
+echo ==================================================
+echo.
 exit /b 0
