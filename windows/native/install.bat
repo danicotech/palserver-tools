@@ -10,6 +10,14 @@ rem Server install dir: windows\native\server by default; builds before
 rem 1.0.2 used windows\server -- reuse it if found, to avoid re-downloading 6 GB.
 set "SRVDIR=%NATIVE%\server"
 if exist "%ROOT%\windows\server\PalServer.exe" set "SRVDIR=%ROOT%\windows\server"
+rem start-all remembers which server folder the user picked. If that folder
+rem already holds a server, it is their own install (often on another drive) --
+rem use it and skip the 6 GB download instead of making a second copy.
+rem We never run steamcmd against it: validate can overwrite files on a server
+rem that has been running for months. Updating it is what update.bat is for.
+set "PICKED="
+if exist "%ROOT%ackend\data\server-dir.txt" for /f "usebackq delims=" %%a in ("%ROOT%ackend\data\server-dir.txt") do set "PICKED=%%~a"
+if defined PICKED if exist "%PICKED%\PalServer.exe" set "SRVDIR=%PICKED%"
 title Palworld SteamCMD 版 - 一次裝好全部
 
 rem Installs everything needed to run the full stack, in one go:
@@ -43,6 +51,11 @@ echo       %G%已存在,略過%R%
 rem ---------- 2. game server ----------
 :server
 echo %T%[2/7]%R% Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)...
+if not defined PICKED goto :needdl
+if not exist "%PICKED%\PalServer.exe" goto :needdl
+echo       %G%使用你指定的伺服器,略過下載:%R%"%PICKED%"
+goto :appok
+:needdl
 rem 'Missing configuration' has three known causes; try each in turn:
 rem   1. SteamCMD just self-updated -> simply run it again
 rem   2. stale appcache (most common after a self-update) -> delete and retry

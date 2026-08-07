@@ -10,9 +10,17 @@ ROOT="$PWD"
 . "$ROOT/linux/native/ui.sh"
 . "$ROOT/linux/native/use-tools.sh"
 
-# 舊版裝在 linux/server,兩個位置都認
-export SERVER_DIR="$ROOT/linux/native/server"
-[ -x "$SERVER_DIR/PalServer.sh" ] || { [ -x "$ROOT/linux/server/PalServer.sh" ] && export SERVER_DIR="$ROOT/linux/server"; }
+# 要用哪個伺服器資料夾。第一次會問,之後記住 —— 所以早就裝在別處的 SteamCMD
+# 伺服器可以原地繼續用,不必搬任何檔案。要換資料夾就在它的提問輸入 C。
+bash "$ROOT/linux/native/pick-server-dir.sh"
+SERVER_DIR=$(head -1 "$ROOT/backend/data/server-dir.txt" 2>/dev/null || true)
+[ -n "$SERVER_DIR" ] && [ -x "$SERVER_DIR/PalServer.sh" ] || {
+  echo "[X] 沒有選好伺服器資料夾(或裡面沒有 PalServer.sh),不啟動。"
+  echo "    重跑 bash linux/native/start-all.sh,在第一個問題選一個資料夾,"
+  echo "    或選 M 自己輸入路徑;記錄放在 backend/data/server-dir.txt。"
+  exit 1
+}
+export SERVER_DIR
 export PANEL_DIR="$ROOT/frontend/packages/web/dist"
 export CONFIG_PATH="$ROOT/backend/config.json"
 export PRESENCE_PATH="$ROOT/backend/data/presence.json"
@@ -24,15 +32,7 @@ export REST_HOST="127.0.0.1"
 export RCON_HOST="127.0.0.1"
 
 step "[1/5]" "檢查伺服器本體..."
-[ -x "$SERVER_DIR/PalServer.sh" ] || {
-  echo "[X] 找不到伺服器本體(PalServer.sh)。已檢查這兩個位置:"
-  echo "      $ROOT/linux/native/server/"
-  echo "      $ROOT/linux/server/          (舊版位置)"
-  [ -x "$ROOT/linux/native/steamcmd/steamcmd.sh" ] &&
-    echo "      SteamCMD 有、伺服器沒有 = 安裝中途被中斷了(伺服器本體約 6 GB)。"
-  echo "    請執行 bash linux/native/install.sh —— 會從中斷處續傳。"
-  exit 1
-}
+echo "      使用的伺服器資料夾:$SERVER_DIR"
 
 step "[2/5]" "檢查 Python(存檔解析用)..."
 command -v python3 >/dev/null || {

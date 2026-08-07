@@ -12,11 +12,18 @@ rem   scheduler : Go service; also serves the site + API on localhost:9000
 rem   PalServer : started/stopped by the scheduler per backend\config.json
 rem Single-line + goto only: cmd mangles multi-line if(...) without CRLF.
 
-set "SERVER_DIR=%CD%\windows\native\server"
-rem Builds before 1.0.2 installed into windows\server; accept both paths.
-if not exist "%SERVER_DIR%\PalServer.exe" if exist "%CD%\windows\server\PalServer.exe" set "SERVER_DIR=%CD%\windows\server"
+rem Which server folder to use. Asks on the first run, then remembers - so an
+rem existing SteamCMD install anywhere on the machine can be used as-is, with no
+rem files copied or moved. Type C at its prompt to switch folders later.
+call "%~dp0pick-server-dir.bat"
+set "SERVER_DIR="
+if exist "%CD%\backend\data\server-dir.txt" for /f "usebackq delims=" %%a in ("%CD%\backend\data\server-dir.txt") do set "SERVER_DIR=%%~a"
+if not defined SERVER_DIR goto :nopick
 set "PANEL_DIR=%CD%\frontend\packages\web\dist"
 set "CONFIG_PATH=%CD%\backend\config.json"
+rem One folder answers both questions: a SteamCMD install keeps PalServer.exe and
+rem Pal\Saved next to each other, so the server we control is also the server
+rem whose saves the panel reads.
 set "SAVE_ROOT=%SERVER_DIR%"
 set "PRESENCE_PATH=%CD%\backend\data\presence.json"
 set "ROSTER_PATH=%CD%\backend\data\roster.json"
@@ -27,6 +34,7 @@ set "REST_HOST=127.0.0.1"
 set "RCON_HOST=127.0.0.1"
 
 echo %T%[1/5]%R% 檢查伺服器本體...
+echo     使用的伺服器資料夾:"%SERVER_DIR%"
 if not exist "%SERVER_DIR%\PalServer.exe" goto :noserver
 
 echo %T%[2/5]%R% 檢查 Python(存檔解析用)...
@@ -126,10 +134,21 @@ echo     2. 之前開的 start-all 還在 —— 找找工作列上有沒有另�
 pause
 exit /b 1
 
+:nopick
+echo %X%[X]%R% 沒有選好伺服器資料夾,不啟動。
+echo     重跑一次 windows\native\start-all.bat,在第一個問題輸入編號,
+echo     或直接貼上資料夾路徑(例如 D:\steamcmd\steamapps\common\PalServer)。
+pause
+exit /b 1
+
 :noserver
-echo %X%[X]%R% 找不到伺服器本體(PalServer.exe)。已檢查這兩個位置:
+echo %X%[X]%R% 這個資料夾裡沒有 PalServer.exe:
+echo       "%SERVER_DIR%"
+echo     它記在 backend\data\server-dir.txt。重跑 start-all,在第一個問題輸入 C
+echo     就可以改指到別的資料夾;或直接刪掉那個檔案讓它重新問。
+echo.
+echo     還沒裝過伺服器的話,雙擊 windows\native\install.bat 會裝到:
 echo       %CD%\windows\native\server\
-echo       %CD%\windows\server\          (1.0.2 以前的舊位置)
 if exist "%CD%\windows\native\steamcmd\steamcmd.exe" echo.
 if exist "%CD%\windows\native\steamcmd\steamcmd.exe" echo     SteamCMD 有、伺服器沒有 = 安裝中途被關掉了(伺服器本體約 6 GB)。
 echo.

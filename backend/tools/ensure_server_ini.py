@@ -151,6 +151,17 @@ def main():
         return 0
 
     lines[idx] = "%s=(%s)" % (KEY, ",".join("%s=%s" % (k, v) for k, v in fields))
+    # 第一次動別人的設定檔前，先留一份原始備份。
+    # 面板可以指到「已經自己跑了好一陣子」的伺服器資料夾，那份 ini 裡可能有一堆
+    # 手調過的參數；就算這裡只改 REST/RCON，也該讓人有辦法還原。
+    # 只在備份不存在時建立 —— 否則跑第二次就會把備份蓋成已修改的版本。
+    bak = ini + ".bak"
+    if not os.path.exists(bak):
+        try:
+            shutil.copyfile(ini, bak)
+            print("[ini] 已備份原始設定:%s" % bak)
+        except OSError as e:
+            print("[ini] 備份失敗（不影響設定調整）:%s" % e)
     # 先寫暫存再改名，避免寫到一半被中斷就毀掉設定檔
     tmp = ini + ".tmp"
     with open(tmp, "w", encoding="utf-8", newline="\n") as f:

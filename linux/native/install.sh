@@ -15,6 +15,12 @@ NATIVE="$ROOT/linux/native"
 # 伺服器安裝位置:預設 linux/native/server;舊版裝在 linux/server,沿用以免重下 6 GB
 SRVDIR="$NATIVE/server"
 [ -x "$ROOT/linux/server/PalServer.sh" ] && SRVDIR="$ROOT/linux/server"
+# start-all 會記住使用者選的伺服器資料夾。那裡若已經有伺服器,就是他自己的安裝
+# (常常在另一顆磁碟),直接沿用並略過 6 GB 下載,不要再複製一份。
+# 也刻意不對它跑 steamcmd:validate 會覆蓋檔案,對跑了好幾個月的伺服器太危險,
+# 要更新那台請用 update.sh。
+PICKED=$(head -1 "$ROOT/backend/data/server-dir.txt" 2>/dev/null || true)
+[ -n "${PICKED:-}" ] && [ -x "$PICKED/PalServer.sh" ] && SRVDIR="$PICKED"
 
 # root 直接跑;非 root 有 sudo 用 sudo(裝系統套件用;可攜版不需要權限)
 SUDO=""
@@ -65,13 +71,16 @@ else
 fi
 
 step "[2/7]" "Palworld 專用伺服器(第一次約需下載數 GB,請耐心等)..."
+if [ -n "${PICKED:-}" ] && [ -x "$PICKED/PalServer.sh" ]; then
+  ok "使用你指定的伺服器,略過下載:$PICKED"
+else
 # 「Missing configuration」的三個已知成因逐次換招:剛自我更新完、appcache 過期、參數順序。
-SCMD="$NATIVE/steamcmd/steamcmd.sh"
-echo "      嘗試 1/4:標準安裝"
-"$SCMD" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit || true
-if [ ! -x "$SRVDIR/PalServer.sh" ]; then
-  echo "      嘗試 2/4:清掉 SteamCMD 快取後再試"
-  rm -rf "$NATIVE/steamcmd/appcache"; sleep 2
+  SCMD="$NATIVE/steamcmd/steamcmd.sh"
+  echo "      嘗試 1/4:標準安裝"
+  "$SCMD" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit || true
+  if [ ! -x "$SRVDIR/PalServer.sh" ]; then
+    echo "      嘗試 2/4:清掉 SteamCMD 快取後再試"
+    rm -rf "$NATIVE/steamcmd/appcache"; sleep 2
   "$SCMD" +force_install_dir "$SRVDIR" +login anonymous +app_update 2394010 validate +quit || true
 fi
 if [ ! -x "$SRVDIR/PalServer.sh" ]; then
@@ -90,6 +99,7 @@ fi
   exit 1
 }
 ok
+fi
 
 fi # SKIP_STEAM
 
