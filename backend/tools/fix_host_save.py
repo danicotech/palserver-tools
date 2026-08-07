@@ -43,6 +43,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pal
 
 from extract_pals import decompress_save, load_gvas  # noqa: E402
 from palworld_save_tools import palsav  # noqa: E402
+from palworld_save_tools.gvas import GvasFile  # noqa: E402
+from palworld_save_tools.paltypes import PALWORLD_TYPE_HINTS  # noqa: E402
 
 STEAM_BASE = 76561197960265728
 DEFAULT_OLD = "00000000-0000-0000-0000-000000000001"
@@ -108,6 +110,37 @@ def backup(world):
     dst = "%s-BACKUP-%s" % (world.rstrip("\\/"), time.strftime("%Y%m%d-%H%M%S"))
     shutil.copytree(world, dst)
     return dst
+
+
+def patch_player_file(path, old_text, new_text):
+    """改玩家檔裡的 PlayerUId / IndividualId.PlayerUId,回傳改了幾個欄位。
+
+    先驗證「讀進來再原樣寫回去」和原檔位元組相同,不同就不動 ——
+    這是確認這個版本的解析器真的吃得下這個檔案的唯一可靠方式。
+    """
+    raw = decompress_save(path)
+    g = GvasFile.read(raw, PALWORLD_TYPE_HINTS, {}, allow_nan=True)
+    if g.write({}) != raw:
+        raise RuntimeError("玩家檔無法無損還原,為了安全不改它:%s" % path)
+
+    old_u, new_u = uuid.UUID(old_text), uuid.UUID(new_text)
+    changed = 0
+    sd = g.properties["SaveData"]["value"]
+
+    def set_uid(holder, key):
+        nonlocal changed
+        node = holder.get(key)
+        if isinstance(node, dict) and node.get("value") == old_u:
+            node["value"] = new_u
+            changed += 1
+
+    set_uid(sd, "PlayerUId")
+    ind = sd.get("IndividualId", {}).get("value")
+    if isinstance(ind, dict):
+        set_uid(ind, "PlayerUId")
+
+    rewrite(path, g.write({}), save_type_of(path))
+    return changed
 
 
 def main():
@@ -182,13 +215,13 @@ def main():
     rewrite(level, patched, stype)
     print("Level.sav  : 已改 %d 處" % n)
 
-    # 玩家檔:同樣的錨點,改完再改檔名
-    praw = decompress_save(old_file)
-    pstype = save_type_of(old_file)
-    ppatched, pn = patch(praw, old_b, new_b)
-    rewrite(old_file, ppatched, pstype)
+    # 玩家檔:走結構化讀寫,不用錨點。
+    # 玩家檔裡的 PlayerUId 排列和 Level.sav 不一樣(實測錨點命中 0 處),
+    # 但它很小而且「完整解析得完」—— 讀進來原樣寫回去是位元組相同的,
+    # 所以結構化改寫是這裡最安全的做法,也不必猜它的二進位版面。
+    pn = patch_player_file(old_file, old_text, new_text)
     os.rename(old_file, new_file)
-    print("玩家檔     : 已改 %d 處,並改名為 %s" % (pn, os.path.basename(new_file)))
+    print("玩家檔     : 已改 %d 個欄位,並改名為 %s" % (pn, os.path.basename(new_file)))
 
     # 驗證:重新讀回來,確認舊 UID 一個都不剩、新 UID 數量對得上、結構仍解得開
     back = decompress_save(level)
