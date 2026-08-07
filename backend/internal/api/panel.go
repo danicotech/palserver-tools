@@ -54,7 +54,20 @@ func (s *Server) registerPanel(engine *gin.Engine, dir string) {
 				return
 			}
 		}
-		// 其餘一律回 index.html（單頁應用的路由不會 404）
+		// 找不到檔案時,只有「看起來像 SPA 路由」的路徑才回 index.html。
+		//
+		// 帶副檔名的請求是資源,不存在就必須是 404。以前一律回 index.html(而且是
+		// 200),前端就會以為檔案存在 —— 實際踩到的是整張地圖空白:
+		//   detectMapTiles() 用 HEAD /map-tiles/0/0/0.webp 探測有沒有圖磚,
+		//   拿到 200 就判定「有圖磚」,於是每一張圖磚都收到 index.html 的 HTML,
+		//   而「沒有圖磚就退回單張 palworld-full-map.jpg」那條路永遠走不到。
+		// /game-data/*.json 少任何一個也一樣:JSON.parse 收到 HTML 直接爆,
+		// 篩選清單就整個消失。
+		// Docker 版沒這問題,因為 nginx 對這些路徑有各自的 location,缺檔就 404。
+		if filepath.Ext(p) != "" {
+			c.JSON(http.StatusNotFound, gin.H{"ok": false, "error": "not found: " + p})
+			return
+		}
 		c.File(index)
 	})
 }
