@@ -127,6 +127,15 @@ if not errorlevel 1 goto :haspnpm
 echo       corepack 取不到指定版本的 pnpm,改用 npm 全域安裝...
 call npm install -g pnpm >nul 2>nul
 call pnpm --version >nul 2>nul
+if not errorlevel 1 goto :haspnpm
+rem Still no usable pnpm: almost always the system Node is too old for it
+rem (npm installs pnpm with just a warning, then pnpm refuses to run).
+rem Force the portable Node 22 and try once more.
+echo       %Y%改用專案內建的 Node 再試一次(不動系統上的那個)...%R%
+call "%NATIVE%\get-tools.bat" node force
+if errorlevel 1 goto :pnpmfail
+call npm install -g pnpm >nul 2>nul
+call pnpm --version >nul 2>nul
 if errorlevel 1 goto :pnpmfail
 :haspnpm
 echo       %G%完成%R%

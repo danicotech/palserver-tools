@@ -48,8 +48,19 @@ echo       https://www.python.org/downloads/  (安裝時勾選 Add python.exe to
 exit /b 1
 
 :node
+rem 'force' skips the system check and installs the portable build anyway.
+if /i "%~2"=="force" goto :nodeget
 where node >nul 2>nul
-if not errorlevel 1 exit /b 0
+if errorlevel 1 goto :nodeget
+rem Presence is not enough - the version matters. The pnpm we install needs
+rem Node >= 22.13; on an older Node, npm installs pnpm with only a warning and
+rem then pnpm cannot run at all. Symptom: '裝不起 pnpm' right after
+rem 'corepack 取不到指定版本的 pnpm'.
+set "_nodemaj=0"
+for /f "tokens=1 delims=.v" %%v in ('node -p "process.versions.node"') do set "_nodemaj=%%v"
+if %_nodemaj% GEQ 22 exit /b 0
+echo       系統的 Node 太舊(v%_nodemaj%.x,pnpm 需要 22 以上),改用專案內建的...
+:nodeget
 echo       這台電腦沒有 Node.js,下載官方可攜版(約 30 MB,只放進專案資料夾)...
 if exist "%TOOLS%\node" rd /s /q "%TOOLS%\node"
 if exist "%TOOLS%\node-v22.14.0-win-x64" rd /s /q "%TOOLS%\node-v22.14.0-win-x64"
