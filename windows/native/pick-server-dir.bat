@@ -65,9 +65,9 @@ set "CUR="
 :ask
 echo.
 echo   %H%要用哪個帕魯伺服器資料夾?%R%
-echo     就是放著 PalServer.exe 和 Pal\Saved 的那一層。
 echo     選好之後,排程器會直接開關那台伺服器、面板也讀它的存檔 —— 不會搬動任何檔案。
 echo.
+call :tree
 set "AUTO="
 call :try "%CD%\windows\native\server"
 call :try "%CD%\windows\server"
@@ -96,9 +96,9 @@ echo     %Y%自動偵測沒有找到伺服器(這台還沒裝過,或裝在別的
 
 :manual
 echo.
-echo     請輸入伺服器安裝資料夾的完整路徑。
-echo     在檔案總管對著資料夾按 Shift+右鍵 -^> 「複製路徑」再貼上最快。
-echo     貼到裡面幾層(甚至貼到 Level.sav)也沒關係,會自動往上對正。
+echo     請輸入%K%伺服器資料夾%R%(上圖標「就是這一層」的那個)的完整路徑。
+echo     在檔案總管對著它按 Shift+右鍵 -^> 「複製路徑」再貼上最快。
+echo     不確定是哪一層也沒關係:貼存檔目錄、甚至貼 Level.sav,都會自動往上對正。
 set "SEL="
 set /p "SEL=  路徑: "
 if not defined SEL goto :nopath
@@ -153,6 +153,23 @@ echo.
 echo   %G%[OK]%R% 就用這個資料夾啟動,不會搬動裡面任何檔案。
 echo         記在 backend\data\server-dir.txt,下次直接沿用;要換就在提問時輸入 C。
 endlocal
+exit /b 0
+
+rem tree -> draw the folder layout. "the folder holding PalServer.exe" is clear
+rem enough once you know it; someone doing this for the first time is holding a
+rem save path and cannot tell how many levels to go up. Showing the shape, and
+rem where the saves actually sit, beats another sentence of explanation.
+:tree
+echo     %H%伺服器資料夾長這樣%R%(要指的是最上面那一層):
+echo.
+echo       %K%PalServer\%R%                    ^<-- 就是這一層
+echo         PalServer.exe               伺服器本體
+echo         DefaultPalWorldSettings.ini
+echo         Pal\
+echo           Saved\
+echo             Config\WindowsServer\PalWorldSettings.ini   設定
+echo             SaveGames\0\一長串英數\Level.sav            %K%存檔在這裡%R%
+echo.
 exit /b 0
 
 rem ---- helpers ----------------------------------------------------------

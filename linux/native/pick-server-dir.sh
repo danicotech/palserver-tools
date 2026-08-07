@@ -69,6 +69,21 @@ worlds_of() {
   done
 }
 
+# 畫出資料夾層級。「放著 PalServer.sh 的那一層」對熟的人夠用,對第一次弄的人
+# 不夠 —— 他們手上通常是存檔那一串路徑,不知道要往上退幾層。
+show_tree() {
+  echo "    ${C_STEP}伺服器資料夾長這樣${C_RESET}(要指的是最上面那一層):"
+  echo
+  echo "      ${C_KEY}PalServer/${C_RESET}                    <-- 就是這一層"
+  echo "        PalServer.sh                伺服器本體"
+  echo "        DefaultPalWorldSettings.ini"
+  echo "        Pal/"
+  echo "          Saved/"
+  echo "            Config/LinuxServer/PalWorldSettings.ini   設定"
+  echo "            SaveGames/0/一長串英數/Level.sav          ${C_KEY}存檔在這裡${C_RESET}"
+  echo
+}
+
 # auto_detect —— 自動模式只認這個安裝推得出來的兩個位置:
 #   1. 這個專案自己下載的伺服器
 #   2. 專案所在的上一層(面板常常就放在伺服器資料夾裡面)
@@ -108,9 +123,9 @@ fi
 if [ -z "$CUR" ]; then
   echo
   echo "  ${C_STEP}要用哪個帕魯伺服器資料夾?${C_RESET}"
-  echo "    就是放著 PalServer.sh 和 Pal/Saved 的那一層。"
   echo "    選好之後,排程器會直接開關那台伺服器、面板也讀它的存檔 —— 不會搬動任何檔案。"
   echo
+  show_tree
   AUTO=$(auto_detect || true)
   if [ -n "$AUTO" ]; then
     echo "    ${C_KEY}[A]${C_RESET} 自動偵測到的"
@@ -134,8 +149,8 @@ if [ -z "$CUR" ]; then
     case "$sel" in
       M | m)
         echo
-        echo "    請輸入伺服器安裝資料夾的完整路徑。"
-        echo "    貼到裡面幾層(甚至貼到 Level.sav)也沒關係,會自動往上對正。"
+        echo "    請輸入${C_KEY}伺服器資料夾${C_RESET}(上圖標「就是這一層」的那個)的完整路徑。"
+        echo "    不確定是哪一層也沒關係:貼存檔目錄、甚至貼 Level.sav,都會自動往上對正。"
         printf "  路徑: "
         read -r sel || sel=""
         [ -n "$sel" ] || { err "沒有輸入任何路徑。"; continue; }
